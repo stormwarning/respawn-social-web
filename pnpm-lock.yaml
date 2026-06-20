@@ -9,83 +9,83 @@ importers:
   .:
     dependencies:
       '@atcute/client':
-        specifier: ^5.1.0
+        specifier: 5.1.0
         version: 5.1.0(@atcute/lexicons@2.0.1)(typescript@6.0.3)
       '@atcute/identity':
-        specifier: ^2.0.0
+        specifier: 2.0.0
         version: 2.0.0(@atcute/lexicons@2.0.1)(typescript@6.0.3)
       '@atcute/identity-resolver':
-        specifier: ^2.0.0
+        specifier: 2.0.0
         version: 2.0.0(@atcute/identity@2.0.0(@atcute/lexicons@2.0.1)(typescript@6.0.3))(@atcute/lexicons@2.0.1)(typescript@6.0.3)
       '@atcute/identity-resolver-node':
-        specifier: ^2.0.0
+        specifier: 2.0.0
         version: 2.0.0(@atcute/identity-resolver@2.0.0(@atcute/identity@2.0.0(@atcute/lexicons@2.0.1)(typescript@6.0.3))(@atcute/lexicons@2.0.1)(typescript@6.0.3))(@atcute/identity@2.0.0(@atcute/lexicons@2.0.1)(typescript@6.0.3))(@atcute/lexicons@2.0.1)
       '@atcute/lexicons':
-        specifier: ^2.0.1
+        specifier: 2.0.1
         version: 2.0.1
       '@atproto/api':
-        specifier: ^0.20.16
+        specifier: 0.20.16
         version: 0.20.16
       '@atproto/jwk-jose':
-        specifier: ^0.2.1
+        specifier: 0.2.1
         version: 0.2.1
       '@atproto/oauth-client-node':
-        specifier: ^0.4.2
+        specifier: 0.4.2
         version: 0.4.2
       '@netlify/blobs':
-        specifier: ^10.7.9
+        specifier: 10.7.9
         version: 10.7.9
       jose:
-        specifier: ^6.2.3
+        specifier: 6.2.3
         version: 6.2.3
     devDependencies:
       '@atcute/lex-cli':
-        specifier: ^3.1.0
+        specifier: 3.1.0
         version: 3.1.0(@atcute/cbor@2.3.4(@atcute/cid@2.4.1))(@atcute/cid@2.4.1)(typescript@6.0.3)
       '@playwright/test':
-        specifier: ^1.61.0
+        specifier: 1.61.0
         version: 1.61.0
       '@sveltejs/adapter-netlify':
-        specifier: ^6.0.4
+        specifier: 6.0.4
         version: 6.0.4(@sveltejs/kit@2.66.0(@opentelemetry/api@1.9.0)(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.3)(vite@8.0.16(@types/node@26.0.0)))(svelte@5.56.3)(typescript@6.0.3)(vite@8.0.16(@types/node@26.0.0)))
       '@sveltejs/kit':
-        specifier: ^2.66.0
+        specifier: 2.66.0
         version: 2.66.0(@opentelemetry/api@1.9.0)(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.3)(vite@8.0.16(@types/node@26.0.0)))(svelte@5.56.3)(typescript@6.0.3)(vite@8.0.16(@types/node@26.0.0))
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^7.1.2
+        specifier: 7.1.2
         version: 7.1.2(svelte@5.56.3)(vite@8.0.16(@types/node@26.0.0))
       '@testing-library/svelte':
-        specifier: ^5.3.1
+        specifier: 5.3.1
         version: 5.3.1(svelte@5.56.3)(vite@8.0.16(@types/node@26.0.0))(vitest@4.1.9)
       '@types/node':
-        specifier: ^26.0.0
+        specifier: 26.0.0
         version: 26.0.0
       '@vitest/ui':
-        specifier: ^4.1.9
+        specifier: 4.1.9
         version: 4.1.9(vitest@4.1.9)
       jsdom:
-        specifier: ^29.1.1
+        specifier: 29.1.1
         version: 29.1.1
       oxfmt:
-        specifier: ^0.55.0
+        specifier: 0.55.0
         version: 0.55.0(svelte@5.56.3)
       oxlint:
-        specifier: ^1.70.0
+        specifier: 1.70.0
         version: 1.70.0
       svelte:
-        specifier: ^5.56.3
+        specifier: 5.56.3
         version: 5.56.3
       svelte-check:
-        specifier: ^4.6.0
+        specifier: 4.6.0
         version: 4.6.0(picomatch@4.0.4)(svelte@5.56.3)(typescript@6.0.3)
       typescript:
-        specifier: ^6.0.3
+        specifier: 6.0.3
         version: 6.0.3
       vite:
-        specifier: ^8.0.16
+        specifier: 8.0.16
         version: 8.0.16(@types/node@26.0.0)
       vitest:
-        specifier: ^4.1.9
+        specifier: 4.1.9
         version: 4.1.9(@opentelemetry/api@1.9.0)(@types/node@26.0.0)(@vitest/ui@4.1.9)(jsdom@29.1.1)(vite@8.0.16(@types/node@26.0.0))
 
 packages:
