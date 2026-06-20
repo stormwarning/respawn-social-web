@@ -1,0 +1,60 @@
+{
+	"name": "respawn-social-web",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "oxlint",
+		"fmt": "oxfmt",
+		"fmt:check": "oxfmt --check",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:e2e": "playwright test",
+		"codegen": "lex-cli generate"
+	},
+	"dependencies": {
+		"@atcute/client": "^5.1.0",
+		"@atcute/identity": "^2.0.0",
+		"@atcute/identity-resolver": "^2.0.0",
+		"@atcute/identity-resolver-node": "^2.0.0",
+		"@atcute/lexicons": "^2.0.1",
+		"@atproto/api": "^0.20.16",
+		"@atproto/jwk-jose": "^0.2.1",
+		"@atproto/oauth-client-node": "^0.4.2",
+		"@netlify/blobs": "^10.7.9",
+		"jose": "^6.2.3"
+	},
+	"devDependencies": {
+		"@atcute/lex-cli": "^3.1.0",
+		"@playwright/test": "^1.61.0",
+		"@sveltejs/adapter-netlify": "^6.0.4",
+		"@sveltejs/kit": "^2.66.0",
+		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"@testing-library/svelte": "^5.3.1",
+		"@types/node": "^26.0.0",
+		"@vitest/ui": "^4.1.9",
+		"jsdom": "^29.1.1",
+		"oxfmt": "^0.55.0",
+		"oxlint": "^1.70.0",
+		"svelte": "^5.56.3",
+		"svelte-check": "^4.6.0",
+		"typescript": "^6.0.3",
+		"vite": "^8.0.16",
+		"vitest": "^4.1.9"
+	},
+	"engines": {
+		"node": ">=24.11.0"
+	},
+	"packageManager": "pnpm@10.28.2",
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild"
+		]
+	}
+}

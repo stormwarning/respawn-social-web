@@ -1,0 +1,10 @@
+[build]
+command = "pnpm build"
+publish = "build"
+
+[functions]
+# Bundle server deps for the Node runtime used by adapter-netlify.
+node_bundler = "esbuild"
+
+# Netlify Blobs is enabled automatically; no plugin needed.
+# adapter-netlify generates the functions + redirects at build time.

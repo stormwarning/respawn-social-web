@@ -1,0 +1,18 @@
+node_modules/
+/.svelte-kit/
+/build/
+/.netlify/
+
+# env
+.env
+.env.*
+!.env.example
+
+# test output
+/test-results/
+/playwright-report/
+/coverage/
+
+# editor / os
+.DS_Store
+*.log
