@@ -3,7 +3,9 @@
 		"oxlint": {
 			"initialization_options": {
 				"settings": {
+					"configPath": null,
 					"run": "onType",
+					"disableNestedConfig": false,
 					"fixKind": "safe_fix",
 					"typeAware": true,
 					"unusedDisableDirectives": "deny"
@@ -13,7 +15,7 @@
 		"oxfmt": {
 			"initialization_options": {
 				"settings": {
-					"configPath": "./oxfmt.config.ts",
+					"fmt.configPath": null,
 					"run": "onSave"
 				}
 			}
