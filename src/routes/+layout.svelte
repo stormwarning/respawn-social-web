@@ -9,7 +9,12 @@
 	<a href="/" class="brand">Respawn Social</a>
 	<nav>
 		{#if data.user}
-			<span class="who">{data.user.handle ?? data.user.did}</span>
+			<a class="who" href="/profile">
+				{#if data.user.avatarUrl}
+					<img class="avatar" src={data.user.avatarUrl} alt="" />
+				{/if}
+				<span>{data.user.handle ?? data.user.did}</span>
+			</a>
 			<form method="POST" action="/logout">
 				<button type="submit">Log out</button>
 			</form>
@@ -46,8 +51,19 @@
 	}
 
 	.who {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
 		color: var(--color-muted);
 		font-size: var(--text-sm);
+		text-decoration: none;
+	}
+
+	.avatar {
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: 50%;
+		object-fit: cover;
 	}
 
 	main {
