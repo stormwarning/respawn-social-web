@@ -6,6 +6,7 @@ import {
 	WellKnownHandleResolver,
 } from '@atcute/identity-resolver'
 import { NodeDnsHandleResolver } from '@atcute/identity-resolver-node'
+import { getPdsEndpoint } from '@atcute/identity'
 import { isDid, isHandle, type AtprotoDid, type Did } from '@atcute/lexicons/syntax'
 
 const handleResolver = new CompositeHandleResolver({
@@ -33,4 +34,14 @@ export async function resolveToDid(input: string): Promise<Did | AtprotoDid> {
 	if (isDid(value)) return value
 	if (isHandle(value)) return handleResolver.resolve(value)
 	throw new Error(`Not a valid handle or DID: ${input}`)
+}
+
+/**
+ * Resolve a DID's PDS service endpoint from its DID document. Needed to build
+ * blob URLs (`com.atproto.sync.getBlob`) for records stored on the user's repo,
+ * since the authed Agent does not expose its service origin.
+ */
+export async function resolvePdsEndpoint(did: Did | AtprotoDid): Promise<string | undefined> {
+	const doc = await docResolver.resolve(did as AtprotoDid)
+	return getPdsEndpoint(doc)
 }
