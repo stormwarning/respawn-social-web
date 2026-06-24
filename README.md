@@ -6,7 +6,7 @@ SvelteKit frontend for a game-focused social app on the **AT Protocol**.
 
 This app is its own AT Protocol OAuth **confidential client** — it owns auth and
 sessions, and talks **directly to the user's PDS** (server-side) for record
-CRUD. The separate [`respawn-social-backend`](https://github.com/stormwarning/respawn-social-backend)
+CRUD. The separate [`respawn-social-api`](https://github.com/stormwarning/respawn-social-api)
 is a pure **API service** (IGDB game data); this app calls it for `/games/*`
 only and does **not** use its auth endpoints.
 

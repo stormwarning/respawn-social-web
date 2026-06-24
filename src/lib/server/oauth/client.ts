@@ -15,7 +15,9 @@ const SCOPE = 'atproto transition:generic'
  * 127.0.0.1 / [::1] per spec.
  */
 function buildMetadata(): { metadata: OAuthClientMetadataInput; isLoopback: boolean } {
-	const publicUrl = env.APP_URL?.replace(/\/$/, '')
+	// Use the origin only, so a stray path/trailing slash in APP_URL (e.g. the
+	// callback URL pasted by mistake) can't corrupt client_id / redirect_uris.
+	const publicUrl = env.APP_URL ? new URL(env.APP_URL).origin : undefined
 
 	if (!publicUrl) {
 		const redirectUri = 'http://127.0.0.1:5173/oauth/callback'
