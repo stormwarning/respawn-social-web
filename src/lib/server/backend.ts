@@ -31,10 +31,15 @@ async function api<T>(path: string, fetchFn: typeof fetch = fetch): Promise<T> {
 	return res.json() as Promise<T>
 }
 
-export function getGame(id: string | number, fetchFn?: typeof fetch): Promise<Game> {
-	return api<Game>(`/games/${id}`, fetchFn)
+export async function getGame(id: string | number, fetchFn?: typeof fetch): Promise<Game> {
+	const { game } = await api<{ game: Game }>(`/games/${id}`, fetchFn)
+	return game
 }
 
-export function searchGames(query: string, fetchFn?: typeof fetch): Promise<Game[]> {
-	return api<Game[]>(`/games/search?q=${encodeURIComponent(query)}`, fetchFn)
+export async function searchGames(query: string, fetchFn?: typeof fetch): Promise<Game[]> {
+	const { results } = await api<{ results: Game[] }>(
+		`/games/search?q=${encodeURIComponent(query)}`,
+		fetchFn,
+	)
+	return results
 }
