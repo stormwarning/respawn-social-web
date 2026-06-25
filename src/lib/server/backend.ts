@@ -36,6 +36,11 @@ export async function getGame(id: string | number, fetchFn?: typeof fetch): Prom
 	return game
 }
 
+export async function getGameBySlug(slug: string, fetchFn?: typeof fetch): Promise<Game> {
+	const { game } = await api<{ game: Game }>(`/games/slug/${encodeURIComponent(slug)}`, fetchFn)
+	return game
+}
+
 export async function searchGames(query: string, fetchFn?: typeof fetch): Promise<Game[]> {
 	const { results } = await api<{ results: Game[] }>(
 		`/games/search?q=${encodeURIComponent(query)}`,
