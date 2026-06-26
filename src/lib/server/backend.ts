@@ -1,14 +1,5 @@
 import { env } from '$env/dynamic/private'
-
-/** Minimal game shape returned by the backend IGDB proxy. Refine when the
- * backend contract is finalised. */
-export interface Game {
-	id: number
-	name: string
-	summary?: string
-	cover?: { url: string }
-	[key: string]: unknown
-}
+import type { Game } from '$lib/types/game'
 
 function baseUrl(): string {
 	const url = env.BACKEND_API_URL
