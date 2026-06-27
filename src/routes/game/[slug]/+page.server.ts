@@ -15,14 +15,13 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 				.join(', ')
 
 		if (game.cover?.url) game.cover.url = normalizeCoverUrl(game.cover.url)
-		// if (game.platforms) game.platforms = game.platforms.map((p) => p.name).join(', ')
 
 		game.developer = names('developer')
 		game.publisher = names('publisher')
 
-		console.log('GAME', game)
+		let site = game.websites?.find((w) => w.type.id === 1)?.url
 
-		return { game }
+		return { game, site }
 	} catch (err) {
 		console.error('[game/[slug]] load failed', err)
 		error(404, 'Game not found')

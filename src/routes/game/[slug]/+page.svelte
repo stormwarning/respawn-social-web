@@ -14,8 +14,14 @@
 	{#if data.game.summary}
 		<p>{data.game.summary}</p>
 	{/if}
-	Developer: {data.game.developer}
-	Publisher: {data.game.publisher}
-	<p>Platforms: {#each data.game.platforms as platform}{platform.name}<br>{/each}</p>
-	<p>Genres: {#each data.game.genres as genre}{genre.name}<br>{/each}</p>
+	<p>Website: {data.site}</p>
+	<p>IGDB: {data.game.url}</p>
+	<p>Where to play:</p>
+	<ul>{#each data.game.external_games as item}<li>{item.url}</li>{/each}</ul>
+	<p>Developer: {data.game.developer}</p>
+	<p>Publisher: {data.game.publisher}</p>
+	<p>Platforms:</p>
+	<ul>{#each data.game.platforms as platform}<li>{platform.name}</li>{/each}</ul>
+	<p>Genres:</p>
+	<ul>{#each data.game.genres as genre}<li>{genre.name}</li>{/each}</ul>
 </article>
