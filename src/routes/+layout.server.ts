@@ -3,6 +3,8 @@ import type { Did } from '@atcute/lexicons/syntax'
 import { avatarUrlForBlob, loadBskyProfile, loadRespawnProfile } from '$lib/atproto/profile'
 import type { LayoutServerLoad } from './$types'
 
+export const trailingSlash = 'always'
+
 /** Expose the current user to every page for SSR rendering. */
 export const load: LayoutServerLoad = async ({ locals }) => {
 	if (!locals.user || !locals.agent) {
