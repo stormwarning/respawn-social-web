@@ -1,5 +1,7 @@
 <script lang="ts">
 	import '../app.css';
+
+	import SearchForm from '$lib/components/search-form.svelte';
 	import type { LayoutData } from './$types';
 
 	let { data, children }: { data: LayoutData; children: import('svelte').Snippet } = $props();
@@ -7,19 +9,20 @@
 
 <header>
 	<a href="/" class="brand">Respawn Social</a>
+	<SearchForm />
 	<nav>
 		{#if data.user}
-			<a class="who" href="/profile">
+			<a class="who" href="/profile/">
 				{#if data.user.avatarUrl}
 					<img class="avatar" src={data.user.avatarUrl} alt="" />
 				{/if}
 				<span>{data.user.handle ?? data.user.did}</span>
 			</a>
-			<form method="POST" action="/logout">
+			<form method="POST" action="/logout/">
 				<button type="submit">Log out</button>
 			</form>
 		{:else}
-			<a href="/login">Log in</a>
+			<a href="/login/">Log in</a>
 		{/if}
 	</nav>
 </header>
