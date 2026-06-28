@@ -28,7 +28,8 @@
 		"@atproto/jwk-jose": "0.2.1",
 		"@atproto/oauth-client-node": "0.4.2",
 		"@netlify/blobs": "10.7.9",
-		"jose": "6.2.3"
+		"jose": "6.2.3",
+		"sharp": "0.35.2"
 	},
 	"devDependencies": {
 		"@atcute/lex-cli": "3.1.0",

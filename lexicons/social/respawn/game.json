@@ -1,0 +1,66 @@
+{
+	"lexicon": 1,
+	"id": "social.respawn.game",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "A game in the actor's collection, keyed by its IGDB id. Stores rating, like/play state, references to logs, and the cover image with its dominant color.",
+			"key": "any",
+			"record": {
+				"type": "object",
+				"required": ["createdAt"],
+				"properties": {
+					"rating": {
+						"type": "integer",
+						"description": "Actor's rating, 1-10.",
+						"minimum": 1,
+						"maximum": 10
+					},
+					"liked": {
+						"type": "boolean"
+					},
+					"playing": {
+						"type": "boolean"
+					},
+					"played": {
+						"type": "string",
+						"description": "Play state. Absent means not played.",
+						"knownValues": ["played", "completed", "abandoned", "retired", "shelved"]
+					},
+					"cover": {
+						"type": "ref",
+						"ref": "#cover"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "datetime"
+					}
+				}
+			}
+		},
+		"cover": {
+			"type": "object",
+			"required": ["image"],
+			"properties": {
+				"image": {
+					"type": "blob",
+					"accept": ["image/png", "image/jpeg", "image/webp"],
+					"maxSize": 1000000
+				},
+				"colors": {
+					"type": "ref",
+					"ref": "#colors"
+				}
+			}
+		},
+		"colors": {
+			"type": "object",
+			"properties": {
+				"dominant": {
+					"type": "string",
+					"description": "Dominant cover color as a hex string, e.g. #1a2b3c."
+				}
+			}
+		}
+	}
+}
