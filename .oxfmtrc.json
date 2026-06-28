@@ -4,5 +4,8 @@
 	"useTabs": true,
 	"semi": false,
 	"singleQuote": true,
-	"trailingComma": "all"
+	"trailingComma": "all",
+	"svelte": {
+		"indentScriptAndStyle": false
+	}
 }

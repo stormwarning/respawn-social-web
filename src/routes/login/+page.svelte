@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { ActionData } from './$types';
+import type { ActionData } from './$types'
 
-	let { form }: { form: ActionData } = $props();
+let { form }: { form: ActionData } = $props()
 </script>
 
 <svelte:head>
@@ -28,39 +28,39 @@
 </form>
 
 <style>
-	.login {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-		max-width: 22rem;
-	}
+.login {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	max-width: 22rem;
+}
 
-	label {
-		font-size: var(--text-sm);
-		color: var(--color-muted);
-	}
+label {
+	font-size: var(--text-sm);
+	color: var(--color-muted);
+}
 
-	input {
-		padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius);
-		background: var(--color-surface);
-		color: var(--color-text);
-	}
+input {
+	padding: var(--space-2) var(--space-3);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius);
+	background: var(--color-surface);
+	color: var(--color-text);
+}
 
-	button {
-		margin-top: var(--space-2);
-		padding: var(--space-2) var(--space-3);
-		border: none;
-		border-radius: var(--radius);
-		background: var(--color-accent);
-		color: #07101f;
-		font-weight: 600;
-		cursor: pointer;
-	}
+button {
+	margin-top: var(--space-2);
+	padding: var(--space-2) var(--space-3);
+	border: none;
+	border-radius: var(--radius);
+	background: var(--color-accent);
+	color: #07101f;
+	font-weight: 600;
+	cursor: pointer;
+}
 
-	.error {
-		color: #ff8a8a;
-		font-size: var(--text-sm);
-	}
+.error {
+	color: #ff8a8a;
+	font-size: var(--text-sm);
+}
 </style>

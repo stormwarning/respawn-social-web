@@ -1,18 +1,18 @@
 <script lang="ts">
-	import { goto } from '$app/navigation'
+import { goto } from '$app/navigation'
 
-	let q = $state('')
+let q = $state('')
 
-	function toQuerySegment(value: string) {
-		return encodeURIComponent(value.trim()).replace(/%20/g, '+')
-	}
+function toQuerySegment(value: string) {
+	return encodeURIComponent(value.trim()).replace(/%20/g, '+')
+}
 
-	function onsubmit(event: SubmitEvent) {
-		event.preventDefault()
-		const trimmed = q.trim()
-		if (!trimmed) return
-		goto(`/search/${toQuerySegment(trimmed)}/`)
-	}
+function onsubmit(event: SubmitEvent) {
+	event.preventDefault()
+	const trimmed = q.trim()
+	if (!trimmed) return
+	goto(`/search/${toQuerySegment(trimmed)}/`)
+}
 </script>
 
 <form id="search" class="form" action="/search/" method="get" {onsubmit}>
