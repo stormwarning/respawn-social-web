@@ -20,8 +20,9 @@ only and does **not** use its auth endpoints.
   `event.locals` (`agent`, `user`), so pages render authed data on the server.
 - **OAuth**: `@atproto/oauth-client-node` (Node runtime). State + session stores
   are backed by **Netlify Blobs** (Netlify functions are stateless).
-- **Identity / lexicons**: `@atcute/*` for handle/DID resolution and lexicon
-  codegen; `@atproto/api` `Agent` for PDS XRPC.
+- **Identity / lexicons**: `@atcute/*` for handle/DID resolution;
+  `@atproto/lex` for lexicon codegen (in `packages/lexicons`); `@atproto/api`
+  `Agent` for PDS XRPC.
 - **Hosting**: `adapter-netlify` (Node, `edge: false`).
 
 ### Key paths (in `apps/web`)
@@ -72,7 +73,7 @@ pnpm lint         # oxlint
 pnpm fmt          # oxfmt (write)  | pnpm fmt:check
 pnpm test         # vitest (unit)
 pnpm test:e2e     # playwright (smoke)
-pnpm codegen      # @atcute/lex-cli -> apps/web/src/lib/lexicons/
+pnpm codegen      # @atproto/lex -> packages/lexicons/src/lexicons/
 ```
 
 > **Dev OAuth note:** the loopback client requires the callback host to be

@@ -1,0 +1,43 @@
+{
+	"lexicon": 1,
+	"id": "social.respawn.feed.comment",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "A comment on a log or list. Stored in the commenter's repo; the subject's author can hide it via their social.respawn.feed.gate record.",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["text", "subject", "createdAt"],
+				"properties": {
+					"text": {
+						"type": "string",
+						"maxGraphemes": 3000,
+						"maxLength": 30000
+					},
+					"facets": {
+						"type": "array",
+						"items": {
+							"type": "ref",
+							"ref": "social.respawn.richtext.facet"
+						}
+					},
+					"subject": {
+						"type": "ref",
+						"ref": "com.atproto.repo.strongRef",
+						"description": "The root log or list being commented on."
+					},
+					"parent": {
+						"type": "ref",
+						"ref": "com.atproto.repo.strongRef",
+						"description": "Optional parent comment, for threaded replies."
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "datetime"
+					}
+				}
+			}
+		}
+	}
+}

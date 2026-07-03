@@ -1,0 +1,25 @@
+{
+	"lexicon": 1,
+	"id": "social.respawn.graph.follow",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "Record declaring a social 'follow' relationship of another account.",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["subject", "createdAt"],
+				"properties": {
+					"subject": {
+						"type": "string",
+						"format": "did"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "datetime"
+					}
+				}
+			}
+		}
+	}
+}

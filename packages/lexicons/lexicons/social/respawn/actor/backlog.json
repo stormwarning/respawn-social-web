@@ -1,0 +1,51 @@
+{
+	"lexicon": 1,
+	"id": "social.respawn.actor.backlog",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "The actor's backlog of games to play. A single record per repo.",
+			"key": "literal:self",
+			"record": {
+				"type": "object",
+				"required": ["games", "createdAt"],
+				"properties": {
+					"games": {
+						"type": "array",
+						"maxLength": 1000,
+						"items": {
+							"type": "ref",
+							"ref": "#backlogItem"
+						}
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "datetime"
+					}
+				}
+			}
+		},
+		"backlogItem": {
+			"type": "object",
+			"required": ["game", "dateAdded"],
+			"properties": {
+				"game": {
+					"type": "ref",
+					"ref": "social.respawn.defs#gameRef"
+				},
+				"cover": {
+					"type": "ref",
+					"ref": "social.respawn.defs#cover"
+				},
+				"releaseDate": {
+					"type": "string",
+					"format": "datetime"
+				},
+				"dateAdded": {
+					"type": "string",
+					"format": "datetime"
+				}
+			}
+		}
+	}
+}

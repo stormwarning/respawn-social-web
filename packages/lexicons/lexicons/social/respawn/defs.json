@@ -1,0 +1,56 @@
+{
+	"lexicon": 1,
+	"id": "social.respawn.defs",
+	"defs": {
+		"cover": {
+			"type": "object",
+			"description": "A game cover image with optional extracted colors.",
+			"required": ["image"],
+			"properties": {
+				"image": {
+					"type": "blob",
+					"accept": ["image/png", "image/jpeg", "image/webp"],
+					"maxSize": 1000000
+				},
+				"colors": {
+					"type": "ref",
+					"ref": "#colors"
+				}
+			}
+		},
+		"colors": {
+			"type": "object",
+			"properties": {
+				"dominant": {
+					"type": "string",
+					"description": "Dominant cover color as a hex string, e.g. #1a2b3c."
+				}
+			}
+		},
+		"gameRef": {
+			"type": "object",
+			"description": "Denormalized reference to a game title, keyed by its IGDB id, so records are self-describing without an IGDB lookup.",
+			"required": ["igdbId", "slug", "title"],
+			"properties": {
+				"igdbId": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"slug": {
+					"type": "string",
+					"maxLength": 200
+				},
+				"title": {
+					"type": "string",
+					"maxGraphemes": 200,
+					"maxLength": 2000
+				}
+			}
+		},
+		"playState": {
+			"type": "string",
+			"description": "Play state. Absent means not played.",
+			"knownValues": ["played", "completed", "abandoned", "retired", "shelved"]
+		}
+	}
+}

@@ -1,0 +1,132 @@
+{
+	"lexicon": 1,
+	"id": "social.respawn.feed.log",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "Record of a play session for a game, optionally including a review. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey.",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["game", "createdAt"],
+				"properties": {
+					"game": {
+						"type": "ref",
+						"ref": "social.respawn.defs#gameRef"
+					},
+					"edition": {
+						"type": "string",
+						"description": "Edition of the game this session was played on.",
+						"maxGraphemes": 100,
+						"maxLength": 1000
+					},
+					"dlc": {
+						"type": "array",
+						"description": "Expansions or DLC included in this session.",
+						"maxLength": 20,
+						"items": {
+							"type": "string",
+							"maxGraphemes": 100,
+							"maxLength": 1000
+						}
+					},
+					"platform": {
+						"type": "string",
+						"maxGraphemes": 100,
+						"maxLength": 1000
+					},
+					"cover": {
+						"type": "ref",
+						"ref": "social.respawn.defs#cover"
+					},
+					"datePlayed": {
+						"type": "string",
+						"format": "datetime"
+					},
+					"startedPlaying": {
+						"type": "boolean"
+					},
+					"finishedPlaying": {
+						"type": "ref",
+						"ref": "social.respawn.defs#playState"
+					},
+					"rating": {
+						"type": "integer",
+						"description": "Actor's rating, 1-10.",
+						"minimum": 1,
+						"maximum": 10
+					},
+					"liked": {
+						"type": "boolean"
+					},
+					"review": {
+						"type": "ref",
+						"ref": "#review"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "datetime"
+					}
+				}
+			}
+		},
+		"review": {
+			"type": "object",
+			"description": "A review attached to a log.",
+			"required": ["text"],
+			"properties": {
+				"text": {
+					"type": "string",
+					"description": "Display text. Spans marked with a spoiler facet are scrambled here; naive clients can render this field safely.",
+					"maxGraphemes": 10000,
+					"maxLength": 100000
+				},
+				"textWithSpoilers": {
+					"type": "string",
+					"description": "Original text with spoiler spans unscrambled. Only present when the review contains spoiler facets.",
+					"maxGraphemes": 10000,
+					"maxLength": 100000
+				},
+				"containsSpoilers": {
+					"type": "boolean",
+					"description": "Whole-review spoiler flag. Clients hide the review text until revealed, unless the viewer has the game in their collection with a completed play state."
+				},
+				"facets": {
+					"type": "array",
+					"items": {
+						"type": "ref",
+						"ref": "social.respawn.richtext.facet"
+					}
+				},
+				"external": {
+					"type": "ref",
+					"ref": "#external"
+				},
+				"media": {
+					"type": "array",
+					"description": "References to Grain gallery records to display with the review.",
+					"maxLength": 10,
+					"items": {
+						"type": "ref",
+						"ref": "com.atproto.repo.strongRef"
+					}
+				}
+			}
+		},
+		"external": {
+			"type": "object",
+			"description": "Reference to an external document (e.g. standard.site) holding the full review.",
+			"required": ["uri"],
+			"properties": {
+				"uri": {
+					"type": "string",
+					"format": "uri"
+				},
+				"cid": {
+					"type": "string",
+					"format": "cid"
+				}
+			}
+		}
+	}
+}

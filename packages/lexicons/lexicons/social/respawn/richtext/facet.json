@@ -1,0 +1,80 @@
+{
+	"lexicon": 1,
+	"id": "social.respawn.richtext.facet",
+	"defs": {
+		"main": {
+			"type": "object",
+			"description": "Annotation of a sub-string within rich text. Modeled on app.bsky.richtext.facet with Respawn-specific formatting features.",
+			"required": ["index", "features"],
+			"properties": {
+				"index": {
+					"type": "ref",
+					"ref": "#byteSlice"
+				},
+				"features": {
+					"type": "array",
+					"items": {
+						"type": "union",
+						"refs": ["#link", "#bold", "#italic", "#spoiler", "#blockquote", "#listItem"]
+					}
+				}
+			}
+		},
+		"byteSlice": {
+			"type": "object",
+			"description": "Specifies the sub-string range a facet feature applies to. Start index is inclusive, end index is exclusive. Indices are zero-indexed, counting bytes of the UTF-8 encoded text.",
+			"required": ["byteStart", "byteEnd"],
+			"properties": {
+				"byteStart": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"byteEnd": {
+					"type": "integer",
+					"minimum": 0
+				}
+			}
+		},
+		"link": {
+			"type": "object",
+			"description": "Facet feature for a URL.",
+			"required": ["uri"],
+			"properties": {
+				"uri": {
+					"type": "string",
+					"format": "uri"
+				}
+			}
+		},
+		"bold": {
+			"type": "object",
+			"description": "Facet feature for bold text.",
+			"properties": {}
+		},
+		"italic": {
+			"type": "object",
+			"description": "Facet feature for italic text.",
+			"properties": {}
+		},
+		"spoiler": {
+			"type": "object",
+			"description": "Facet feature marking a span as a spoiler. In display text the span is scrambled; the original text lives in the accompanying textWithSpoilers field.",
+			"properties": {}
+		},
+		"blockquote": {
+			"type": "object",
+			"description": "Facet feature for a blockquote span.",
+			"properties": {}
+		},
+		"listItem": {
+			"type": "object",
+			"description": "Facet feature for a list item span.",
+			"properties": {
+				"ordered": {
+					"type": "boolean",
+					"description": "Whether the item belongs to an ordered (numbered) list."
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,62 @@
+{
+	"lexicon": 1,
+	"id": "social.respawn.feed.gate",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "Interaction settings for a log or list, analogous to app.bsky.feed.threadgate/postgate. The record key (rkey) must match the rkey of the gated record. Absence of a gate record means everyone can interact.",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["subject", "createdAt"],
+				"properties": {
+					"subject": {
+						"type": "string",
+						"format": "at-uri",
+						"description": "The log or list this gate applies to."
+					},
+					"allow": {
+						"type": "array",
+						"description": "Rules for who can comment. Absent means everyone; an empty array or a nobody rule means no one.",
+						"maxLength": 5,
+						"items": {
+							"type": "union",
+							"refs": ["#nobodyRule", "#followingRule", "#followerRule"]
+						}
+					},
+					"disableLikes": {
+						"type": "boolean"
+					},
+					"hiddenComments": {
+						"type": "array",
+						"description": "AT-URIs of comments the author has hidden.",
+						"maxLength": 50,
+						"items": {
+							"type": "string",
+							"format": "at-uri"
+						}
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "datetime"
+					}
+				}
+			}
+		},
+		"nobodyRule": {
+			"type": "object",
+			"description": "Disallow comments from everyone.",
+			"properties": {}
+		},
+		"followingRule": {
+			"type": "object",
+			"description": "Allow comments from actors the author follows.",
+			"properties": {}
+		},
+		"followerRule": {
+			"type": "object",
+			"description": "Allow comments from actors who follow the author.",
+			"properties": {}
+		}
+	}
+}

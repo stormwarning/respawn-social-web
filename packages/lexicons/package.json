@@ -3,5 +3,22 @@
 	"version": "0.0.1",
 	"private": true,
 	"description": "Canonical social.respawn.* lexicon schemas shared by the web app and services.",
-	"type": "module"
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"check": "tsc --noEmit",
+		"codegen": "lex install && lex build --clear --index-file --import-ext '.ts'",
+		"codegen:check": "lex install --ci",
+		"lexicons:update": "lex install --update",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@atproto/lex": "0.1.7"
+	},
+	"devDependencies": {
+		"typescript": "6.0.3",
+		"vitest": "4.1.9"
+	}
 }

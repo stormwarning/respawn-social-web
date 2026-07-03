@@ -26,10 +26,53 @@
 						"accept": ["image/png", "image/jpeg", "image/webp"],
 						"maxSize": 1000000
 					},
+					"pronouns": {
+						"type": "string",
+						"maxGraphemes": 32,
+						"maxLength": 320
+					},
+					"faves": {
+						"type": "array",
+						"description": "The actor's favorite games.",
+						"maxLength": 4,
+						"items": {
+							"type": "ref",
+							"ref": "#fave"
+						}
+					},
+					"channel": {
+						"type": "string",
+						"description": "URL of the actor's streaming or video channel.",
+						"format": "uri"
+					},
+					"bsky": {
+						"type": "string",
+						"description": "DID of the actor's Bluesky account, so a viewer can open it in their preferred Bluesky client.",
+						"format": "did"
+					},
+					"adultContent": {
+						"type": "string",
+						"description": "How to display adult content to visitors of this profile. Clients default to blur when absent.",
+						"knownValues": ["show", "blur", "hide"]
+					},
 					"createdAt": {
 						"type": "string",
 						"format": "datetime"
 					}
+				}
+			}
+		},
+		"fave": {
+			"type": "object",
+			"required": ["game"],
+			"properties": {
+				"game": {
+					"type": "ref",
+					"ref": "social.respawn.defs#gameRef"
+				},
+				"cover": {
+					"type": "ref",
+					"ref": "social.respawn.defs#cover"
 				}
 			}
 		}

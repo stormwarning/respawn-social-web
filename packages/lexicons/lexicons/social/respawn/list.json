@@ -1,0 +1,79 @@
+{
+	"lexicon": 1,
+	"id": "social.respawn.list",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "A curated list of games. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey.",
+			"key": "tid",
+			"record": {
+				"type": "object",
+				"required": ["name", "slug", "createdAt"],
+				"properties": {
+					"name": {
+						"type": "string",
+						"maxGraphemes": 100,
+						"maxLength": 1000
+					},
+					"slug": {
+						"type": "string",
+						"description": "URL slug, unique within the actor's repo. Generated from the name.",
+						"maxLength": 200
+					},
+					"description": {
+						"type": "ref",
+						"ref": "#description"
+					},
+					"ranked": {
+						"type": "boolean",
+						"description": "Whether item order represents a ranking."
+					},
+					"items": {
+						"type": "array",
+						"maxLength": 1000,
+						"items": {
+							"type": "ref",
+							"ref": "#item"
+						}
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "datetime"
+					}
+				}
+			}
+		},
+		"description": {
+			"type": "object",
+			"required": ["text"],
+			"properties": {
+				"text": {
+					"type": "string",
+					"maxGraphemes": 3000,
+					"maxLength": 30000
+				},
+				"facets": {
+					"type": "array",
+					"items": {
+						"type": "ref",
+						"ref": "social.respawn.richtext.facet"
+					}
+				}
+			}
+		},
+		"item": {
+			"type": "object",
+			"required": ["game"],
+			"properties": {
+				"game": {
+					"type": "ref",
+					"ref": "social.respawn.defs#gameRef"
+				},
+				"cover": {
+					"type": "ref",
+					"ref": "social.respawn.defs#cover"
+				}
+			}
+		}
+	}
+}
