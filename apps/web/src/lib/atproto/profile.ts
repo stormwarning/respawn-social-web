@@ -1,14 +1,16 @@
 import type { Agent } from '@atproto/api'
 import type { BlobRef } from '@atproto/api'
+import { Collections } from '@respawn-social/lexicons'
 
-export const RESPAWN_PROFILE_COLLECTION = 'social.respawn.actor.profile'
+export const RESPAWN_PROFILE_COLLECTION = Collections.profile
 const RKEY = 'self'
 
 /**
  * The Respawn profile record stored at `social.respawn.actor.profile/self` in
- * the user's repo. Mirrors the lexicon in `lexicons/social/respawn/actor/profile.json`.
- * Hand-declared (rather than imported from the @atcute codegen) so the `avatar`
- * blob lines up with the @atproto/api `BlobRef` the Agent returns from uploadBlob.
+ * the user's repo. Mirrors the lexicon in
+ * `packages/lexicons/lexicons/social/respawn/actor/profile.json`. Hand-declared
+ * (rather than imported from the codegen) so the `avatar` blob lines up with
+ * the @atproto/api `BlobRef` the Agent returns from uploadBlob.
  */
 export interface RespawnProfileRecord {
 	$type?: typeof RESPAWN_PROFILE_COLLECTION

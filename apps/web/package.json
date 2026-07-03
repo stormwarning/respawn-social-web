@@ -12,8 +12,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"test:e2e": "playwright test",
-		"codegen": "lex-cli generate"
+		"test:e2e": "playwright test"
 	},
 	"dependencies": {
 		"@atcute/client": "5.1.0",
@@ -25,11 +24,11 @@
 		"@atproto/jwk-jose": "0.2.1",
 		"@atproto/oauth-client-node": "0.4.2",
 		"@netlify/blobs": "10.7.9",
+		"@respawn-social/lexicons": "workspace:*",
 		"jose": "6.2.3",
 		"sharp": "0.35.2"
 	},
 	"devDependencies": {
-		"@atcute/lex-cli": "3.1.0",
 		"@playwright/test": "1.61.0",
 		"@sveltejs/adapter-netlify": "6.0.4",
 		"@sveltejs/kit": "2.66.0",

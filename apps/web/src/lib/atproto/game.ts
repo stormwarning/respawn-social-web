@@ -1,7 +1,8 @@
 import type { Agent } from '@atproto/api'
 import type { BlobRef } from '@atproto/api'
+import { Collections } from '@respawn-social/lexicons'
 
-export const RESPAWN_GAME_COLLECTION = 'social.respawn.game'
+export const RESPAWN_GAME_COLLECTION = Collections.game
 
 const rkeyFor = (igdbId: number) => String(igdbId)
 
@@ -15,9 +16,9 @@ export type PlayedState = 'played' | 'completed' | 'abandoned' | 'retired' | 'sh
 
 /**
  * A game in the user's collection, stored at `social.respawn.game/<igdbId>`.
- * Mirrors the lexicon in `lexicons/social/respawn/game.json`. Hand-declared (rather
- * than imported from the @atcute codegen) so the `cover.image` blob lines up with the
- * @atproto/api `BlobRef` the Agent returns from uploadBlob.
+ * Mirrors the lexicon in `packages/lexicons/lexicons/social/respawn/game.json`.
+ * Hand-declared (rather than imported from the codegen) so the `cover.image` blob
+ * lines up with the @atproto/api `BlobRef` the Agent returns from uploadBlob.
  */
 export interface RespawnGameRecord {
 	$type?: typeof RESPAWN_GAME_COLLECTION
