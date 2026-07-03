@@ -1,6 +1,12 @@
 # respawn-social-web
 
-SvelteKit frontend for a game-focused social app on the **AT Protocol**.
+Monorepo for a game-focused social app on the **AT Protocol** (pnpm workspaces).
+
+| Workspace           | Purpose                                                          |
+| ------------------- | ---------------------------------------------------------------- |
+| `apps/web`          | SvelteKit frontend (Netlify)                                     |
+| `packages/lexicons` | Canonical `social.respawn.*` lexicon schemas + generated types   |
+| `services/*`        | Planned: appview (Jetstream ingester + read API), realtime relay |
 
 ## Architecture
 
@@ -18,7 +24,7 @@ only and does **not** use its auth endpoints.
   codegen; `@atproto/api` `Agent` for PDS XRPC.
 - **Hosting**: `adapter-netlify` (Node, `edge: false`).
 
-### Key paths
+### Key paths (in `apps/web`)
 
 | Path                                 | Purpose                                            |
 | ------------------------------------ | -------------------------------------------------- |
@@ -29,6 +35,8 @@ only and does **not** use its auth endpoints.
 | `src/lib/server/backend.ts`          | Typed fetch wrapper for the backend API            |
 | `src/routes/oauth/*`                 | callback, `client-metadata.json`, `jwks.json`      |
 
+Lexicon JSON lives in `packages/lexicons/lexicons/`.
+
 ## Setup
 
 > **Node ≥ 22.18** (or ≥ 20.19) required — `oxlint.config.ts` loads via native
@@ -36,13 +44,13 @@ only and does **not** use its auth endpoints.
 
 ```sh
 pnpm install
-cp .env.example .env
+cp apps/web/.env.example apps/web/.env
 ```
 
 Generate the confidential-client signing key and cookie secret:
 
 ```sh
-node scripts/gen-jwk.mjs        # -> paste into PRIVATE_JWK
+node apps/web/scripts/gen-jwk.js   # -> paste into PRIVATE_JWK
 openssl rand -hex 32            # -> paste into COOKIE_SECRET
 ```
 
@@ -64,7 +72,7 @@ pnpm lint         # oxlint
 pnpm fmt          # oxfmt (write)  | pnpm fmt:check
 pnpm test         # vitest (unit)
 pnpm test:e2e     # playwright (smoke)
-pnpm codegen      # @atcute/lex-cli -> src/lib/lexicons/
+pnpm codegen      # @atcute/lex-cli -> apps/web/src/lib/lexicons/
 ```
 
 > **Dev OAuth note:** the loopback client requires the callback host to be
@@ -75,4 +83,5 @@ pnpm codegen      # @atcute/lex-cli -> src/lib/lexicons/
 
 Set `APP_URL`, `BACKEND_API_URL`, `PRIVATE_JWK`, `COOKIE_SECRET` in the site
 env. `adapter-netlify` generates the function + redirects; Netlify Blobs is
-enabled automatically. Build: `pnpm build`.
+enabled automatically. Build: `pnpm build` with base directory `apps/web`
+(set via the root `netlify.toml`).

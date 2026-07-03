@@ -1,7 +1,7 @@
 node_modules/
-/.svelte-kit/
-/build/
-/.netlify/
+.svelte-kit/
+build/
+.netlify/
 
 # env
 .env
@@ -9,9 +9,9 @@ node_modules/
 !.env.example
 
 # test output
-/test-results/
-/playwright-report/
-/coverage/
+test-results/
+playwright-report/
+coverage/
 
 # editor / os
 .DS_Store

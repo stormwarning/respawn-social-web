@@ -7,6 +7,15 @@ settings:
 importers:
 
   .:
+    devDependencies:
+      oxfmt:
+        specifier: 0.55.0
+        version: 0.55.0(svelte@5.56.3)
+      oxlint:
+        specifier: 1.70.0
+        version: 1.70.0
+
+  apps/web:
     dependencies:
       '@atcute/client':
         specifier: 5.1.0
@@ -69,12 +78,6 @@ importers:
       jsdom:
         specifier: 29.1.1
         version: 29.1.1
-      oxfmt:
-        specifier: 0.55.0
-        version: 0.55.0(svelte@5.56.3)
-      oxlint:
-        specifier: 1.70.0
-        version: 1.70.0
       svelte:
         specifier: 5.56.3
         version: 5.56.3
@@ -90,6 +93,8 @@ importers:
       vitest:
         specifier: 4.1.9
         version: 4.1.9(@opentelemetry/api@1.9.0)(@types/node@26.0.0)(@vitest/ui@4.1.9)(jsdom@29.1.1)(vite@8.0.16(@types/node@26.0.0))
+
+  packages/lexicons: {}
 
 packages:
 

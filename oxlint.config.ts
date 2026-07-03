@@ -9,7 +9,7 @@ export default defineConfig({
 		suspicious: 'warn',
 		perf: 'warn',
 	},
-	ignorePatterns: ['.svelte-kit/', 'build/', 'node_modules/', 'src/lib/lexicons/'],
+	ignorePatterns: ['.svelte-kit/', 'build/', 'node_modules/', '**/src/lib/lexicons/'],
 	rules: {
 		'no-console': 'off',
 		// CSS/side-effect imports (e.g. `import '../app.css'`) are intentional.

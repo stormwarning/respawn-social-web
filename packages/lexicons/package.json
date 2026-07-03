@@ -1,0 +1,7 @@
+{
+	"name": "@respawn-social/lexicons",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Canonical social.respawn.* lexicon schemas shared by the web app and services.",
+	"type": "module"
+}
