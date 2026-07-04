@@ -17,6 +17,18 @@ export interface RespawnProfileRecord {
 	displayName?: string
 	description?: string
 	avatar?: BlobRef
+	pronouns?: string
+	/** The actor's favorite games, max 4. */
+	faves?: Array<{
+		game: { igdbId: number; slug: string; title: string }
+		cover?: { image: BlobRef; colors?: { dominant?: string } }
+	}>
+	/** URL of the actor's streaming or video channel. */
+	channel?: string
+	/** DID of the actor's Bluesky account. */
+	bsky?: string
+	/** How to display adult content to profile visitors; clients default to blur. */
+	adultContent?: 'show' | 'blur' | 'hide'
 	createdAt?: string
 }
 
