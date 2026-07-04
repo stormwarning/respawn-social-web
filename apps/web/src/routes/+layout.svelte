@@ -12,7 +12,7 @@ let { data, children }: { data: LayoutData; children: import('svelte').Snippet }
 	<SearchForm />
 	<nav>
 		{#if data.user}
-			<a class="who" href="/profile/">
+			<a class="who" href="/settings/">
 				{#if data.user.avatarUrl}
 					<img class="avatar" src={data.user.avatarUrl} alt="" />
 				{/if}
