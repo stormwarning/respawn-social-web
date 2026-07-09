@@ -2,11 +2,12 @@
 
 Monorepo for a game-focused social app on the **AT Protocol** (pnpm workspaces).
 
-| Workspace           | Purpose                                                          |
-| ------------------- | ---------------------------------------------------------------- |
-| `apps/web`          | SvelteKit frontend (Netlify)                                     |
-| `packages/lexicons` | Canonical `social.respawn.*` lexicon schemas + generated types   |
-| `services/*`        | Planned: appview (Jetstream ingester + read API), realtime relay |
+| Workspace           | Purpose                                                             |
+| ------------------- | ------------------------------------------------------------------- |
+| `apps/web`          | SvelteKit frontend (Netlify)                                        |
+| `packages/lexicons` | Canonical `social.respawn.*` lexicon schemas + generated types      |
+| `services/appview`  | Jetstream ingester + Postgres index + XRPC-style read API (Railway) |
+| `services/relay`    | Planned: realtime WS rebroadcast for live updates                   |
 
 ## Architecture
 
@@ -63,6 +64,24 @@ openssl rand -hex 32            # -> paste into COOKIE_SECRET
 | `BACKEND_API_URL` | yes      | Base URL of the backend API service.                                                              |
 | `PRIVATE_JWK`     | prod     | ES256 private JWK (single-line JSON) for `private_key_jwt`.                                       |
 | `COOKIE_SECRET`   | yes      | 32+ byte hex, signs the session cookie.                                                           |
+| `APPVIEW_URL`     | no       | Base URL of `services/appview`. Unset → PDS-direct reads only (no following feed).                |
+| `APPVIEW_SECRET`  | no       | Shared secret sent as `x-appview-secret`; must match the appview env.                             |
+
+### Appview (`services/appview`)
+
+Long-running Node service (Railway or similar; Netlify can't host it): consumes
+Jetstream for `social.respawn.*` collections, validates against
+`@respawn-social/lexicons`, and indexes into Postgres. Serves `/xrpc/…` read
+endpoints (`getTimeline`, `getAuthorFeed`, `getLogThread`, `getActorProfile`,
+`getGameActivity`) the SvelteKit server calls with the viewer DID.
+
+```sh
+cd services/appview
+cp .env.example .env         # set DATABASE_URL
+pnpm db:push                 # create tables (drizzle-kit)
+pnpm dev                     # API + ingester (INGEST=0 for API only)
+pnpm sync                    # backfill/reconcile the index from the network
+```
 
 ## Develop
 

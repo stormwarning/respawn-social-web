@@ -1,0 +1,36 @@
+{
+	"name": "@respawn-social/appview",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Jetstream ingester + Postgres index + XRPC-style read API for social.respawn.* records.",
+	"type": "module",
+	"scripts": {
+		"dev": "node --watch src/index.ts",
+		"start": "node src/index.ts",
+		"sync": "node src/sync/run.ts",
+		"db:push": "drizzle-kit push",
+		"db:studio": "drizzle-kit studio",
+		"check": "tsc --noEmit",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@atcute/identity": "2.0.0",
+		"@atcute/identity-resolver": "2.0.0",
+		"@atcute/identity-resolver-node": "2.0.0",
+		"@atcute/lexicons": "2.0.1",
+		"@hono/node-server": "2.0.8",
+		"@respawn-social/lexicons": "workspace:*",
+		"drizzle-orm": "0.45.2",
+		"hono": "4.12.27",
+		"postgres": "3.4.9"
+	},
+	"devDependencies": {
+		"@types/node": "26.0.0",
+		"drizzle-kit": "0.31.10",
+		"typescript": "6.0.3",
+		"vitest": "4.1.9"
+	},
+	"engines": {
+		"node": ">=24.11.0"
+	}
+}
