@@ -1,29 +1,27 @@
 <script lang="ts">
+import TextInput from '$lib/components/text-input.svelte'
 import type { ActionData } from './$types'
 
 let { form }: { form: ActionData } = $props()
 </script>
 
 <svelte:head>
-	<title>Log in · Respawn Social</title>
+	<title>Sign in · Respawn Social</title>
 </svelte:head>
 
-<h1>Log in</h1>
-<p>Sign in with your AT Protocol / Bluesky identity.</p>
+<h1>Sign in with your ATmosphere account.</h1>
 
 <form method="POST" class="login">
-	<label for="handle">Handle or DID</label>
-	<input
+	<TextInput
+		label="Account name"
+		message={form?.error}
 		id="handle"
 		name="handle"
-		type="text"
 		placeholder="alice.bsky.social"
 		autocomplete="username"
 		required
+		inputmode="url"
 	/>
-	{#if form?.error}
-		<p class="error">{form.error}</p>
-	{/if}
 	<button type="submit">Continue</button>
 </form>
 
@@ -35,19 +33,6 @@ let { form }: { form: ActionData } = $props()
 	max-width: 22rem;
 }
 
-label {
-	font-size: var(--text-sm);
-	color: var(--color-muted);
-}
-
-input {
-	padding: var(--space-2) var(--space-3);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius);
-	background: var(--color-surface);
-	color: var(--color-text);
-}
-
 button {
 	margin-top: var(--space-2);
 	padding: var(--space-2) var(--space-3);
@@ -57,10 +42,5 @@ button {
 	color: #07101f;
 	font-weight: 600;
 	cursor: pointer;
-}
-
-.error {
-	color: #ff8a8a;
-	font-size: var(--text-sm);
 }
 </style>
