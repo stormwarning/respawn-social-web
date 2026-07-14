@@ -1,3 +1,7 @@
+@layer theme, base, utilities;
+
+@import 'styles/theme.css' layer(theme);
+
 /* Design tokens — plain CSS custom properties, no framework. */
 :root {
 	/* color */
@@ -7,6 +11,9 @@
 	--color-text: #e6edf3;
 	--color-muted: #9aa7b4;
 	--color-accent: #6e9fff;
+	--color-critical: oklch(70.4% 0.191 22.216);
+	--color-positive: oklch(79.2% 0.209 151.711);
+	--color-caution: oklch(85.2% 0.199 91.936);
 
 	/* space scale */
 	--space-1: 0.25rem;
