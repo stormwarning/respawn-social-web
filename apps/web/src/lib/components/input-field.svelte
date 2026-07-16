@@ -68,14 +68,20 @@ let fieldAttrs: FieldAttrs = $derived({
 		descriptionId={description ? descriptionId : undefined}
 		{disabled}
 	/>
-	{@render children(fieldAttrs)}
-	<FieldMessage id={messageId} {message} {tone} {reserveMessageSpace} {disabled} />
+	<div class="input-wrapper">
+		{@render children(fieldAttrs)}
+		<FieldMessage id={messageId} {message} {tone} {reserveMessageSpace} {disabled} />
+	</div>
 </div>
 
 <style>
 .input-field {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-1);
+	display: grid;
+	gap: 8px;
+}
+
+.input-wrapper {
+	display: grid;
+	gap: 8px;
 }
 </style>

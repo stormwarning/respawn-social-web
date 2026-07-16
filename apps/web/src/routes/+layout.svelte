@@ -8,7 +8,7 @@ let { data, children }: { data: LayoutData; children: import('svelte').Snippet }
 </script>
 
 <header>
-	<a href="/" class="brand">Respawn Social</a>
+	<a href="/" class="brand">Respawn</a>
 	<SearchForm />
 	<nav>
 		{#if data.user}
@@ -37,8 +37,7 @@ header {
 	align-items: center;
 	justify-content: space-between;
 	padding: var(--space-3) var(--space-4);
-	border-bottom: 1px solid var(--color-border);
-	background: var(--color-surface);
+	background: var(--color-grey-950);
 }
 
 .brand {

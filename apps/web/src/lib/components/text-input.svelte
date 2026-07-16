@@ -29,7 +29,16 @@ let {
 }: Props = $props()
 </script>
 
-<InputField {id} {label} {tertiaryLabel} {description} {message} {tone} {reserveMessageSpace} {disabled}>
+<InputField
+	{id}
+	{label}
+	{tertiaryLabel}
+	{description}
+	{message}
+	{tone}
+	{reserveMessageSpace}
+	{disabled}
+>
 	{#snippet children(field)}
 		<input class="input" type="text" bind:value {...rest} {...field} />
 	{/snippet}
@@ -37,17 +46,18 @@ let {
 
 <style>
 .input {
-	font: inherit;
+	padding: 8px 12px;
+	font-size: 1.0625rem;
 	color: var(--color-text);
-	background: var(--color-surface);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius);
-	padding: var(--space-2) var(--space-3);
+	background: var(--color-grey-600);
+	border: none;
+	border-radius: 8px;
+	corner-shape: var(--corner-shape);
 }
 
 .input:focus-visible {
 	outline: 2px solid var(--color-accent);
-	outline-offset: 1px;
+	outline-offset: 2px;
 }
 
 .input[aria-invalid='true'] {

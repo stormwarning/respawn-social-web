@@ -61,10 +61,6 @@ let {
 	gap: var(--space-2);
 }
 
-.label {
-	font-weight: 600;
-}
-
 .label.disabled {
 	color: var(--color-muted);
 }
