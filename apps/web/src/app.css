@@ -1,6 +1,8 @@
 @layer theme, base, utilities;
 
 @import 'styles/theme.css' layer(theme);
+@import 'styles/base.css' layer(base);
+@import 'styles/utilities.css' layer(utilities);
 
 /* Design tokens — plain CSS custom properties, no framework. */
 :root {
@@ -10,7 +12,7 @@
 	--color-border: #2a313c;
 	--color-text: #e6edf3;
 	--color-muted: #9aa7b4;
-	--color-accent: #6e9fff;
+	--color-accent: var(--color-blue-500);
 	--color-critical: oklch(70.4% 0.191 22.216);
 	--color-positive: oklch(79.2% 0.209 151.711);
 	--color-caution: oklch(85.2% 0.199 91.936);
@@ -30,38 +32,4 @@
 	--text-xl: 2rem;
 
 	--radius: 0.5rem;
-}
-
-*,
-*::before,
-*::after {
-	box-sizing: border-box;
-}
-
-html,
-body {
-	margin: 0;
-	padding: 0;
-}
-
-body {
-	background: var(--color-bg);
-	color: var(--color-text);
-	font-family: var(--font-sans);
-	font-size: var(--text-base);
-	line-height: 1.5;
-	-webkit-font-smoothing: antialiased;
-}
-
-a {
-	color: var(--color-accent);
-	text-decoration: none;
-}
-
-a:hover {
-	text-decoration: underline;
-}
-
-button {
-	font: inherit;
 }
