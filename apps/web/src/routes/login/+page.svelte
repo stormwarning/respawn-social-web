@@ -20,7 +20,9 @@ let { form }: { form: ActionData } = $props()
 			id="handle"
 			name="handle"
 			placeholder="alice.bsky.social"
+			autocapitalize="off"
 			autocomplete="username"
+			autocorrect="off"
 			required
 			inputmode="url"
 		/>
