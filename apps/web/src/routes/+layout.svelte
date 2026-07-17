@@ -3,11 +3,13 @@ import '../app.css'
 
 import SearchForm from '$lib/components/search-form.svelte'
 import type { LayoutData } from './$types'
+import SiteHeader from './site-header.svelte'
 
 let { data, children }: { data: LayoutData; children: import('svelte').Snippet } = $props()
 </script>
 
-<header>
+<SiteHeader {data} />
+<!-- <header>
 	<a href="/" class="brand">Respawn</a>
 	<SearchForm />
 	<nav>
@@ -25,7 +27,7 @@ let { data, children }: { data: LayoutData; children: import('svelte').Snippet }
 			<a href="/login/">Log in</a>
 		{/if}
 	</nav>
-</header>
+</header> -->
 
 <main>
 	{@render children()}
