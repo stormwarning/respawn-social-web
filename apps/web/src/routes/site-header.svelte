@@ -1,5 +1,5 @@
 <script>
-let data = $props()
+let { data, onsearch } = $props()
 </script>
 
 <header class="header">
@@ -9,7 +9,9 @@ let data = $props()
 		</div>
 	</a>
 	<div class="header-actions">
-		<button class="button" type="button"><div>Search</div></button>
+		<button class="button" type="button" onclick={onsearch}>
+			<div>Search</div>
+		</button>
 		{#if data.user}
 			<a class="who" href="/settings/">
 				{#if data.user.avatarUrl}
@@ -33,6 +35,30 @@ let data = $props()
 	display: flex;
 	justify-content: space-between;
 	padding-inline: 16px;
+
+	&::before {
+		position: absolute;
+		inset: 0;
+		background-color: var(--color-grey-800);
+		opacity: 0;
+		content: '';
+		scale: 1 0;
+		transform-origin: top;
+		transition:
+			scale 100ms ease-out,
+			opacity 100ms ease-out;
+	}
+
+	> * {
+		position: relative;
+	}
+}
+
+:global(body:has(dialog[open])) .header {
+	&::before {
+		opacity: 1;
+		scale: 1 1;
+	}
 }
 
 .header-logo {
@@ -40,16 +66,18 @@ let data = $props()
 }
 
 .header-logo-block {
+	--logo-padding: 19px;
+
 	display: flex;
-	padding: 1rem;
-	padding-top: calc(env(safe-area-inset-top) + 1rem);
+	padding: var(--logo-padding);
+	padding-top: calc(env(safe-area-inset-top) + var(--logo-padding));
 	background-color: var(--color-blue-100);
 	border-radius: 0;
 	mask-image: linear-gradient(#fff 0 0), url('./logo.svg');
 	mask-repeat: no-repeat;
 	mask-position:
 		0 0,
-		1rem calc(env(safe-area-inset-top) + 1rem);
+		var(--logo-padding) calc(env(safe-area-inset-top) + var(--logo-padding));
 	mask-size:
 		auto,
 		42px 42px;
@@ -66,6 +94,5 @@ let data = $props()
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	padding: 1rem;
 }
 </style>
