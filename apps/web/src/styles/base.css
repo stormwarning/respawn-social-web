@@ -11,6 +11,10 @@ body {
 	padding: 0;
 }
 
+html:has(dialog[open]) {
+	overflow: hidden;
+}
+
 body {
 	background: var(--color-grey-900);
 	color: var(--color-grey-200);
@@ -29,9 +33,13 @@ a {
 	text-underline-offset: 0.25em;
 	border-radius: 0.25em;
 	corner-shape: var(--corner-shape);
+	outline: 0 solid var(--color-blue-500);
+	outline-offset: 2px;
+	transition: 100ms ease-out;
+	transition-property: text-decoration, outline;
 
 	&:focus-visible {
+		text-decoration: 0;
 		outline: 0.125em solid var(--color-blue-500);
-		outline-offset: 2px;
 	}
 }

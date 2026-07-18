@@ -32,7 +32,7 @@ let { form }: { form: ActionData } = $props()
 			<a href="/privacy-policy/">Privacy policy</a>.
 		</p>
 
-		<button class="button primary" type="submit">Start</button>
+		<button class="button primary" type="submit"><span>Start</span></button>
 	</form>
 </div>
 

@@ -37,10 +37,14 @@
 	--highlight-edge: rgb(255 255 255 / 85%);
 	--shadow-edge: rgb(0 0 0 / 25%);
 
+	display: flex;
+	justify-content: center;
+	align-items: center;
 	padding: 12px;
+	font-family: inherit;
 	font-size: 1.0625rem;
 	font-weight: 600;
-	text-box: trim-both cap alphabetic;
+	color: var(--color-grey-800);
 	text-decoration: none;
 	background-color: var(--color-grey-100);
 	border: none;
@@ -55,6 +59,7 @@
 	-webkit-tap-highlight-color: transparent;
 
 	> * {
+		text-box: trim-both cap alphabetic;
 		translate: 0 -1px;
 	}
 
@@ -76,5 +81,9 @@
 	&.primary {
 		color: var(--color-grey-800);
 		background-color: var(--color-blue-100);
+	}
+
+	&.is-icon-only {
+		padding: 8px;
 	}
 }
