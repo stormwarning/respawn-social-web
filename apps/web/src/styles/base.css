@@ -11,6 +11,10 @@ body {
 	padding: 0;
 }
 
+html:has(dialog[open]) {
+	overflow: hidden;
+}
+
 body {
 	background: var(--color-grey-900);
 	color: var(--color-grey-200);
