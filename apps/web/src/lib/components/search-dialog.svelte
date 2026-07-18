@@ -1,6 +1,7 @@
 <script lang="ts">
 import { goto } from '$app/navigation'
 import SiteHeader from '../../routes/site-header.svelte'
+import CoverImage from './cover-image.svelte'
 
 interface SearchResult {
 	name: string
@@ -82,6 +83,7 @@ function onclick(event: MouseEvent) {
 			<form class="form" action="/search/" method="get" {onsubmit}>
 				<div class="input-wrapper">
 					<label class="sr-only" for="search-dialog-q">Search:</label>
+					<!-- svelte-ignore a11y_autofocus -->
 					<input
 						id="search-dialog-q"
 						class="input"
@@ -91,6 +93,7 @@ function onclick(event: MouseEvent) {
 						autocorrect="off"
 						autocapitalize="off"
 						autocomplete="off"
+						autofocus
 						placeholder="Find a game…"
 						bind:value={q}
 						{oninput}
@@ -116,15 +119,13 @@ function onclick(event: MouseEvent) {
 					{#each results as result, i (result.slug)}
 						<li style:--i={i}>
 							<a class="result" href="/game/{result.slug}/" onclick={() => dialog.close()}>
-								{#if result.coverUrl}
-									<img class="cover" src={result.coverUrl} alt="" loading="lazy" />
-								{:else}
-									<span class="cover"></span>
-								{/if}
-								<span class="name">{result.name}</span>
-								{#if result.year}
-									<span class="year">{result.year}</span>
-								{/if}
+								<CoverImage image={result.coverUrl} />
+								<span class="result-text">
+									<span class="name">{result.name}</span>
+									{#if result.year}
+										<span class="year">{result.year}</span>
+									{/if}
+								</span>
 							</a>
 						</li>
 					{/each}
@@ -192,7 +193,7 @@ dialog[open]::backdrop {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
-	max-width: max(305px, 50vw);
+	max-width: 1024px;
 	padding: 24px 48px 64px;
 	margin: 0 auto;
 }
@@ -283,7 +284,8 @@ dialog[open]::backdrop {
 }
 
 .result {
-	display: flex;
+	display: grid;
+	grid-template-columns: 42px 1fr;
 	align-items: center;
 	gap: var(--space-2);
 	padding: var(--space-1) var(--space-2);
@@ -293,17 +295,14 @@ dialog[open]::backdrop {
 }
 
 .result:hover {
-	background: var(--color-grey-800);
+	background: var(--color-grey-700);
 }
 
-.cover {
-	flex-shrink: 0;
-	width: 32px;
-	height: 42px;
-	object-fit: cover;
-	background: var(--color-grey-700);
-	border-radius: 4px;
-	corner-shape: var(--corner-shape);
+.result-text {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 8px;
 }
 
 .name {
@@ -313,7 +312,6 @@ dialog[open]::backdrop {
 }
 
 .year {
-	margin-left: auto;
 	color: var(--color-muted);
 	font-size: var(--text-sm);
 }
