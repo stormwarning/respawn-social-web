@@ -70,10 +70,7 @@ h1 {
 	display: grid;
 	grid-template-columns: 72px 1fr;
 	gap: 16px;
-	padding: var(--space-1) var(--space-2);
-	text-decoration: none;
-	border-radius: 8px;
-	corner-shape: var(--corner-shape);
+	padding: 0;
 }
 
 .result-content {
