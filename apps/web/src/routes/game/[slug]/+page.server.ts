@@ -23,9 +23,12 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 				?.filter((c) => c[flag])
 				.map((c) => c.company?.name)
 				.filter(Boolean)
-				.join(', ')
 
 		if (game.cover?.url) game.cover.url = normalizeCoverUrl(game.cover.url)
+
+		if (typeof game.first_release_date === 'number') {
+			game.releaseYear = new Date(game.first_release_date * 1000).getUTCFullYear()
+		}
 
 		game.developer = names('developer')
 		game.publisher = names('publisher')

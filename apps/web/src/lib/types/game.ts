@@ -23,6 +23,7 @@ interface ExternalGame {
 export interface Game {
 	id: number
 	name: string
+	url: string
 	summary?: string
 	cover?: { url: string }
 	external_games?: ExternalGame[]

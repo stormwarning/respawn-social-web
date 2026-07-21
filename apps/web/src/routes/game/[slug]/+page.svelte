@@ -1,8 +1,12 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import Chip from '$lib/components/chip.svelte'
+import CoverImage from '$lib/components/cover-image.svelte'
 import type { ActionData, PageData } from './$types'
 
 let { data, form }: { data: PageData; form: ActionData } = $props()
+let { game } = $derived(data)
+
 // svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
 let played = $state(data.played)
 let saving = $state(false)
@@ -16,12 +20,26 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>{data.game.name} · Respawn Social</title>
+	<title>{game.name} 🞍 Respawn</title>
 </svelte:head>
 
-<article>
-	<h1>{data.game.name}</h1>
-	<img src={data.game.cover?.url} alt="" />
+<article class="page">
+	<header class="game-header">
+		<div class="title">
+			<h1>{game.name}</h1>
+			<div class="title-meta">
+				<span>{game.releaseYear}</span>
+				{#if game.releaseYear && game.developer}<span role="separator">🞍</span>{/if}
+				<span>{game.developer}</span>
+			</div>
+		</div>
+		<CoverImage image={game.cover?.url} />
+	</header>
+
+	{#if game.summary}
+		<p>{game.summary}</p>
+	{/if}
+
 	{#if data.isLoggedIn}
 		<form
 			method="POST"
@@ -122,28 +140,148 @@ $effect(() => {
 			{/if}
 		</section>
 	{/if}
-	{#if data.game.summary}
-		<p>{data.game.summary}</p>
-	{/if}
-	<p>Website: {data.site}</p>
-	<p>IGDB: {data.game.url}</p>
-	<p>Where to play:</p>
+
+	<section class="details">
+		<div class="details-block">
+			<h4>Publishers</h4>
+			<ul class="list">
+				{#each game.publisher as publisher}
+					<li><Chip>{publisher}</Chip></li>
+				{/each}
+			</ul>
+		</div>
+		<div class="details-block">
+			<h4>Platforms</h4>
+			<ul class="list">
+				{#each game.platforms as platform}
+					<li><Chip>{platform.name}</Chip></li>
+				{/each}
+			</ul>
+		</div>
+		<div class="details-block">
+			<h4>Genres</h4>
+			<ul class="list">
+				{#each game.genres as genre}
+					<li><Chip>{genre.name}</Chip></li>
+				{/each}
+			</ul>
+		</div>
+		{#if game.url || data.site}
+			<div class="details-more">
+				<span>More at</span>
+				{#if game.url}<a href={game.url} rel="noopener noreferrer">IGDB</a>{/if}
+				{#if data.site}<a href={data.site} rel="noopener noreferrer">Official</a>{/if}
+			</div>
+		{/if}
+	</section>
+	<!-- <p>Where to play:</p>
 	<ul>
 		{#each data.game.external_games as item}<li>{item.url}</li>{/each}
-	</ul>
-	<p>Developer: {data.game.developer}</p>
-	<p>Publisher: {data.game.publisher}</p>
-	<p>Platforms:</p>
-	<ul>
-		{#each data.game.platforms as platform}<li>{platform.name}</li>{/each}
-	</ul>
-	<p>Genres:</p>
-	<ul>
-		{#each data.game.genres as genre}<li>{genre.name}</li>{/each}
-	</ul>
+	</ul> -->
 </article>
 
 <style>
+.page {
+	display: grid;
+	gap: 32px;
+	grid-template-columns: 100%;
+	padding-top: 16px;
+
+	p {
+		font-size: 0.9375rem;
+		text-wrap: pretty;
+	}
+}
+
+.game-header {
+	display: grid;
+	grid-template-columns: 1fr min(33vw, 230px);
+	gap: 16px;
+}
+
+.title {
+	display: grid;
+	align-content: start;
+	gap: 24px;
+
+	h1 {
+		font-size: 1.375rem;
+		font-weight: 600;
+		line-height: 1.2;
+	}
+}
+
+.title-meta {
+	display: flex;
+	gap: 4px;
+	font-size: 0.75rem;
+	letter-spacing: 0.02em;
+	line-height: 1.2;
+
+	> span:not([role='separator']) {
+		color: var(--color-grey-400);
+	}
+
+	> span[role='separator'] {
+		color: var(--color-grey-500);
+	}
+}
+
+.details {
+	display: grid;
+	gap: 16px;
+	padding: 16px;
+	background-color: var(--color-grey-800);
+	border-radius: 8px;
+	corner-shape: var(--corner-shape);
+}
+
+.details-block {
+	display: grid;
+	gap: 12px;
+
+	> h4 {
+		font-size: 0.875rem;
+		font-weight: 400;
+		color: var(--color-grey-300);
+		letter-spacing: 0.02em;
+		text-box: trim-both cap alphabetic;
+		text-transform: uppercase;
+	}
+}
+
+.details-more {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 8px;
+	padding-top: 16px;
+
+	> span {
+		font-size: 0.875rem;
+		letter-spacing: 0.01em;
+		text-box: trim-both cap alphabetic;
+	}
+
+	> a {
+		padding: 4px;
+		font-size: 0.75rem;
+		color: var(--color-blue-100);
+		letter-spacing: 0.02em;
+		text-box: trim-both cap alphabetic;
+		text-decoration: none;
+		border: 1px solid var(--color-grey-400);
+	}
+}
+
+.list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 0;
+	list-style: none;
+}
+
 .log-form {
 	display: flex;
 	flex-direction: column;
