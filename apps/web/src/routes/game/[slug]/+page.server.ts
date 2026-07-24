@@ -9,6 +9,7 @@ import {
 	type RespawnGameRecord,
 } from '$lib/atproto/game'
 import { createLog, listLogs, type GateAllowRule, type RespawnLogRecord } from '$lib/atproto/log'
+import { addToBacklog, loadBacklog, removeFromBacklog } from '$lib/atproto/backlog'
 import { buildCover } from '$lib/server/cover'
 
 const PLAY_STATES = new Set(['played', 'completed', 'abandoned', 'retired', 'shelved'])
@@ -36,14 +37,19 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 		let site = game.websites?.find((w) => w.type.id === 1)?.url
 
 		let played = false
+		let liked = false
+		let inBacklog = false
 		let ownLogs: Array<{ n: number; createdAt: string; rating: number | null }> = []
 		if (locals.user && locals.agent) {
 			try {
-				const [rec, logs] = await Promise.all([
+				const [rec, logs, backlog] = await Promise.all([
 					loadGameRecord(locals.agent, locals.user.did, game.id),
 					listLogs(locals.agent, locals.user.did, { igdbId: game.id }),
+					loadBacklog(locals.agent, locals.user.did),
 				])
 				played = rec?.played != null
+				liked = rec?.liked === true
+				inBacklog = backlog?.games.some((entry) => entry.game.igdbId === game.id) ?? false
 				// listLogs is newest first; number chronologically.
 				ownLogs = logs
 					.map((log, i) => ({
@@ -61,6 +67,8 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 			game,
 			site,
 			played,
+			liked,
+			inBacklog,
 			ownLogs,
 			isLoggedIn: !!locals.user,
 			viewerHandle: locals.user?.handle ?? locals.user?.did ?? null,
@@ -106,6 +114,75 @@ export const actions: Actions = {
 			return { played: true }
 		} catch (err) {
 			console.error('[game/[slug]] toggle failed', err)
+			return fail(500, { error: 'Could not update. Try again.' })
+		}
+	},
+
+	like: async ({ request, locals }) => {
+		if (!locals.user || !locals.agent) redirect(303, '/login')
+		const { agent, user } = locals
+
+		const form = await request.formData()
+		const igdbId = Number(form.get('igdbId'))
+		if (!Number.isInteger(igdbId) || igdbId < 1) {
+			return fail(400, { error: 'Invalid game id.' })
+		}
+		const coverUrl = String(form.get('coverUrl') ?? '')
+
+		try {
+			const existing = await loadGameRecord(agent, user.did, igdbId)
+
+			// Already liked → drop the liked field but keep the record (cover survives).
+			if (existing?.liked) {
+				const { liked: _drop, ...rest } = existing
+				await putGameRecord(agent, user.did, igdbId, rest)
+				return { liked: false }
+			}
+
+			const record: RespawnGameRecord = existing
+				? { ...existing, liked: true }
+				: { liked: true, createdAt: new Date().toISOString() }
+
+			if (!record.cover && coverUrl) {
+				record.cover = await buildCover(agent, coverUrl)
+			}
+
+			await putGameRecord(agent, user.did, igdbId, record)
+			return { liked: true }
+		} catch (err) {
+			console.error('[game/[slug]] like failed', err)
+			return fail(500, { error: 'Could not update. Try again.' })
+		}
+	},
+
+	backlog: async ({ request, locals }) => {
+		if (!locals.user || !locals.agent) redirect(303, '/login')
+		const { agent, user } = locals
+
+		const form = await request.formData()
+		const igdbId = Number(form.get('igdbId'))
+		if (!Number.isInteger(igdbId) || igdbId < 1) {
+			return fail(400, { error: 'Invalid game id.' })
+		}
+		const slug = String(form.get('slug') ?? '')
+		const title = String(form.get('title') ?? '')
+		const coverUrl = String(form.get('coverUrl') ?? '')
+		// The client already knows the current state; trust it rather than re-reading.
+		const inBacklog = form.get('inBacklog') === 'true'
+
+		try {
+			if (inBacklog) {
+				await removeFromBacklog(agent, user.did, igdbId)
+				return { inBacklog: false }
+			}
+
+			await addToBacklog(agent, user.did, {
+				game: { igdbId, slug, title },
+				cover: coverUrl ? await buildCover(agent, coverUrl) : undefined,
+			})
+			return { inBacklog: true }
+		} catch (err) {
+			console.error('[game/[slug]] backlog failed', err)
 			return fail(500, { error: 'Could not update. Try again.' })
 		}
 	},

@@ -23,6 +23,8 @@ interface ExternalGame {
 export interface Game {
 	id: number
 	name: string
+	// IGDB's URL slug, e.g. "horizon-zero-dawn".
+	slug: string
 	url: string
 	summary?: string
 	cover?: { url: string }
