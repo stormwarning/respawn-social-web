@@ -1,7 +1,10 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import IconBooksSolid from './icons/icon-books-solid.svelte'
 import IconBooks from './icons/icon-books.svelte'
+import IconControllerSolid from './icons/icon-controller-solid.svelte'
 import IconController from './icons/icon-controller.svelte'
+import IconHeartSolid from './icons/icon-heart-solid.svelte'
 import IconHeart from './icons/icon-heart.svelte'
 
 let {
@@ -41,7 +44,7 @@ $effect(() => {
 </script>
 
 <section class="actions">
-	{#if isLoggedIn}
+	{#if !isLoggedIn}
 		<a class="action-button" href="/login/">
 			<span>Sign in to track this game</span>
 		</a>
@@ -63,42 +66,20 @@ $effect(() => {
 			>
 				<input type="hidden" name="igdbId" value={igdbId} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
-				<button class="action-button has-icon" type="submit" disabled={saving}>
+				<button
+					class="action-button has-icon"
+					type="submit"
+					disabled={saving}
+					aria-pressed={played ? 'true' : 'false'}
+				>
 					<div>
 						{#if played}
-							✓
+							<IconControllerSolid />
+							<span>Played</span>
 						{:else}
 							<IconController />
+							<span>Played</span>
 						{/if}
-						<span>{played ? 'Played' : 'Play'}</span>
-					</div>
-				</button>
-			</form>
-
-			<form
-				method="POST"
-				action="?/like"
-				use:enhance={() => {
-					saving = true
-					return ({ result, update }) => {
-						if (result.type === 'success' && result.data) {
-							liked = Boolean(result.data.liked)
-						}
-						saving = false
-						update({ reset: false })
-					}
-				}}
-			>
-				<input type="hidden" name="igdbId" value={igdbId} />
-				<input type="hidden" name="coverUrl" value={coverUrl} />
-				<button class="action-button has-icon" type="submit" disabled={saving}>
-					<div>
-						{#if liked}
-							♥
-						{:else}
-							<IconHeart />
-						{/if}
-						<span>{liked ? 'Liked' : 'Like'}</span>
 					</div>
 				</button>
 			</form>
@@ -122,15 +103,49 @@ $effect(() => {
 				<input type="hidden" name="title" value={title} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
 				<input type="hidden" name="inBacklog" value={inBacklog} />
-				<button class="action-button has-icon" type="submit" disabled={saving}>
+				<button
+					class="action-button has-icon is-backlog"
+					type="submit"
+					disabled={saving}
+					aria-pressed={inBacklog ? 'true' : 'false'}
+				>
 					<div>
 						{#if inBacklog}
-							✓
+							<IconBooksSolid />
+							<span>Backlog</span>
 						{:else}
 							<IconBooks />
+							<span>Backlog</span>
 						{/if}
-						<span>{inBacklog ? 'Backlog' : 'Backlog'}</span>
 					</div>
+				</button>
+			</form>
+		</div>
+		<div class="actions-rating">
+			<form
+				method="POST"
+				action="?/like"
+				use:enhance={() => {
+					saving = true
+					return ({ result, update }) => {
+						if (result.type === 'success' && result.data) {
+							liked = Boolean(result.data.liked)
+						}
+						saving = false
+						update({ reset: false })
+					}
+				}}
+			>
+				<input type="hidden" name="igdbId" value={igdbId} />
+				<input type="hidden" name="coverUrl" value={coverUrl} />
+				<button
+					class="like-button"
+					type="submit"
+					disabled={saving}
+					aria-label="Like"
+					aria-pressed={liked ? 'true' : 'false'}
+				>
+					<IconHeartSolid />
 				</button>
 			</form>
 		</div>
@@ -226,20 +241,12 @@ $effect(() => {
 	gap: 8px;
 	padding: 8px;
 	background-color: var(--color-blue-100);
-	border-radius: 10px;
-	corner-shape: var(--corner-shape);
+	border-radius: 8px;
 
-	/*> a {
-		padding: 8px;
-		font-size: 0.875rem;
-		color: var(--color-blue-100);
-		letter-spacing: 0.02em;
-		text-box: trim-both cap alphabetic;
-		text-decoration: none;
-		border: 1px solid var(--color-grey-400);
-		border-radius: 4px;
+	@supports (corner-shape: squircle) {
+		border-radius: 16px;
 		corner-shape: var(--corner-shape);
-	}*/
+	}
 }
 
 .actions-primary {
@@ -255,22 +262,35 @@ $effect(() => {
 	padding: 8px;
 	font-size: 0.875rem;
 	font-weight: 600;
-	color: var(--color-grey-950);
+	color: var(--color-grey-700);
 	letter-spacing: 0.01em;
 	text-decoration: none;
 	background-color: transparent;
 	border: none;
 	border-radius: 4px;
-	corner-shape: var(--corner-shape);
 	user-select: none;
 	touch-action: manipulation;
 	-webkit-tap-highlight-color: transparent;
 	transition: all 100ms ease-out;
 
+	@supports (corner-shape: squircle) {
+		border-radius: 8px;
+		corner-shape: var(--corner-shape);
+	}
+
 	> * {
 		text-box: trim-both cap alphabetic;
 		translate: 0 -1px;
 		transition: all 100ms ease-out;
+	}
+
+	&:hover {
+		background-color: var(--color-blue-200);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--color-blue-500);
+		outline-offset: 2px;
 	}
 
 	&:active {
@@ -286,6 +306,8 @@ $effect(() => {
 
 	&.has-icon {
 		padding: 4px;
+		min-width: 72px;
+		aspect-ratio: 1;
 
 		> div {
 			display: flex;
@@ -296,11 +318,67 @@ $effect(() => {
 			:global(> svg) {
 				width: 40px;
 				height: 40px;
+				mix-blend-mode: hard-light;
 			}
 
 			> span {
 				text-box: trim-both cap alphabetic;
 			}
+		}
+	}
+
+	&[aria-pressed='true'] {
+		&.is-playing {
+			:global(svg) {
+				fill: var(--color-green-500);
+			}
+		}
+
+		&.has-played,
+		&.is-backlog {
+			:global(svg) {
+				fill: var(--color-blue-600);
+			}
+		}
+	}
+}
+
+.like-button {
+	display: flex;
+	padding: 4px;
+	color: var(--color-grey-600);
+	background-color: transparent;
+	border: none;
+	border-radius: 4px;
+	corner-shape: var(--corner-shape);
+	user-select: none;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+	transition: all 100ms ease-out;
+
+	:global(> svg) {
+		display: flex;
+		width: 32px;
+		height: 32px;
+		opacity: 0.5;
+		mix-blend-mode: hard-light;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--color-blue-500);
+		outline-offset: 2px;
+	}
+
+	&:active {
+		scale: 0.95;
+	}
+
+	&[aria-pressed='true'] {
+		color: var(--color-pink-600);
+
+		:global(> svg) {
+			opacity: 1;
+			mix-blend-mode: normal;
 		}
 	}
 }
