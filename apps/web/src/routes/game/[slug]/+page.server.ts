@@ -37,6 +37,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 		let site = game.websites?.find((w) => w.type.id === 1)?.url
 
 		let played = false
+		let playing = false
 		let liked = false
 		let inBacklog = false
 		let ownLogs: Array<{ n: number; createdAt: string; rating: number | null }> = []
@@ -48,6 +49,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 					loadBacklog(locals.agent, locals.user.did),
 				])
 				played = rec?.played != null
+				playing = rec?.playing === true
 				liked = rec?.liked === true
 				inBacklog = backlog?.games.some((entry) => entry.game.igdbId === game.id) ?? false
 				// listLogs is newest first; number chronologically.
@@ -67,6 +69,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 			game,
 			site,
 			played,
+			playing,
 			liked,
 			inBacklog,
 			ownLogs,
@@ -80,7 +83,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 }
 
 export const actions: Actions = {
-	toggle: async ({ request, locals }) => {
+	played: async ({ request, locals }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user } = locals
 
@@ -113,7 +116,44 @@ export const actions: Actions = {
 			await putGameRecord(agent, user.did, igdbId, record)
 			return { played: true }
 		} catch (err) {
-			console.error('[game/[slug]] toggle failed', err)
+			console.error('[game/[slug]] played failed', err)
+			return fail(500, { error: 'Could not update. Try again.' })
+		}
+	},
+
+	playing: async ({ request, locals }) => {
+		if (!locals.user || !locals.agent) redirect(303, '/login')
+		const { agent, user } = locals
+
+		const form = await request.formData()
+		const igdbId = Number(form.get('igdbId'))
+		if (!Number.isInteger(igdbId) || igdbId < 1) {
+			return fail(400, { error: 'Invalid game id.' })
+		}
+		const coverUrl = String(form.get('coverUrl') ?? '')
+
+		try {
+			const existing = await loadGameRecord(agent, user.did, igdbId)
+
+			// Already playing → drop the playing field but keep the record (cover survives).
+			if (existing?.playing) {
+				const { playing: _drop, ...rest } = existing
+				await putGameRecord(agent, user.did, igdbId, rest)
+				return { playing: false }
+			}
+
+			const record: RespawnGameRecord = existing
+				? { ...existing, playing: true }
+				: { playing: true, createdAt: new Date().toISOString() }
+
+			if (!record.cover && coverUrl) {
+				record.cover = await buildCover(agent, coverUrl)
+			}
+
+			await putGameRecord(agent, user.did, igdbId, record)
+			return { playing: true }
+		} catch (err) {
+			console.error('[game/[slug]] playing failed', err)
 			return fail(500, { error: 'Could not update. Try again.' })
 		}
 	},

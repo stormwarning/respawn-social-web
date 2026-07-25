@@ -6,6 +6,8 @@ import IconControllerSolid from './icons/icon-controller-solid.svelte'
 import IconController from './icons/icon-controller.svelte'
 import IconHeartSolid from './icons/icon-heart-solid.svelte'
 import IconHeart from './icons/icon-heart.svelte'
+import IconPlayCircleSolid from './icons/icon-play-circle-solid.svelte'
+import IconPlayCircle from './icons/icon-play-circle.svelte'
 
 let {
 	isLoggedIn,
@@ -14,6 +16,7 @@ let {
 	title,
 	coverUrl = '',
 	played: playedProp,
+	playing: playingProp,
 	liked: likedProp,
 	inBacklog: inBacklogProp,
 }: {
@@ -23,12 +26,15 @@ let {
 	title: string
 	coverUrl?: string
 	played: boolean
+	playing: boolean
 	liked: boolean
 	inBacklog: boolean
 } = $props()
 
 // svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
 let played = $state(playedProp)
+// svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
+let playing = $state(playingProp)
 // svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
 let liked = $state(likedProp)
 // svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
@@ -38,6 +44,7 @@ let saving = $state(false)
 // Resync when navigating between games (the component instance is reused).
 $effect(() => {
 	played = playedProp
+	playing = playingProp
 	liked = likedProp
 	inBacklog = inBacklogProp
 })
@@ -52,7 +59,41 @@ $effect(() => {
 		<div class="actions-primary">
 			<form
 				method="POST"
-				action="?/toggle"
+				action="?/playing"
+				use:enhance={() => {
+					saving = true
+					return ({ result, update }) => {
+						if (result.type === 'success' && result.data) {
+							playing = Boolean(result.data.playing)
+						}
+						saving = false
+						update({ reset: false })
+					}
+				}}
+			>
+				<input type="hidden" name="igdbId" value={igdbId} />
+				<input type="hidden" name="coverUrl" value={coverUrl} />
+				<button
+					class="action-button has-icon is-playing"
+					type="submit"
+					disabled={saving}
+					aria-pressed={playing ? 'true' : 'false'}
+				>
+					<div>
+						{#if playing}
+							<IconPlayCircleSolid />
+							<span>Playing</span>
+						{:else}
+							<IconPlayCircle />
+							<span>Play</span>
+						{/if}
+					</div>
+				</button>
+			</form>
+
+			<form
+				method="POST"
+				action="?/played"
 				use:enhance={() => {
 					saving = true
 					return ({ result, update }) => {
@@ -67,7 +108,7 @@ $effect(() => {
 				<input type="hidden" name="igdbId" value={igdbId} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
 				<button
-					class="action-button has-icon"
+					class="action-button has-icon has-played"
 					type="submit"
 					disabled={saving}
 					aria-pressed={played ? 'true' : 'false'}

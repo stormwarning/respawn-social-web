@@ -36,6 +36,7 @@ let { game } = $derived(data)
 		title={game.name}
 		coverUrl={game.cover?.url ?? ''}
 		played={data.played}
+		playing={data.playing}
 		liked={data.liked}
 		inBacklog={data.inBacklog}
 	/>
