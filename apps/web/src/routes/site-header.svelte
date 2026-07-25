@@ -1,4 +1,6 @@
 <script>
+import AvatarImage from '$lib/components/avatar-image.svelte'
+
 let { data, onsearch } = $props()
 </script>
 
@@ -25,13 +27,11 @@ let { data, onsearch } = $props()
 		</button>
 		{#if data.user}
 			<a class="who" href="/settings/">
-				{#if data.user.avatarUrl}
-					<img class="avatar" src={data.user.avatarUrl} alt="" />
-				{/if}
-				<span>{data.user.handle ?? data.user.did}</span>
+				<AvatarImage image={data.user.avatarUrl} />
+				<!-- <span>{data.user.handle ?? data.user.did}</span> -->
 			</a>
 			<form method="POST" action="/logout/">
-				<button type="submit">Log out</button>
+				<button class="button" type="submit"><div>Sign out</div></button>
 			</form>
 		{:else}
 			<a class="button primary" href="/login/"><div>Start</div></a>
@@ -106,5 +106,15 @@ let { data, onsearch } = $props()
 	display: flex;
 	align-items: center;
 	gap: 8px;
+}
+
+.who {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+
+	:global(> div) {
+		max-width: 36px;
+	}
 }
 </style>
