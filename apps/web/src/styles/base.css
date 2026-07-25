@@ -31,7 +31,7 @@ p {
 a {
 	color: inherit;
 	text-underline-offset: 0.25em;
-	border-radius: 0.25em;
+	border-radius: 0.5em;
 	corner-shape: var(--corner-shape);
 	outline: 0 solid var(--color-blue-500);
 	outline-offset: 2px;

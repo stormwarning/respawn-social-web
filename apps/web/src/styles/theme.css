@@ -17,7 +17,13 @@
 	--color-grey-950: oklch(14.1% 0.005 285.823);
 
 	--color-blue-100: oklch(95.1% 0.026 236.824);
+	--color-blue-200: oklch(90.1% 0.058 230.902);
 	--color-blue-500: oklch(68.5% 0.169 237.323);
+	--color-blue-600: oklch(58.8% 0.158 241.966);
+
+	--color-pink-600: oklch(59.2% 0.249 0.584);
+
+	--color-green-500: oklch(69.6% 0.17 162.48);
 
 	--corner-shape: squircle;
 }

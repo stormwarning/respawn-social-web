@@ -10,12 +10,10 @@ let { image } = $props()
 .cover {
 	position: relative;
 	aspect-ratio: 3/4;
-	flex-shrink: 0;
 	object-fit: cover;
 	background: var(--color-grey-400);
 	border-radius: 4px;
 	corner-shape: var(--corner-shape);
-	/*box-shadow: inset 0 0 0 1px rgb(255 255 255 / 25%);*/
 	overflow: hidden;
 
 	&::after {
