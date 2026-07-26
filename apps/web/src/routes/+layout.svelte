@@ -10,6 +10,11 @@ let { data, children }: { data: LayoutData; children: import('svelte').Snippet }
 let searchDialog: ReturnType<typeof SearchDialog> | undefined
 </script>
 
+<svelte:head>
+	<meta name="description" content="Track, save, and share what you’re playing" />
+	<meta property="og:image" content="https://respawn.social/og-image.png" />
+</svelte:head>
+
 <SiteHeader {data} onsearch={() => searchDialog?.open()} />
 <SearchDialog {data} bind:this={searchDialog} />
 

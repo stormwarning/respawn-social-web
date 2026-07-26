@@ -17,7 +17,8 @@ function authorPath(author: { handle: string | null; did: string }): string {
 </script>
 
 <svelte:head>
-	<title>Respawn Social</title>
+	<title>Respawn</title>
+	<meta property="og:url" content="https://respawn.social" />
 </svelte:head>
 
 {#if data.loggedIn}
