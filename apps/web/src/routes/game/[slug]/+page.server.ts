@@ -40,6 +40,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 		let playing = false
 		let liked = false
 		let inBacklog = false
+		let rating = 0
 		let ownLogs: Array<{ n: number; createdAt: string; rating: number | null }> = []
 		if (locals.user && locals.agent) {
 			try {
@@ -51,6 +52,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 				played = rec?.played != null
 				playing = rec?.playing === true
 				liked = rec?.liked === true
+				rating = rec?.rating ?? 0
 				inBacklog = backlog?.games.some((entry) => entry.game.igdbId === game.id) ?? false
 				// listLogs is newest first; number chronologically.
 				ownLogs = logs
@@ -71,6 +73,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 			played,
 			playing,
 			liked,
+			rating,
 			inBacklog,
 			ownLogs,
 			isLoggedIn: !!locals.user,
@@ -191,6 +194,49 @@ export const actions: Actions = {
 			return { liked: true }
 		} catch (err) {
 			console.error('[game/[slug]] like failed', err)
+			return fail(500, { error: 'Could not update. Try again.' })
+		}
+	},
+
+	rate: async ({ request, locals }) => {
+		if (!locals.user || !locals.agent) redirect(303, '/login')
+		const { agent, user } = locals
+
+		const form = await request.formData()
+		const igdbId = Number(form.get('igdbId'))
+		if (!Number.isInteger(igdbId) || igdbId < 1) {
+			return fail(400, { error: 'Invalid game id.' })
+		}
+		const rating = Number(form.get('rating'))
+		if (!Number.isInteger(rating) || rating < 0 || rating > 10) {
+			return fail(400, { error: 'Invalid rating.' })
+		}
+		const coverUrl = String(form.get('coverUrl') ?? '')
+
+		try {
+			const existing = await loadGameRecord(agent, user.did, igdbId)
+
+			// The lexicon's minimum is 1, so clearing means dropping the field, not writing 0.
+			if (rating === 0) {
+				if (existing) {
+					const { rating: _drop, ...rest } = existing
+					await putGameRecord(agent, user.did, igdbId, rest)
+				}
+				return { rating: 0 }
+			}
+
+			const record: RespawnGameRecord = existing
+				? { ...existing, rating }
+				: { rating, createdAt: new Date().toISOString() }
+
+			if (!record.cover && coverUrl) {
+				record.cover = await buildCover(agent, coverUrl)
+			}
+
+			await putGameRecord(agent, user.did, igdbId, record)
+			return { rating }
+		} catch (err) {
+			console.error('[game/[slug]] rate failed', err)
 			return fail(500, { error: 'Could not update. Try again.' })
 		}
 	},

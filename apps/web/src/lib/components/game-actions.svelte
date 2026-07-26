@@ -1,4 +1,5 @@
 <script lang="ts">
+import { tick } from 'svelte'
 import { enhance } from '$app/forms'
 import IconBooksSolid from './icons/icon-books-solid.svelte'
 import IconBooks from './icons/icon-books.svelte'
@@ -8,6 +9,7 @@ import IconHeartSolid from './icons/icon-heart-solid.svelte'
 import IconHeart from './icons/icon-heart.svelte'
 import IconPlayCircleSolid from './icons/icon-play-circle-solid.svelte'
 import IconPlayCircle from './icons/icon-play-circle.svelte'
+import StarRating from './star-rating.svelte'
 
 let {
 	isLoggedIn,
@@ -18,6 +20,7 @@ let {
 	played: playedProp,
 	playing: playingProp,
 	liked: likedProp,
+	rating: ratingProp,
 	inBacklog: inBacklogProp,
 }: {
 	isLoggedIn: boolean
@@ -28,6 +31,8 @@ let {
 	played: boolean
 	playing: boolean
 	liked: boolean
+	/** 0–10 in half-star steps; 0 means unrated. */
+	rating: number
 	inBacklog: boolean
 } = $props()
 
@@ -38,16 +43,26 @@ let playing = $state(playingProp)
 // svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
 let liked = $state(likedProp)
 // svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
+let rating = $state(ratingProp)
+// svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
 let inBacklog = $state(inBacklogProp)
 let saving = $state(false)
+let ratingForm = $state<HTMLFormElement>()
 
 // Resync when navigating between games (the component instance is reused).
 $effect(() => {
 	played = playedProp
 	playing = playingProp
 	liked = likedProp
+	rating = ratingProp
 	inBacklog = inBacklogProp
 })
+
+// Wait for the hidden input to pick up the new value before submitting.
+async function submitRating() {
+	await tick()
+	ratingForm?.requestSubmit()
+}
 </script>
 
 <section class="actions">
@@ -163,6 +178,32 @@ $effect(() => {
 			</form>
 		</div>
 		<div class="actions-rating">
+			<form
+				bind:this={ratingForm}
+				method="POST"
+				action="?/rate"
+				use:enhance={() => {
+					saving = true
+					return ({ result, update }) => {
+						if (result.type === 'success' && result.data) {
+							rating = Number(result.data.rating)
+						}
+						saving = false
+						update({ reset: false })
+					}
+				}}
+			>
+				<input type="hidden" name="igdbId" value={igdbId} />
+				<input type="hidden" name="coverUrl" value={coverUrl} />
+				<input type="hidden" name="rating" value={rating} />
+				<StarRating
+					bind:value={rating}
+					disabled={saving}
+					label="Your rating"
+					onchange={submitRating}
+				/>
+			</form>
+
 			<form
 				method="POST"
 				action="?/like"
@@ -292,6 +333,12 @@ $effect(() => {
 
 .actions-primary {
 	display: flex;
+	gap: 8px;
+}
+
+.actions-rating {
+	display: flex;
+	align-items: center;
 	gap: 8px;
 }
 
