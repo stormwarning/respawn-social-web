@@ -1,5 +1,6 @@
 <script lang="ts">
 import Chip from '$lib/components/chip.svelte'
+import ClampText from '$lib/components/clamp-text.svelte'
 import CoverImage from '$lib/components/cover-image.svelte'
 import GameActions from '$lib/components/game-actions.svelte'
 import type { PageData } from './$types'
@@ -26,7 +27,7 @@ let { game } = $derived(data)
 	</header>
 
 	{#if game.summary}
-		<p>{game.summary}</p>
+		<ClampText text={game.summary} />
 	{/if}
 
 	<GameActions
@@ -87,11 +88,6 @@ let { game } = $derived(data)
 	gap: 32px;
 	grid-template-columns: 100%;
 	padding-top: 16px;
-
-	p {
-		font-size: 0.9375rem;
-		text-wrap: pretty;
-	}
 }
 
 .game-header {
