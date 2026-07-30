@@ -83,6 +83,12 @@
 		background-color: var(--color-blue-100);
 	}
 
+	&.small {
+		padding: 8px 10px;
+		font-size: 0.875rem;
+		letter-spacing: 0.01em;
+	}
+
 	&.is-icon-only {
 		padding: 8px;
 	}
