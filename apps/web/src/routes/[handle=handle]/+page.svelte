@@ -1,5 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import AvatarImage from '$lib/components/avatar-image.svelte'
 import type { PageData } from './$types'
 
 let { data }: { data: PageData } = $props()
@@ -24,129 +25,175 @@ const playStateLabels: Record<string, string> = {
 </script>
 
 <svelte:head>
-	<title>{displayName} · Respawn Social</title>
+	<title>{displayName}’s profile 🞍 Respawn</title>
 </svelte:head>
 
-<article>
+<article class="profile">
 	<header class="profile-header">
-		{#if data.avatarUrl}
-			<img class="avatar" src={data.avatarUrl} alt="" />
-		{/if}
-		<div>
-			<h1>{displayName}</h1>
-			<p class="sub">
-				@{data.handle}
-				{#if data.profile?.pronouns}· {data.profile.pronouns}{/if}
-			</p>
+		<div class="avatar">
+			<AvatarImage image={data.avatarUrl} />
 		</div>
-		{#if data.isLoggedIn && !data.isSelf}
-			<form
-				method="POST"
-				action={following ? '?/unfollow' : '?/follow'}
-				use:enhance={() => {
-					saving = true
-					return ({ result, update }) => {
-						if (result.type === 'success' && result.data) {
-							following = Boolean(result.data.following)
-						}
-						saving = false
-						update({ reset: false })
-					}
-				}}
-			>
-				<button type="submit" disabled={saving}>
-					{following ? 'Following ✓' : 'Follow'}
-				</button>
-			</form>
-		{:else if data.isSelf}
-			<a href="/settings/">Edit profile</a>
-		{/if}
+		<div class="content">
+			<h2>{displayName}</h2>
+
+			<div class="profile-actions">
+				{#if data.isLoggedIn && !data.isSelf}
+					<form
+						method="POST"
+						action={following ? '?/unfollow' : '?/follow'}
+						use:enhance={() => {
+							saving = true
+							return ({ result, update }) => {
+								if (result.type === 'success' && result.data) {
+									following = Boolean(result.data.following)
+								}
+								saving = false
+								update({ reset: false })
+							}
+						}}
+					>
+						<button class="button small" type="submit" disabled={saving}>
+							<span>{following ? 'Following ✓' : 'Follow'}</span>
+						</button>
+					</form>
+				{:else if data.isSelf}
+					<a class="button small" href="/settings/"><span>Edit profile</span></a>
+				{/if}
+			</div>
+
+			<!-- @todo Only display bio here if it's 140 chars or less. -->
+			{#if data.profile?.description}
+				<div class="bio">
+					<p>{data.profile.description}</p>
+				</div>
+			{/if}
+		</div>
 	</header>
 
-	{#if data.profile?.description}
-		<p>{data.profile.description}</p>
-	{/if}
+	<main class="layout">
+		<section class="body">
+			<p class="sub">
+				{data.gameCount} games · {data.logCount} logs · {data.backlogCount} in backlog
+				{#if data.profile?.channel}
+					· <a href={data.profile.channel} rel="external noopener">channel</a>
+				{/if}
+				{#if data.profile?.bsky}
+					· <a href="https://bsky.app/profile/{data.profile.bsky}" rel="external noopener"
+						>Bluesky</a
+					>
+				{/if}
+			</p>
 
-	<p class="sub">
-		{data.gameCount} games · {data.logCount} logs · {data.backlogCount} in backlog
-		{#if data.profile?.channel}
-			· <a href={data.profile.channel} rel="external noopener">channel</a>
-		{/if}
-		{#if data.profile?.bsky}
-			· <a href="https://bsky.app/profile/{data.profile.bsky}" rel="external noopener">Bluesky</a>
-		{/if}
-	</p>
+			{#if data.profile?.faves?.length}
+				<h2>Favorites</h2>
+				<ul>
+					{#each data.profile.faves as fave (fave.game.igdbId)}
+						<li><a href="/game/{fave.game.slug}/">{fave.game.title}</a></li>
+					{/each}
+				</ul>
+			{/if}
+		</section>
 
-	{#if data.profile?.faves?.length}
-		<h2>Favorites</h2>
-		<ul>
-			{#each data.profile.faves as fave (fave.game.igdbId)}
-				<li><a href="/game/{fave.game.slug}/">{fave.game.title}</a></li>
-			{/each}
-		</ul>
-	{/if}
+		<aside class="sidebar">
+			<h2>Recent logs</h2>
+			{#if data.recentLogs.length === 0}
+				<p class="sub">No logs yet.</p>
+			{:else}
+				<ul>
+					{#each data.recentLogs as log (log.uri)}
+						<li>
+							<a href="/{data.handle}/game/{log.game.slug}/{log.n > 1 ? `${log.n}/` : ''}">
+								{log.game.title}
+							</a>
+							{#if log.finishedPlaying}
+								· {playStateLabels[log.finishedPlaying] ?? log.finishedPlaying}
+							{/if}
+							{#if log.rating}· {log.rating}/10{/if}
+							{#if log.liked}· ♥{/if}
+							{#if log.hasReview}· reviewed{/if}
+						</li>
+					{/each}
+				</ul>
+			{/if}
 
-	<h2>Recent logs</h2>
-	{#if data.recentLogs.length === 0}
-		<p class="sub">No logs yet.</p>
-	{:else}
-		<ul>
-			{#each data.recentLogs as log (log.uri)}
-				<li>
-					<a href="/{data.handle}/game/{log.game.slug}/{log.n > 1 ? `${log.n}/` : ''}">
-						{log.game.title}
-					</a>
-					{#if log.finishedPlaying}
-						· {playStateLabels[log.finishedPlaying] ?? log.finishedPlaying}
-					{/if}
-					{#if log.rating}· {log.rating}/10{/if}
-					{#if log.liked}· ♥{/if}
-					{#if log.hasReview}· reviewed{/if}
-				</li>
-			{/each}
-		</ul>
-	{/if}
-
-	{#if data.lists.length}
-		<h2>Lists</h2>
-		<ul>
-			{#each data.lists as list (list.slug)}
-				<li>
-					<a href="/{data.handle}/list/{list.slug}/">{list.name}</a>
-					<span class="sub">({list.itemCount})</span>
-				</li>
-			{/each}
-		</ul>
-	{/if}
+			{#if data.lists.length}
+				<h2>Lists</h2>
+				<ul>
+					{#each data.lists as list (list.slug)}
+						<li>
+							<a href="/{data.handle}/list/{list.slug}/">{list.name}</a>
+							<span class="sub">({list.itemCount})</span>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</aside>
+	</main>
 </article>
 
 <style>
+.profile {
+	display: grid;
+	gap: 32px;
+	container-type: inline-size;
+}
+
 .profile-header {
-	display: flex;
-	align-items: center;
-	gap: var(--space-3);
+	display: grid;
+	justify-items: center;
+	gap: 16px;
+
+	@container (min-width: 600px) {
+		grid-template-columns: 112px 1fr;
+		justify-items: start;
+	}
 }
 
 .avatar {
-	width: 4rem;
-	height: 4rem;
-	border-radius: 50%;
-	object-fit: cover;
-	border: 1px solid var(--color-border);
+	width: 64px;
+
+	@container (min-width: 600px) {
+		width: 100%;
+	}
 }
 
-.sub {
-	color: var(--color-muted);
-	font-size: var(--text-sm);
+.content {
+	display: grid;
+	justify-items: center;
+	gap: 16px;
+
+	h2 {
+		text-box: trim-both cap alphabetic;
+	}
+
+	@container (min-width: 600px) {
+		justify-items: start;
+		padding-block: 16px;
+	}
 }
 
-button {
-	padding: var(--space-1) var(--space-3);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius);
-	background: var(--color-accent);
-	color: #07101f;
-	font-weight: 600;
-	cursor: pointer;
+.profile-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.bio {
+	max-width: 60ch;
+	margin: 0 auto;
+
+	p {
+		text-box: trim-both cap alphabetic;
+	}
+}
+
+.layout {
+	display: grid;
+
+	gap: 64px;
+
+	@container (min-width: 600px) {
+		grid-template-columns: 1fr 256px;
+	}
 }
 </style>

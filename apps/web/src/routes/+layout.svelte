@@ -24,7 +24,7 @@ let searchDialog: ReturnType<typeof SearchDialog> | undefined
 
 <style>
 main {
-	max-width: 48rem;
+	max-width: 60rem;
 	margin: 0 auto;
 	padding: 16px;
 }
