@@ -26,7 +26,7 @@ let { data, onsearch } = $props()
 			</svg>
 		</button>
 		{#if data.user}
-			<a class="who" href="/settings/">
+			<a class="who" href="/{data.user.handle}/">
 				<AvatarImage image={data.user.avatarUrl} />
 				<!-- <span>{data.user.handle ?? data.user.did}</span> -->
 			</a>
