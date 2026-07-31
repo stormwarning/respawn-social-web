@@ -26,7 +26,7 @@ let showMessage = $derived(!disabled && Boolean(message))
 </script>
 
 {#if message || reserveMessageSpace}
-	<div {id} class={['body sm secondary', tone, { placeholder: !showMessage }]} {...rest}>
+	<div {id} class={['copy sm secondary', tone, { placeholder: !showMessage }]} {...rest}>
 		{#if showMessage && message}
 			{#if typeof message === 'function'}{@render message()}{:else}{message}{/if}
 		{:else}

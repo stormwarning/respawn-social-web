@@ -6,7 +6,7 @@
 	text-wrap: balance;
 }
 
-.body {
+.copy {
 	line-height: 1.4;
 	text-box: trim-both cap alphabetic;
 	text-wrap: pretty;

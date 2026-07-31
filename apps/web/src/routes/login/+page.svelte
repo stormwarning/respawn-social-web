@@ -27,7 +27,7 @@ let { form }: { form: ActionData } = $props()
 			inputmode="url"
 		/>
 
-		<p class="body sm secondary">
+		<p class="copy sm secondary">
 			By signing in you agree to the <a href="/terms-of-use/">Terms of use</a> and
 			<a href="/privacy-policy/">Privacy policy</a>.
 		</p>
