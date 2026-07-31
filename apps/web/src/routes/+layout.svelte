@@ -27,5 +27,6 @@ main {
 	max-width: 60rem;
 	margin: 0 auto;
 	padding: 16px;
+	container-type: inline-size;
 }
 </style>

@@ -75,17 +75,26 @@ export async function loadBskyProfile(agent: Agent, did: string): Promise<Profil
 }
 
 /**
- * Build the getBlob URL for a Respawn-stored avatar on the user's PDS.
+ * Build the getBlob URL for any Respawn-stored blob on the user's PDS.
  * `pdsEndpoint` comes from `resolvePdsEndpoint(did)` in ./identity.
  */
+export function blobUrl(
+	pdsEndpoint: string | undefined,
+	did: string,
+	blob: BlobRef | undefined,
+): string | null {
+	if (!blob || !pdsEndpoint) return null
+	const cid = blob.ref?.toString?.() ?? String(blob.ref)
+	return `${pdsEndpoint}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`
+}
+
+/** Build the getBlob URL for a Respawn-stored avatar on the user's PDS. */
 export function avatarUrlForBlob(
 	pdsEndpoint: string | undefined,
 	did: string,
 	avatar: BlobRef | undefined,
 ): string | null {
-	if (!avatar || !pdsEndpoint) return null
-	const cid = avatar.ref?.toString?.() ?? String(avatar.ref)
-	return `${pdsEndpoint}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`
+	return blobUrl(pdsEndpoint, did, avatar)
 }
 
 /** Write (create or overwrite) the Respawn profile record at `self`. */
