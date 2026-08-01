@@ -437,11 +437,15 @@ async function submitRating() {
 	background-color: transparent;
 	border: none;
 	border-radius: 4px;
-	corner-shape: var(--corner-shape);
 	user-select: none;
 	touch-action: manipulation;
 	-webkit-tap-highlight-color: transparent;
 	transition: all 100ms ease-out;
+
+	@supports (corner-shape: squircle) {
+		border-radius: 8px;
+		corner-shape: var(--corner-shape);
+	}
 
 	:global(> svg) {
 		display: flex;

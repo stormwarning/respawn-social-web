@@ -129,8 +129,12 @@ let { game } = $derived(data)
 	gap: 16px;
 	padding: 16px;
 	background-color: var(--color-grey-800);
-	border-radius: 8px;
-	corner-shape: var(--corner-shape);
+	border-radius: 6px;
+
+	@supports (corner-shape: squircle) {
+		border-radius: 12px;
+		corner-shape: var(--corner-shape);
+	}
 }
 
 .details-block {

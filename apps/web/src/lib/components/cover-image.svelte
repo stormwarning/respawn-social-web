@@ -13,16 +13,24 @@ let { image } = $props()
 	object-fit: cover;
 	background: var(--color-grey-400);
 	border-radius: 4px;
-	corner-shape: var(--corner-shape);
 	overflow: hidden;
+
+	@supports (corner-shape: squircle) {
+		border-radius: 8px;
+		corner-shape: var(--corner-shape);
+	}
 
 	&::after {
 		position: absolute;
 		inset: 0;
 		border-radius: 4px;
-		corner-shape: var(--corner-shape);
 		box-shadow: inset 0 0 0 1px rgb(255 255 255 / 25%);
 		content: '';
+
+		@supports (corner-shape: squircle) {
+			border-radius: 8px;
+			corner-shape: var(--corner-shape);
+		}
 	}
 
 	img {

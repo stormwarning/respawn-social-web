@@ -237,8 +237,12 @@ dialog[open]::backdrop {
 	line-height: 1;
 	background: transparent;
 	border: none;
-	border-radius: 8px;
-	corner-shape: var(--corner-shape);
+	border-radius: 4px;
+
+	@supports (corner-shape: squircle) {
+		border-radius: 8px;
+		corner-shape: var(--corner-shape);
+	}
 }
 
 .input:focus-visible {
@@ -254,8 +258,12 @@ dialog[open]::backdrop {
 	color: var(--color-grey-300);
 	background-color: transparent;
 	border: none;
-	border-radius: 8px;
-	corner-shape: var(--corner-shape);
+	border-radius: 4px;
+
+	@supports (corner-shape: squircle) {
+		border-radius: 8px;
+		corner-shape: var(--corner-shape);
+	}
 
 	&:focus-visible {
 		outline: 2px solid var(--color-accent);
@@ -290,8 +298,12 @@ dialog[open]::backdrop {
 	gap: var(--space-2);
 	padding: var(--space-1) var(--space-2);
 	text-decoration: none;
-	border-radius: 8px;
-	corner-shape: var(--corner-shape);
+	border-radius: 6px;
+
+	@supports (corner-shape: squircle) {
+		border-radius: 12px;
+		corner-shape: var(--corner-shape);
+	}
 }
 
 .result:hover {

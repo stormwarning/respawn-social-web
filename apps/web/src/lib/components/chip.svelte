@@ -15,7 +15,11 @@ let { children }: { children: import('svelte').Snippet } = $props()
 	text-box: trim-both cap alphabetic;
 	background-color: var(--color-grey-700);
 	border-radius: 4px;
-	corner-shape: var(--corner-shape);
 	box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 20%);
+
+	@supports (corner-shape: squircle) {
+		border-radius: 8px;
+		corner-shape: var(--corner-shape);
+	}
 }
 </style>

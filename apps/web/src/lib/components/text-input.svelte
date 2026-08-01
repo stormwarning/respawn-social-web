@@ -51,8 +51,12 @@ let {
 	color: var(--color-text);
 	background: var(--color-grey-600);
 	border: none;
-	border-radius: 8px;
-	corner-shape: var(--corner-shape);
+	border-radius: 4px;
+
+	@supports (corner-shape: squircle) {
+		border-radius: 8px;
+		corner-shape: var(--corner-shape);
+	}
 }
 
 .input:focus-visible {
