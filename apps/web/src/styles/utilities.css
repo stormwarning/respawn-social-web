@@ -65,6 +65,7 @@
 	> * {
 		text-box: trim-both cap alphabetic;
 		translate: 0 -1px;
+		transition: all 100ms ease-out;
 	}
 
 	&:focus-visible {
@@ -78,7 +79,6 @@
 
 		> * {
 			translate: 0 1px;
-			transition: all 100ms ease-out;
 		}
 	}
 
