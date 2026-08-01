@@ -1,4 +1,7 @@
 import { redirect } from '@sveltejs/kit'
+import type { OAuthSession } from '@atproto/oauth-client-node'
+import { agentFromSession } from '$lib/atproto/agent'
+import { ensureRespawnProfile } from '$lib/atproto/profile'
 import { getOAuthClient } from '$lib/server/oauth/client'
 import { setSessionCookie } from '$lib/server/session'
 import type { RequestHandler } from './$types'
@@ -6,17 +9,25 @@ import type { RequestHandler } from './$types'
 export const GET: RequestHandler = async ({ url, cookies }) => {
 	const client = await getOAuthClient()
 
-	let did: string
+	let session: OAuthSession
 	try {
 		// Exchanges the auth code, validates state, and persists the session in
 		// the session store. Returns the authenticated OAuth session.
-		const { session } = await client.callback(url.searchParams)
-		did = session.did
+		;({ session } = await client.callback(url.searchParams))
 	} catch (err) {
 		console.error('[oauth/callback] failed', err)
 		redirect(303, '/login?error=callback')
 	}
 
-	setSessionCookie(cookies, did)
+	setSessionCookie(cookies, session.did)
+
+	// Seed the Respawn profile from Bluesky. Kept out of the redirect's try so a
+	// mirror failure never blocks sign-in.
+	try {
+		await ensureRespawnProfile(agentFromSession(session), session.did)
+	} catch (err) {
+		console.error('[oauth/callback] profile bootstrap failed', err)
+	}
+
 	redirect(303, '/')
 }

@@ -3,7 +3,7 @@ import { Collections } from '@respawn-social/lexicons'
 import type { Actions, PageServerLoad } from './$types'
 import { avatarUrlForBlob, type RespawnProfileRecord } from '$lib/atproto/profile'
 import { findFollow, follow, unfollow } from '$lib/atproto/graph'
-import { getRecordOrNull, listAllRecords } from '$lib/atproto/records'
+import { getRecordOrNull, listAllRecords, toPlainRecord } from '$lib/atproto/records'
 import { listLogs } from '$lib/atproto/log'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
 import { listLists } from '$lib/atproto/list'
@@ -45,7 +45,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	return {
 		handle: actor.handle ?? actor.did,
 		did: actor.did,
-		profile: profile?.value ?? null,
+		profile: profile ? toPlainRecord(profile.value) : null,
 		avatarUrl: avatarUrlForBlob(actor.pds, actor.did, profile?.value.avatar),
 		recentLogs: logs.slice(0, 10).map((log) => ({
 			uri: log.uri,

@@ -3,7 +3,7 @@ import { Collections } from '@respawn-social/lexicons'
 import type { Actions, PageServerLoad } from './$types'
 import { createComment } from '$lib/atproto/comment'
 import { createLike, deleteLike, findLike } from '$lib/atproto/like'
-import { getRecordOrNull } from '$lib/atproto/records'
+import { getRecordOrNull, toPlainRecord } from '$lib/atproto/records'
 import { listLogs, type RespawnGateRecord } from '$lib/atproto/log'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
 
@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		handle: actor.handle ?? actor.did,
-		log: log.value,
+		log: toPlainRecord(log.value),
 		logUri: log.uri,
 		logCid: log.cid,
 		n,

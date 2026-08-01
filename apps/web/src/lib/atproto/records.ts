@@ -16,6 +16,17 @@ export function isRecordNotFound(err: unknown): boolean {
 const rkeyFromUri = (uri: string) => uri.slice(uri.lastIndexOf('/') + 1)
 
 /**
+ * Reduce a record to plain JSON. The Agent hydrates blobs into BlobRef (and CID)
+ * class instances, which SvelteKit's devalue serializer rejects — returning one
+ * from a load fails the whole page with "Cannot stringify arbitrary non-POJOs".
+ * BlobRef.toJSON() emits the canonical `{$type:'blob',ref:{$link},…}` shape, so
+ * this loses nothing; `blobUrl` reads either form.
+ */
+export function toPlainRecord<T>(value: T): T {
+	return JSON.parse(JSON.stringify(value)) as T
+}
+
+/**
  * Page through `com.atproto.repo.listRecords` for a collection. `agent` can be
  * an authed agent or a plain one pointed at a public PDS endpoint.
  */

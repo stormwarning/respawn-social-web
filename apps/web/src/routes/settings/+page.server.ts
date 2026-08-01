@@ -2,6 +2,8 @@ import { fail, redirect } from '@sveltejs/kit'
 import { resolvePdsEndpoint } from '$lib/atproto/identity'
 import type { Did } from '@atcute/lexicons/syntax'
 import {
+	ACCEPTED_AVATAR_TYPES,
+	MAX_AVATAR_BYTES,
 	avatarUrlForBlob,
 	loadBskyProfile,
 	loadRespawnProfile,
@@ -9,9 +11,6 @@ import {
 	type RespawnProfileRecord,
 } from '$lib/atproto/profile'
 import type { Actions, PageServerLoad } from './$types'
-
-const MAX_AVATAR_BYTES = 1_000_000
-const ACCEPTED_AVATAR_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user || !locals.agent) redirect(303, '/login')

@@ -5,6 +5,9 @@ import { Collections } from '@respawn-social/lexicons'
 export const RESPAWN_PROFILE_COLLECTION = Collections.profile
 const RKEY = 'self'
 
+export const MAX_AVATAR_BYTES = 1_000_000
+export const ACCEPTED_AVATAR_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
+
 /**
  * The Respawn profile record stored at `social.respawn.actor.profile/self` in
  * the user's repo. Mirrors the lexicon in
@@ -84,7 +87,10 @@ export function blobUrl(
 	blob: BlobRef | undefined,
 ): string | null {
 	if (!blob || !pdsEndpoint) return null
-	const cid = blob.ref?.toString?.() ?? String(blob.ref)
+	// `ref` is a CID instance on a record straight from the Agent, and a plain
+	// `{$link}` object once the record has been through `toPlainRecord`.
+	const ref = blob.ref as { $link?: string } | undefined
+	const cid = ref?.$link ?? blob.ref?.toString?.() ?? String(blob.ref)
 	return `${pdsEndpoint}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${cid}`
 }
 
@@ -109,6 +115,55 @@ export async function putRespawnProfile(
 		rkey: RKEY,
 		record: { $type: RESPAWN_PROFILE_COLLECTION, ...record },
 	})
+}
+
+/**
+ * Copy a Bluesky avatar into the user's repo as a blob. The Respawn lexicon
+ * stores the avatar as a blob, so the CDN image has to be re-uploaded rather
+ * than referenced by URL. Returns undefined when the image is missing,
+ * unsupported, oversized, or the upload fails.
+ */
+async function mirrorBskyAvatar(agent: Agent, avatarUrl: string): Promise<BlobRef | undefined> {
+	try {
+		const res = await fetch(avatarUrl)
+		if (!res.ok) return undefined
+
+		const mime = (res.headers.get('content-type') ?? '').split(';')[0].trim()
+		if (!ACCEPTED_AVATAR_TYPES.has(mime)) return undefined
+
+		const bytes = new Uint8Array(await res.arrayBuffer())
+		if (bytes.byteLength > MAX_AVATAR_BYTES) return undefined
+
+		const upload = await agent.com.atproto.repo.uploadBlob(bytes, { encoding: mime })
+		return upload.data.blob
+	} catch (err) {
+		console.error('[profile] avatar mirror failed', err)
+		return undefined
+	}
+}
+
+/**
+ * Seed the Respawn profile record from the user's Bluesky profile at sign-in.
+ * Idempotent: existing fields are never overwritten, and a record that already
+ * has an avatar short-circuits before any network work.
+ */
+export async function ensureRespawnProfile(agent: Agent, did: string): Promise<void> {
+	const existing = await loadRespawnProfile(agent, did)
+	if (existing?.avatar) return
+
+	const bsky = await loadBskyProfile(agent, did)
+	const avatar = bsky.avatarUrl ? await mirrorBskyAvatar(agent, bsky.avatarUrl) : undefined
+
+	const record: RespawnProfileRecord = {
+		...existing,
+		displayName: existing?.displayName ?? (bsky.displayName || undefined),
+		avatar,
+		createdAt: existing?.createdAt ?? new Date().toISOString(),
+	}
+
+	if (existing && !avatar && record.displayName === existing.displayName) return
+
+	await putRespawnProfile(agent, did, record)
 }
 
 function isRecordNotFound(err: unknown): boolean {
