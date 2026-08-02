@@ -93,15 +93,13 @@ async function submitRating() {
 					disabled={saving}
 					aria-pressed={playing ? 'true' : 'false'}
 				>
-					<div>
-						{#if playing}
-							<IconPlayCircleSolid />
-							<span>Playing</span>
-						{:else}
-							<IconPlayCircle />
-							<span>Play</span>
-						{/if}
-					</div>
+					{#if playing}
+						<IconPlayCircleSolid />
+						<span>Playing</span>
+					{:else}
+						<IconPlayCircle />
+						<span>Play</span>
+					{/if}
 				</button>
 			</form>
 
@@ -127,15 +125,13 @@ async function submitRating() {
 					disabled={saving}
 					aria-pressed={played ? 'true' : 'false'}
 				>
-					<div>
-						{#if played}
-							<IconControllerSolid />
-							<span>Played</span>
-						{:else}
-							<IconController />
-							<span>Played</span>
-						{/if}
-					</div>
+					{#if played}
+						<IconControllerSolid />
+						<span>Played</span>
+					{:else}
+						<IconController />
+						<span>Played</span>
+					{/if}
 				</button>
 			</form>
 
@@ -164,15 +160,13 @@ async function submitRating() {
 					disabled={saving}
 					aria-pressed={inBacklog ? 'true' : 'false'}
 				>
-					<div>
-						{#if inBacklog}
-							<IconBooksSolid />
-							<span>Backlog</span>
-						{:else}
-							<IconBooks />
-							<span>Backlog</span>
-						{/if}
-					</div>
+					{#if inBacklog}
+						<IconBooksSolid />
+						<span>Backlog</span>
+					{:else}
+						<IconBooks />
+						<span>Backlog</span>
+					{/if}
 				</button>
 			</form>
 		</div>
@@ -365,7 +359,7 @@ async function submitRating() {
 		corner-shape: var(--corner-shape);
 	}
 
-	> * {
+	:global(> *) {
 		text-box: trim-both cap alphabetic;
 		translate: 0 -1px;
 		transition: all 100ms ease-out;
@@ -386,35 +380,34 @@ async function submitRating() {
 			inset 0 1px 0 1px rgb(0 0 0 / 25%),
 			inset 0 -1px 0 0 rgb(255 255 255 / 85%);
 
-		> * {
+		:global(> *) {
 			translate: 0 1px;
 		}
 	}
 
 	&.has-icon {
+		flex-direction: column;
+		gap: 2px;
 		padding: 4px;
 		min-width: 72px;
 		aspect-ratio: 1;
 
-		> div {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 2px;
+		:global(> svg) {
+			width: 40px;
+			height: 40px;
+			mix-blend-mode: hard-light;
+		}
 
-			:global(> svg) {
-				width: 40px;
-				height: 40px;
-				mix-blend-mode: hard-light;
-			}
-
-			> span {
-				text-box: trim-both cap alphabetic;
-			}
+		> span {
+			text-box: trim-both cap alphabetic;
 		}
 	}
 
 	&[aria-pressed='true'] {
+		:global(svg) {
+			mix-blend-mode: normal;
+		}
+
 		&.is-playing {
 			:global(svg) {
 				fill: var(--color-green-500);
