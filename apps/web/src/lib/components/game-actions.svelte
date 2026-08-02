@@ -86,6 +86,8 @@ async function submitRating() {
 				}}
 			>
 				<input type="hidden" name="igdbId" value={igdbId} />
+				<input type="hidden" name="slug" value={slug} />
+				<input type="hidden" name="title" value={title} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
 				<button
 					class="action-button has-icon is-playing"
@@ -118,6 +120,8 @@ async function submitRating() {
 				}}
 			>
 				<input type="hidden" name="igdbId" value={igdbId} />
+				<input type="hidden" name="slug" value={slug} />
+				<input type="hidden" name="title" value={title} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
 				<button
 					class="action-button has-icon has-played"
@@ -187,6 +191,8 @@ async function submitRating() {
 				}}
 			>
 				<input type="hidden" name="igdbId" value={igdbId} />
+				<input type="hidden" name="slug" value={slug} />
+				<input type="hidden" name="title" value={title} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
 				<input type="hidden" name="rating" value={rating} />
 				<StarRating
@@ -212,6 +218,8 @@ async function submitRating() {
 				}}
 			>
 				<input type="hidden" name="igdbId" value={igdbId} />
+				<input type="hidden" name="slug" value={slug} />
+				<input type="hidden" name="title" value={title} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
 				<button
 					class="like-button"

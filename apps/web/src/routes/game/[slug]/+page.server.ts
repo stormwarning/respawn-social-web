@@ -5,6 +5,7 @@ import { normalizeCoverUrl } from '$lib/server/igdb'
 import {
 	loadGameRecord,
 	putGameRecord,
+	type GameRef,
 	type PlayedState,
 	type RespawnGameRecord,
 } from '$lib/atproto/game'
@@ -14,6 +15,29 @@ import { buildCover } from '$lib/server/cover'
 
 const PLAY_STATES = new Set(['played', 'completed', 'abandoned', 'retired', 'shelved'])
 const GATE_RULES = new Set(['nobody', 'following', 'followers'])
+
+/**
+ * The id, denormalized game ref, and cover every game-record form posts. The
+ * ref comes back null when the form omits it — a page loaded before the ref
+ * was added still toggles, it just can't backfill. Lengths match
+ * social.respawn.defs#gameRef so the PDS can't reject what we build here.
+ */
+function parseGameForm(
+	form: FormData,
+): { igdbId: number; game: GameRef | null; coverUrl: string } | { error: string } {
+	const igdbId = Number(form.get('igdbId'))
+	if (!Number.isInteger(igdbId) || igdbId < 1) return { error: 'Invalid game id.' }
+
+	const slug = String(form.get('slug') ?? '').trim()
+	const title = String(form.get('title') ?? '').trim()
+	const usable = slug && slug.length <= 200 && title && title.length <= 2000
+
+	return {
+		igdbId,
+		game: usable ? { igdbId, slug, title } : null,
+		coverUrl: String(form.get('coverUrl') ?? ''),
+	}
+}
 
 export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 	try {
@@ -90,12 +114,10 @@ export const actions: Actions = {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user } = locals
 
-		const form = await request.formData()
-		const igdbId = Number(form.get('igdbId'))
-		if (!Number.isInteger(igdbId) || igdbId < 1) {
-			return fail(400, { error: 'Invalid game id.' })
-		}
-		const coverUrl = String(form.get('coverUrl') ?? '')
+		const parsed = parseGameForm(await request.formData())
+		if ('error' in parsed) return fail(400, parsed)
+		const { igdbId, game, coverUrl } = parsed
+		const ref = game ?? undefined
 
 		try {
 			const existing = await loadGameRecord(agent, user.did, igdbId)
@@ -103,14 +125,14 @@ export const actions: Actions = {
 			// Already played → drop the played field but keep the record (cover survives).
 			if (existing?.played != null) {
 				const { played: _drop, ...rest } = existing
-				await putGameRecord(agent, user.did, igdbId, rest)
+				await putGameRecord(agent, user.did, igdbId, { ...rest, game: rest.game ?? ref })
 				return { played: false }
 			}
 
 			// Mark played. Build the cover once, on first creation.
 			const record: RespawnGameRecord = existing
-				? { ...existing, played: 'played' }
-				: { played: 'played', createdAt: new Date().toISOString() }
+				? { ...existing, game: existing.game ?? ref, played: 'played' }
+				: { game: ref, played: 'played', createdAt: new Date().toISOString() }
 
 			if (!record.cover && coverUrl) {
 				record.cover = await buildCover(agent, coverUrl)
@@ -128,12 +150,10 @@ export const actions: Actions = {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user } = locals
 
-		const form = await request.formData()
-		const igdbId = Number(form.get('igdbId'))
-		if (!Number.isInteger(igdbId) || igdbId < 1) {
-			return fail(400, { error: 'Invalid game id.' })
-		}
-		const coverUrl = String(form.get('coverUrl') ?? '')
+		const parsed = parseGameForm(await request.formData())
+		if ('error' in parsed) return fail(400, parsed)
+		const { igdbId, game, coverUrl } = parsed
+		const ref = game ?? undefined
 
 		try {
 			const existing = await loadGameRecord(agent, user.did, igdbId)
@@ -141,13 +161,13 @@ export const actions: Actions = {
 			// Already playing → drop the playing field but keep the record (cover survives).
 			if (existing?.playing) {
 				const { playing: _drop, ...rest } = existing
-				await putGameRecord(agent, user.did, igdbId, rest)
+				await putGameRecord(agent, user.did, igdbId, { ...rest, game: rest.game ?? ref })
 				return { playing: false }
 			}
 
 			const record: RespawnGameRecord = existing
-				? { ...existing, playing: true }
-				: { playing: true, createdAt: new Date().toISOString() }
+				? { ...existing, game: existing.game ?? ref, playing: true }
+				: { game: ref, playing: true, createdAt: new Date().toISOString() }
 
 			if (!record.cover && coverUrl) {
 				record.cover = await buildCover(agent, coverUrl)
@@ -165,12 +185,10 @@ export const actions: Actions = {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user } = locals
 
-		const form = await request.formData()
-		const igdbId = Number(form.get('igdbId'))
-		if (!Number.isInteger(igdbId) || igdbId < 1) {
-			return fail(400, { error: 'Invalid game id.' })
-		}
-		const coverUrl = String(form.get('coverUrl') ?? '')
+		const parsed = parseGameForm(await request.formData())
+		if ('error' in parsed) return fail(400, parsed)
+		const { igdbId, game, coverUrl } = parsed
+		const ref = game ?? undefined
 
 		try {
 			const existing = await loadGameRecord(agent, user.did, igdbId)
@@ -178,13 +196,13 @@ export const actions: Actions = {
 			// Already liked → drop the liked field but keep the record (cover survives).
 			if (existing?.liked) {
 				const { liked: _drop, ...rest } = existing
-				await putGameRecord(agent, user.did, igdbId, rest)
+				await putGameRecord(agent, user.did, igdbId, { ...rest, game: rest.game ?? ref })
 				return { liked: false }
 			}
 
 			const record: RespawnGameRecord = existing
-				? { ...existing, liked: true }
-				: { liked: true, createdAt: new Date().toISOString() }
+				? { ...existing, game: existing.game ?? ref, liked: true }
+				: { game: ref, liked: true, createdAt: new Date().toISOString() }
 
 			if (!record.cover && coverUrl) {
 				record.cover = await buildCover(agent, coverUrl)
@@ -203,15 +221,15 @@ export const actions: Actions = {
 		const { agent, user } = locals
 
 		const form = await request.formData()
-		const igdbId = Number(form.get('igdbId'))
-		if (!Number.isInteger(igdbId) || igdbId < 1) {
-			return fail(400, { error: 'Invalid game id.' })
-		}
+		const parsed = parseGameForm(form)
+		if ('error' in parsed) return fail(400, parsed)
+		const { igdbId, game, coverUrl } = parsed
+		const ref = game ?? undefined
+
 		const rating = Number(form.get('rating'))
 		if (!Number.isInteger(rating) || rating < 0 || rating > 10) {
 			return fail(400, { error: 'Invalid rating.' })
 		}
-		const coverUrl = String(form.get('coverUrl') ?? '')
 
 		try {
 			const existing = await loadGameRecord(agent, user.did, igdbId)
@@ -220,14 +238,14 @@ export const actions: Actions = {
 			if (rating === 0) {
 				if (existing) {
 					const { rating: _drop, ...rest } = existing
-					await putGameRecord(agent, user.did, igdbId, rest)
+					await putGameRecord(agent, user.did, igdbId, { ...rest, game: rest.game ?? ref })
 				}
 				return { rating: 0 }
 			}
 
 			const record: RespawnGameRecord = existing
-				? { ...existing, rating }
-				: { rating, createdAt: new Date().toISOString() }
+				? { ...existing, game: existing.game ?? ref, rating }
+				: { game: ref, rating, createdAt: new Date().toISOString() }
 
 			if (!record.cover && coverUrl) {
 				record.cover = await buildCover(agent, coverUrl)
@@ -246,13 +264,9 @@ export const actions: Actions = {
 		const { agent, user } = locals
 
 		const form = await request.formData()
-		const igdbId = Number(form.get('igdbId'))
-		if (!Number.isInteger(igdbId) || igdbId < 1) {
-			return fail(400, { error: 'Invalid game id.' })
-		}
-		const slug = String(form.get('slug') ?? '')
-		const title = String(form.get('title') ?? '')
-		const coverUrl = String(form.get('coverUrl') ?? '')
+		const parsed = parseGameForm(form)
+		if ('error' in parsed) return fail(400, parsed)
+		const { igdbId, game, coverUrl } = parsed
 		// The client already knows the current state; trust it rather than re-reading.
 		const inBacklog = form.get('inBacklog') === 'true'
 
@@ -262,8 +276,11 @@ export const actions: Actions = {
 				return { inBacklog: false }
 			}
 
+			// Unlike the game record, a backlog item can't exist without the ref.
+			if (!game) return fail(400, { error: 'Invalid game details.' })
+
 			await addToBacklog(agent, user.did, {
-				game: { igdbId, slug, title },
+				game,
 				cover: coverUrl ? await buildCover(agent, coverUrl) : undefined,
 			})
 			return { inBacklog: true }
@@ -321,6 +338,7 @@ export const actions: Actions = {
 			const existing = await loadGameRecord(agent, user.did, game.id)
 			const gameRecord: RespawnGameRecord = {
 				...existing,
+				game: existing?.game ?? log.game,
 				rating: rating ?? existing?.rating,
 				liked: liked || existing?.liked || undefined,
 				played: (finishedPlaying as PlayedState) || existing?.played,

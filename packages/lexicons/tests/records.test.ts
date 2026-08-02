@@ -147,6 +147,7 @@ describe('social.respawn.game', () => {
 		expect(
 			schema.$safeParse({
 				$type: Collections.game,
+				game,
 				rating: 8,
 				liked: true,
 				playing: false,
@@ -154,6 +155,22 @@ describe('social.respawn.game', () => {
 				createdAt,
 			}).success,
 		).toBe(true)
+	})
+
+	it('accepts an entry written before the game ref existed', () => {
+		expect(
+			schema.$safeParse({ $type: Collections.game, played: 'played', createdAt }).success,
+		).toBe(true)
+	})
+
+	it('rejects a partial game ref', () => {
+		expect(
+			schema.$safeParse({
+				$type: Collections.game,
+				game: { igdbId: game.igdbId, slug: game.slug },
+				createdAt,
+			}).success,
+		).toBe(false)
 	})
 })
 

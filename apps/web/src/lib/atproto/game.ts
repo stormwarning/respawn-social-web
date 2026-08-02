@@ -14,6 +14,13 @@ export interface CoverRef {
 
 export type PlayedState = 'played' | 'completed' | 'abandoned' | 'retired' | 'shelved'
 
+/** Denormalized game reference (see social.respawn.defs#gameRef). */
+export interface GameRef {
+	igdbId: number
+	slug: string
+	title: string
+}
+
 /**
  * A game in the user's collection, stored at `social.respawn.game/<igdbId>`.
  * Mirrors the lexicon in `packages/lexicons/lexicons/social/respawn/game.json`.
@@ -22,6 +29,8 @@ export type PlayedState = 'played' | 'completed' | 'abandoned' | 'retired' | 'sh
  */
 export interface RespawnGameRecord {
 	$type?: typeof RESPAWN_GAME_COLLECTION
+	/** Absent on records written before the ref was added to the lexicon. */
+	game?: GameRef
 	rating?: number
 	liked?: boolean
 	playing?: boolean

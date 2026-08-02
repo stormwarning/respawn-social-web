@@ -12,6 +12,7 @@ export { $nsid }
 /** A game in the actor's collection, keyed by its IGDB id. Stores the current rating, like/play state, and the cover image. Logs are separate social.respawn.feed.log records; creating a log updates this record's current state. */
 type Main = {
   $type: 'social.respawn.game'
+  game?: RespawnDefs.GameRef
 
   /**
    * Actor's rating, 1-10.
@@ -31,6 +32,11 @@ const main = /*#__PURE__*/ l.record<'any', Main>(
   'any',
   $nsid,
   /*#__PURE__*/ l.object({
+    game: /*#__PURE__*/ l.optional(
+      /*#__PURE__*/ l.ref<RespawnDefs.GameRef>(
+        (() => RespawnDefs.gameRef) as any,
+      ),
+    ),
     rating: /*#__PURE__*/ l.optional(
       /*#__PURE__*/ l.integer({ minimum: 1, maximum: 10 }),
     ),

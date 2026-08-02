@@ -1,18 +1,13 @@
 import type { Agent } from '@atproto/api'
 import { Collections } from '@respawn-social/lexicons'
-import type { CoverRef, PlayedState, RespawnGameRecord } from '$lib/atproto/game'
+import type { CoverRef, GameRef, PlayedState, RespawnGameRecord } from '$lib/atproto/game'
 import { listAllRecords, type RecordEnvelope } from '$lib/atproto/records'
 import { generateTid } from '$lib/atproto/tid'
 
 export const RESPAWN_LOG_COLLECTION = Collections.log
 export const RESPAWN_GATE_COLLECTION = Collections.gate
 
-/** Denormalized game reference stored on every log (see social.respawn.defs#gameRef). */
-export interface GameRef {
-	igdbId: number
-	slug: string
-	title: string
-}
+export type { GameRef }
 
 export interface LogReview {
 	/** Display text; spoiler spans are scrambled here. */
