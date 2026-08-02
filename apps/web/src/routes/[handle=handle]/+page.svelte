@@ -73,7 +73,7 @@ const playStateLabels: Record<string, string> = {
 	<main class="layout">
 		<section class="body">
 			<p class="sub">
-				{data.gameCount} games · {data.logCount} logs ·
+				<a href="/{data.handle}/games/">{data.gameCount} games</a> · {data.logCount} logs ·
 				<a href="/{data.handle}/backlog/">{data.backlogCount} in backlog</a>
 				{#if data.profile?.channel}
 					· <a href={data.profile.channel} rel="external noopener">channel</a>
