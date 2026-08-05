@@ -26,7 +26,11 @@ let searchDialog: ReturnType<typeof SearchDialog> | undefined
 main {
 	max-width: 60rem;
 	margin: 0 auto;
-	padding: 16px;
+	padding: 32px 16px;
 	container-type: inline-size;
+
+	@media (min-width: 632px) {
+		padding-inline: 48px;
+	}
 }
 </style>
