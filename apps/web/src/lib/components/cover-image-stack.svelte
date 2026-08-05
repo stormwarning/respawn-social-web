@@ -44,7 +44,7 @@ let { covers }: { covers: StackCover[] } = $props()
 		z-index: var(--index, 1);
 		width: var(--cover-width);
 		margin-inline-start: calc(var(--cover-overlap, 0) * -1);
-		box-shadow: 4px 0 16px 0 rgb(0 0 0 / 25%);
+		box-shadow: 2px 0 8px 0 rgb(0 0 0 / 50%);
 
 		&:first-child {
 			margin-inline-start: 0;
