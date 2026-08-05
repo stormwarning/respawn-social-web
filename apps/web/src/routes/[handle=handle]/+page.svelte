@@ -1,6 +1,7 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import AvatarImage from '$lib/components/avatar-image.svelte'
+import CoverImageStack from '$lib/components/cover-image-stack.svelte'
 import type { PageData } from './$types'
 
 let { data }: { data: PageData } = $props()
@@ -96,6 +97,18 @@ const playStateLabels: Record<string, string> = {
 		</section>
 
 		<aside class="sidebar">
+			{#if data.backlogCount > 0}
+				<section class="backlog">
+					<h2>
+						<a href="/{data.handle}/backlog/">Backlog</a>
+						<span class="sub">({data.backlogCount})</span>
+					</h2>
+					<a href="/{data.handle}/backlog/">
+						<CoverImageStack covers={data.backlogCovers} />
+					</a>
+				</section>
+			{/if}
+
 			<h2>Recent logs</h2>
 			{#if data.recentLogs.length === 0}
 				<p class="sub">No logs yet.</p>
@@ -190,11 +203,25 @@ const playStateLabels: Record<string, string> = {
 
 .layout {
 	display: grid;
-
 	gap: 64px;
 
 	@container (min-width: 600px) {
 		grid-template-columns: 1fr 256px;
 	}
+}
+
+.sidebar {
+	display: grid;
+	gap: 24px;
+}
+
+.backlog {
+	display: grid;
+	gap: 12px;
+}
+
+.sub {
+	color: var(--color-muted);
+	font-size: var(--text-sm);
 }
 </style>

@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit'
 import { Collections } from '@respawn-social/lexicons'
 import type { Actions, PageServerLoad } from './$types'
-import { avatarUrlForBlob, type RespawnProfileRecord } from '$lib/atproto/profile'
+import { avatarUrlForBlob, blobUrl, type RespawnProfileRecord } from '$lib/atproto/profile'
 import { findFollow, follow, unfollow } from '$lib/atproto/graph'
 import { getRecordOrNull, listAllRecords, toPlainRecord } from '$lib/atproto/records'
 import { listLogs } from '$lib/atproto/log'
@@ -65,6 +65,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			itemCount: list.value.items?.length ?? 0,
 		})),
 		backlogCount: backlog?.games.length ?? 0,
+		// Same order as the backlog page (most recently added first), so the
+		// preview matches the first covers you see after following the link.
+		backlogCovers: (backlog?.games ?? [])
+			.toReversed()
+			.slice(0, 6)
+			.map((item) => ({
+				igdbId: item.game.igdbId,
+				title: item.game.title,
+				coverUrl: blobUrl(actor.pds, actor.did, item.cover?.image),
+			})),
 		isSelf,
 		isLoggedIn: !!locals.user,
 		followUri,
