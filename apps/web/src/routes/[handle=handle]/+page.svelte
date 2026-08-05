@@ -37,30 +37,32 @@ const playStateLabels: Record<string, string> = {
 		<div class="content">
 			<h2>{displayName}</h2>
 
-			<div class="profile-actions">
-				{#if data.isLoggedIn && !data.isSelf}
-					<form
-						method="POST"
-						action={following ? '?/unfollow' : '?/follow'}
-						use:enhance={() => {
-							saving = true
-							return ({ result, update }) => {
-								if (result.type === 'success' && result.data) {
-									following = Boolean(result.data.following)
+			{#if data.isLoggedIn}
+				<div class="profile-actions">
+					{#if !data.isSelf}
+						<form
+							method="POST"
+							action={following ? '?/unfollow' : '?/follow'}
+							use:enhance={() => {
+								saving = true
+								return ({ result, update }) => {
+									if (result.type === 'success' && result.data) {
+										following = Boolean(result.data.following)
+									}
+									saving = false
+									update({ reset: false })
 								}
-								saving = false
-								update({ reset: false })
-							}
-						}}
-					>
-						<button class="button small" type="submit" disabled={saving}>
-							<span>{following ? 'Following ✓' : 'Follow'}</span>
-						</button>
-					</form>
-				{:else if data.isSelf}
-					<a class="button small" href="/settings/"><span>Edit profile</span></a>
-				{/if}
-			</div>
+							}}
+						>
+							<button class="button small" type="submit" disabled={saving}>
+								<span>{following ? 'Following ✓' : 'Follow'}</span>
+							</button>
+						</form>
+					{:else if data.isSelf}
+						<a class="button small" href="/settings/"><span>Edit profile</span></a>
+					{/if}
+				</div>
+			{/if}
 
 			<!-- @todo Only display bio here if it's 140 chars or less. -->
 			{#if data.profile?.description}
