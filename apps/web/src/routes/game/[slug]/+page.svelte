@@ -71,8 +71,16 @@ let { game } = $derived(data)
 		{#if game.url || data.site}
 			<div class="details-more">
 				<span>More at</span>
-				{#if game.url}<a href={game.url} rel="noopener noreferrer">IGDB</a>{/if}
-				{#if data.site}<a href={data.site} rel="noopener noreferrer">Official</a>{/if}
+				{#if game.url}
+					<a class="outline-button small" href={game.url} rel="noopener noreferrer">
+						<span>IGDB</span>
+					</a>
+				{/if}
+				{#if data.site}
+					<a class="outline-button small" href={data.site} rel="noopener noreferrer">
+						<span>Official</span>
+					</a>
+				{/if}
 			</div>
 		{/if}
 	</section>
@@ -162,16 +170,6 @@ let { game } = $derived(data)
 		font-size: 0.875rem;
 		letter-spacing: 0.01em;
 		text-box: trim-both cap alphabetic;
-	}
-
-	> a {
-		padding: 4px;
-		font-size: 0.75rem;
-		color: var(--color-blue-100);
-		letter-spacing: 0.02em;
-		text-box: trim-both cap alphabetic;
-		text-decoration: none;
-		border: 1px solid var(--color-grey-400);
 	}
 }
 

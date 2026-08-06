@@ -20,53 +20,55 @@ const href = (n: number) => (n === 1 ? `${basePath}/` : `${basePath}/page/${n}/`
 </script>
 
 <nav class="pagination" aria-label={label}>
-	{#if page > 1}
-		<a class="button small" href={href(page - 1)} aria-label="Previous page" rel="prev">
-			<span>Previous</span>
-		</a>
-	{:else}
-		<span class="button small is-disabled" aria-label="Previous page" aria-disabled="true">
-			<span>Previous</span>
-		</span>
-	{/if}
+	<div>
+		{#if page > 1}
+			<a class="outline-button" href={href(page - 1)} aria-label="Previous page" rel="prev">
+				<span>Newer</span>
+			</a>
+		{/if}
+	</div>
 
 	<ol class="pages">
 		{#each items as item, index (index)}
 			<li>
 				{#if item === 'gap'}
-					<span class="gap" aria-hidden="true">…</span>
+					<span class="page" aria-hidden="true">…</span>
 				{:else if item === page}
-					<span class="button small is-current" aria-current="page"><span>{item}</span></span>
+					<span class="page" aria-current="page"><span>{item}</span></span>
 				{:else}
-					<a class="button small" href={href(item)} aria-label="Page {item}"><span>{item}</span></a>
+					<a class="page" href={href(item)} aria-label="Page {item}"><span>{item}</span></a>
 				{/if}
 			</li>
 		{/each}
 	</ol>
 
-	{#if page < totalPages}
-		<a class="button small" href={href(page + 1)} aria-label="Next page" rel="next">
-			<span>Next</span>
-		</a>
-	{:else}
-		<span class="button small is-disabled" aria-label="Next page" aria-disabled="true">
-			<span>Next</span>
-		</span>
-	{/if}
+	<div>
+		{#if page < totalPages}
+			<a class="outline-button" href={href(page + 1)} aria-label="Next page" rel="next">
+				<span>Older</span>
+			</a>
+		{/if}
+	</div>
 </nav>
 
 <style>
 .pagination {
 	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
+	justify-content: space-between;
 	align-items: center;
 	gap: 8px;
+
+	> div {
+		flex: 1 1 100%;
+
+		&:last-of-type {
+			text-align: right;
+		}
+	}
 }
 
 .pages {
 	display: flex;
-	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
 	margin: 0;
@@ -74,21 +76,30 @@ const href = (n: number) => (n === 1 ? `${basePath}/` : `${basePath}/page/${n}/`
 	list-style: none;
 }
 
-.is-current {
-	color: var(--color-grey-050);
-	background-color: var(--color-grey-800);
-}
-
-.is-disabled {
-	color: var(--color-muted);
-	opacity: 0.5;
-	pointer-events: none;
-}
-
-.gap {
+.page {
 	display: block;
-	padding: 0 4px;
-	color: var(--color-muted);
+	padding: 8px;
+	font-size: 0.875rem;
+	color: var(--color-grey-500);
 	text-box: trim-both cap alphabetic;
+	letter-spacing: 0.01em;
+
+	&:is(a) {
+		color: var(--color-blue-100);
+		text-decoration: none;
+		transition: all 100ms ease-out;
+
+		&:hover {
+			background-color: var(--color-grey-700);
+		}
+
+		&:active {
+			scale: 0.98;
+		}
+	}
+
+	&[aria-current='page'] {
+		color: var(--color-grey-400);
+	}
 }
 </style>
