@@ -39,7 +39,6 @@ export async function listAllRecords<T>(
 	const out: RecordEnvelope<T>[] = []
 	let cursor: string | undefined
 	while (out.length < max) {
-		// oxlint-disable-next-line no-await-in-loop -- pages are sequential by cursor
 		const res = await agent.com.atproto.repo.listRecords({
 			repo: did,
 			collection,
