@@ -1,5 +1,5 @@
 <script lang="ts">
-import CoverImage from '$lib/components/cover-image.svelte'
+import CoverList from '$lib/components/cover-list.svelte'
 import Pagination from '$lib/components/pagination.svelte'
 import type { loadBacklogPage } from './load'
 
@@ -20,15 +20,7 @@ let year = (releaseDate: string | null) => releaseDate?.slice(0, 4) ?? ''
 	{#if data.items.length === 0}
 		<p>{data.isSelf ? 'Nothing in your backlog yet.' : 'Nothing in this backlog yet.'}</p>
 	{:else}
-		<ul class="cover-list">
-			{#each data.items as item, index (item.igdbId)}
-				<li>
-					<a href="/game/{item.slug}/" aria-label={item.title}>
-						<CoverImage image={item.coverUrl} />
-					</a>
-				</li>
-			{/each}
-		</ul>
+		<CoverList items={data.items} />
 
 		{#if data.totalPages > 1}
 			<Pagination
@@ -54,20 +46,5 @@ h1 {
 	line-height: 1.2;
 	text-box: trim-both cap alphabetic;
 	text-wrap: balance;
-}
-
-.cover-list {
-	--cols: 4;
-
-	display: grid;
-	grid-template-columns: repeat(var(--cols), 1fr);
-	gap: 8px;
-	padding: 0;
-	margin: 0;
-	list-style: none;
-
-	@container (min-width: 600px) {
-		--cols: 6;
-	}
 }
 </style>

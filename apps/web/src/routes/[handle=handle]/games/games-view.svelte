@@ -1,5 +1,5 @@
 <script lang="ts">
-import CoverImage from '$lib/components/cover-image.svelte'
+import CoverList from '$lib/components/cover-list.svelte'
 import Pagination from '$lib/components/pagination.svelte'
 import type { loadGamesPage } from './load'
 
@@ -13,15 +13,7 @@ let playedHeading = $derived(data.isSelf ? 'You’ve played' : `${data.displayNa
 </script>
 
 {#snippet gameList(items: Data['played'])}
-	<ul class="cover-list">
-		{#each items as item (item.igdbId)}
-			<li>
-				<a href="/game/{item.slug}/" aria-label={item.title}>
-					<CoverImage image={item.coverUrl} />
-				</a>
-			</li>
-		{/each}
-	</ul>
+	<CoverList {items} />
 {/snippet}
 
 <svelte:head>
@@ -85,20 +77,5 @@ h2 {
 	line-height: 1.2;
 	text-box: trim-both cap alphabetic;
 	text-wrap: balance;
-}
-
-.cover-list {
-	--cols: 4;
-
-	display: grid;
-	grid-template-columns: repeat(var(--cols), 1fr);
-	gap: 8px;
-	padding: 0;
-	margin: 0;
-	list-style: none;
-
-	@container (min-width: 600px) {
-		--cols: 6;
-	}
 }
 </style>
