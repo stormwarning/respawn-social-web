@@ -12,6 +12,7 @@ import {
 import { createLog, listLogs, type GateAllowRule, type RespawnLogRecord } from '$lib/atproto/log'
 import { addToBacklog, loadBacklog, removeFromBacklog } from '$lib/atproto/backlog'
 import { buildCover } from '$lib/server/cover'
+import type { Game } from '$lib/types/game'
 
 const PLAY_STATES = new Set(['played', 'completed', 'abandoned', 'retired', 'shelved'])
 const GATE_RULES = new Set(['nobody', 'following', 'followers'])
@@ -39,14 +40,19 @@ function parseGameForm(
 	}
 }
 
+interface AugmentedGame extends Game {
+	developer?: string[]
+	publisher?: string[]
+}
+
 export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 	try {
-		const game = await getGameBySlug(params.slug, fetch)
+		const game: AugmentedGame = await getGameBySlug(params.slug, fetch)
 
 		const names = (flag: 'developer' | 'publisher') =>
 			game.involved_companies
 				?.filter((c) => c[flag])
-				.map((c) => c.company?.name)
+				.map((c) => c.company?.name ?? '')
 				.filter(Boolean)
 
 		if (game.cover?.url) game.cover.url = normalizeCoverUrl(game.cover.url)
