@@ -8,6 +8,14 @@ import {
 import { NodeDnsHandleResolver } from '@atcute/identity-resolver-node'
 import { getPdsEndpoint } from '@atcute/identity'
 import { isDid, isHandle, type AtprotoDid, type Did } from '@atcute/lexicons/syntax'
+import { createMemo } from '$lib/server/memo'
+
+// Both lookups sit on the critical path of every actor page, and neither answer
+// changes often: a handle keeps its DID until the owner re-points it, and a DID
+// keeps its PDS until the repo migrates. Caching them removes two network hops
+// per request on a warm container.
+const didByHandle = createMemo<Did | AtprotoDid>({ ttlMs: 5 * 60_000 })
+const pdsByDid = createMemo<string | undefined>({ ttlMs: 15 * 60_000 })
 
 const handleResolver = new CompositeHandleResolver({
 	strategy: 'race',
@@ -32,7 +40,7 @@ export const docResolver = new CompositeDidDocumentResolver({
 export async function resolveToDid(input: string): Promise<Did | AtprotoDid> {
 	const value = input.trim().replace(/^@/, '')
 	if (isDid(value)) return value
-	if (isHandle(value)) return handleResolver.resolve(value)
+	if (isHandle(value)) return didByHandle.get(value, () => handleResolver.resolve(value))
 	throw new Error(`Not a valid handle or DID: ${input}`)
 }
 
@@ -42,6 +50,12 @@ export async function resolveToDid(input: string): Promise<Did | AtprotoDid> {
  * since the authed Agent does not expose its service origin.
  */
 export async function resolvePdsEndpoint(did: Did | AtprotoDid): Promise<string | undefined> {
-	const doc = await docResolver.resolve(did as AtprotoDid)
-	return getPdsEndpoint(doc)
+	const pds = await pdsByDid.get(did, async () => {
+		const doc = await docResolver.resolve(did as AtprotoDid)
+		return getPdsEndpoint(doc)
+	})
+	// A DID document that resolved but named no PDS is usually a transient blip
+	// upstream; don't let it poison the cache for the full TTL.
+	if (!pds) pdsByDid.delete(did)
+	return pds
 }

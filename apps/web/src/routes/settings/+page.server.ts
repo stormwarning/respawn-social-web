@@ -5,24 +5,28 @@ import {
 	ACCEPTED_AVATAR_TYPES,
 	MAX_AVATAR_BYTES,
 	avatarUrlForBlob,
-	loadBskyProfile,
 	loadRespawnProfile,
 	putRespawnProfile,
 	type RespawnProfileRecord,
 } from '$lib/atproto/profile'
+import { cachedBskyProfile, cachedRespawnProfile, forgetProfile } from '$lib/server/profile-cache'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user || !locals.agent) redirect(303, '/login')
 	const { agent, user } = locals
 
-	// Always fetch the Bluesky profile for the handle + prefill defaults.
-	const bsky = await loadBskyProfile(agent, user.did)
-	const respawn = await loadRespawnProfile(agent, user.did)
+	// The same three lookups the layout header does, so in a single request these
+	// are cache hits rather than a second round of fetches. The Bluesky profile is
+	// always needed for the handle + prefill defaults.
+	const [bsky, respawn, pds] = await Promise.all([
+		cachedBskyProfile(agent, user.did),
+		cachedRespawnProfile(agent, user.did),
+		resolvePdsEndpoint(user.did as Did),
+	])
 
 	let avatarUrl = bsky.avatarUrl
 	if (respawn?.avatar) {
-		const pds = await resolvePdsEndpoint(user.did as Did)
 		avatarUrl = avatarUrlForBlob(pds, user.did, respawn.avatar) ?? avatarUrl
 	}
 
@@ -104,6 +108,9 @@ export const actions: Actions = {
 			console.error('[profile] putRecord failed', err)
 			return fail(500, { error: 'Could not save your profile. Try again.' })
 		}
+		// The header and this page read through a cache; drop it so the saved
+		// display name and avatar show up on the very next render.
+		forgetProfile(user.did)
 
 		return { success: true }
 	},

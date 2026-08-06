@@ -1,6 +1,7 @@
 import { resolvePdsEndpoint } from '$lib/atproto/identity'
 import type { Did } from '@atcute/lexicons/syntax'
-import { avatarUrlForBlob, loadBskyProfile, loadRespawnProfile } from '$lib/atproto/profile'
+import { avatarUrlForBlob } from '$lib/atproto/profile'
+import { cachedBskyProfile, cachedRespawnProfile } from '$lib/server/profile-cache'
 import type { LayoutServerLoad } from './$types'
 
 export const trailingSlash = 'always'
@@ -12,15 +13,22 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	}
 
 	const { agent, timings, user } = locals
-	// Enrich the bare DID with handle + avatar for the header. One getProfile per
-	// request; a failure here must not break page rendering, so fall back to the DID.
+	// Enrich the bare DID with handle + avatar for the header. This runs on every
+	// authenticated render, so the three lookups go out concurrently and all three
+	// are cached; a failure here must not break page rendering, so fall back to
+	// the DID. The PDS is resolved unconditionally rather than only when an avatar
+	// blob exists — a cache hit costs nothing and keeps it off the critical path.
 	try {
-		const bsky = await timings.track('layout.bsky', () => loadBskyProfile(agent, user.did))
-		const respawn = await timings.track('layout.respawn', () => loadRespawnProfile(agent, user.did))
+		const [bsky, respawn, pds] = await timings.track('layout.profile', () =>
+			Promise.all([
+				cachedBskyProfile(agent, user.did),
+				cachedRespawnProfile(agent, user.did),
+				resolvePdsEndpoint(user.did as Did),
+			]),
+		)
 
 		let avatarUrl = bsky.avatarUrl
 		if (respawn?.avatar) {
-			const pds = await timings.track('layout.pds', () => resolvePdsEndpoint(user.did as Did))
 			avatarUrl = avatarUrlForBlob(pds, user.did, respawn.avatar) ?? avatarUrl
 		}
 
