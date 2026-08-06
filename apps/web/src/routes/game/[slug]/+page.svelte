@@ -23,7 +23,7 @@ let { game } = $derived(data)
 				<span>{game.developer}</span>
 			</div>
 		</div>
-		<CoverImage image={game.cover?.url} />
+		<CoverImage image={game.cover?.url} loading="eager" />
 	</header>
 
 	{#if game.summary}

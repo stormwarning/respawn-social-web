@@ -21,7 +21,8 @@ export const GET: RequestHandler = async ({ url, fetch }) => {
 			typeof game.first_release_date === 'number'
 				? new Date(game.first_release_date * 1000).getUTCFullYear()
 				: null,
-		coverUrl: game.cover?.url ? normalizeCoverUrl(game.cover.url) : null,
+		// The dialog renders these in a 42px column.
+		coverUrl: game.cover?.url ? normalizeCoverUrl(game.cover.url, 'small') : null,
 	}))
 
 	return json({ results })

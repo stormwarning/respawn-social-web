@@ -1,9 +1,26 @@
-<script>
-let { image } = $props()
+<script lang="ts">
+interface Props {
+	image: string | null | undefined
+	/**
+	 * Callers that render above the fold pass "eager"; those covers are the LCP
+	 * candidate, so they also get priority over the rest of the page's images.
+	 */
+	loading?: 'lazy' | 'eager'
+}
+
+let { image, loading = 'lazy' }: Props = $props()
 </script>
 
 <div class="cover">
-	{#if image}<img src={image} alt="" loading="lazy" />{/if}
+	{#if image}
+		<img
+			src={image}
+			alt=""
+			{loading}
+			decoding="async"
+			fetchpriority={loading === 'eager' ? 'high' : 'auto'}
+		/>
+	{/if}
 </div>
 
 <style>

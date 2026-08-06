@@ -27,7 +27,7 @@ let { data, onsearch } = $props()
 		</button>
 		{#if data.user}
 			<a class="who" href="/{data.user.handle}/">
-				<AvatarImage image={data.user.avatarUrl} />
+				<AvatarImage image={data.user.avatarUrl} loading="eager" />
 				<!-- <span>{data.user.handle ?? data.user.did}</span> -->
 			</a>
 			<form method="POST" action="/logout/">

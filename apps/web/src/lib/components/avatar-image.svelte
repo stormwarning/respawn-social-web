@@ -1,9 +1,26 @@
-<script>
-let { image } = $props()
+<script lang="ts">
+interface Props {
+	image: string | null | undefined
+	/**
+	 * The header and profile avatars are above the fold on every page; they pass
+	 * "eager" so the browser stops deferring the most prominent image.
+	 */
+	loading?: 'lazy' | 'eager'
+}
+
+let { image, loading = 'lazy' }: Props = $props()
 </script>
 
 <div class="avatar">
-	{#if image}<img src={image} alt="" loading="lazy" />{/if}
+	{#if image}
+		<img
+			src={image}
+			alt=""
+			{loading}
+			decoding="async"
+			fetchpriority={loading === 'eager' ? 'high' : 'auto'}
+		/>
+	{/if}
 </div>
 
 <style>

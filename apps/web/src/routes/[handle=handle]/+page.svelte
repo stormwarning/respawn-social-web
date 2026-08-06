@@ -32,7 +32,7 @@ const playStateLabels: Record<string, string> = {
 <article class="profile">
 	<header class="profile-header">
 		<div class="avatar">
-			<AvatarImage image={data.avatarUrl} />
+			<AvatarImage image={data.avatarUrl} loading="eager" />
 		</div>
 		<div class="content">
 			<h2>{displayName}</h2>

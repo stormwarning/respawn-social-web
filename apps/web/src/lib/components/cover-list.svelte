@@ -2,12 +2,20 @@
 import InteractiveCover from './interactive-cover.svelte'
 
 let { items } = $props()
+
+// Widest layout is 6 columns, so this covers the first row at every breakpoint.
+const EAGER_COUNT = 6
 </script>
 
 <ul class="cover-list">
 	{#each items as item, index (item.igdbId)}
 		<li>
-			<InteractiveCover href="/game/{item.slug}/" imageUrl={item.coverUrl} title={item.title} />
+			<InteractiveCover
+				href="/game/{item.slug}/"
+				imageUrl={item.coverUrl}
+				title={item.title}
+				loading={index < EAGER_COUNT ? 'eager' : 'lazy'}
+			/>
 		</li>
 	{/each}
 </ul>

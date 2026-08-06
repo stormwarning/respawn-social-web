@@ -18,7 +18,7 @@ let { data }: { data: PageData } = $props()
 			{#each data.games as game, index}
 				<li class="result">
 					<a href="/game/{game.slug}/" tabindex="-1" aria-hidden="true">
-						<CoverImage image={game.coverUrl} />
+						<CoverImage image={game.coverUrl} loading={index < 4 ? 'eager' : 'lazy'} />
 					</a>
 					<div class="result-content">
 						<span class="result-title">
