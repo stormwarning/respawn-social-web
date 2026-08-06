@@ -112,6 +112,7 @@ let { data, onsearch } = $props()
 	display: flex;
 	align-items: center;
 	gap: 4px;
+	min-width: 36px;
 
 	:global(> div) {
 		max-width: 36px;
