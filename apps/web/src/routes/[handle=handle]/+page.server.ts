@@ -11,21 +11,24 @@ import { loadBacklog } from '$lib/atproto/backlog'
 import type { RespawnGameRecord } from '$lib/atproto/game'
 
 export const load: PageServerLoad = async ({ params, locals }) => {
+	const { timings } = locals
 	let actor
 	try {
-		actor = await resolveActor(params.handle)
+		actor = await timings.track('profile.resolve', () => resolveActor(params.handle))
 	} catch {
 		error(404, 'Account not found')
 	}
 	const repo = publicAgent(actor.pds)
 
-	const [profile, logs, lists, backlog, games] = await Promise.all([
-		getRecordOrNull<RespawnProfileRecord>(repo, actor.did, Collections.profile, 'self'),
-		listLogs(repo, actor.did),
-		listLists(repo, actor.did),
-		loadBacklog(repo, actor.did),
-		listAllRecords<RespawnGameRecord>(repo, actor.did, Collections.game),
-	])
+	const [profile, logs, lists, backlog, games] = await timings.track('profile.records', () =>
+		Promise.all([
+			getRecordOrNull<RespawnProfileRecord>(repo, actor.did, Collections.profile, 'self'),
+			listLogs(repo, actor.did),
+			listLists(repo, actor.did),
+			loadBacklog(repo, actor.did),
+			listAllRecords<RespawnGameRecord>(repo, actor.did, Collections.game),
+		]),
+	)
 
 	// 1-based chronological log number per game, for /[handle]/game/[slug]/[n] links.
 	const logNumbers = new Map<string, number>()
@@ -39,7 +42,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const isSelf = locals.user?.did === actor.did
 	let followUri: string | null = null
 	if (locals.user && locals.agent && !isSelf) {
-		followUri = (await findFollow(locals.agent, locals.user.did, actor.did))?.uri ?? null
+		const { agent, user } = locals
+		followUri =
+			(await timings.track('profile.follow', () => findFollow(agent, user.did, actor.did)))?.uri ??
+			null
 	}
 
 	return {

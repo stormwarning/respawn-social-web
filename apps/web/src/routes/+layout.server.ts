@@ -11,16 +11,16 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		return { user: null }
 	}
 
-	const { agent, user } = locals
+	const { agent, timings, user } = locals
 	// Enrich the bare DID with handle + avatar for the header. One getProfile per
 	// request; a failure here must not break page rendering, so fall back to the DID.
 	try {
-		const bsky = await loadBskyProfile(agent, user.did)
-		const respawn = await loadRespawnProfile(agent, user.did)
+		const bsky = await timings.track('layout.bsky', () => loadBskyProfile(agent, user.did))
+		const respawn = await timings.track('layout.respawn', () => loadRespawnProfile(agent, user.did))
 
 		let avatarUrl = bsky.avatarUrl
 		if (respawn?.avatar) {
-			const pds = await resolvePdsEndpoint(user.did as Did)
+			const pds = await timings.track('layout.pds', () => resolvePdsEndpoint(user.did as Did))
 			avatarUrl = avatarUrlForBlob(pds, user.did, respawn.avatar) ?? avatarUrl
 		}
 

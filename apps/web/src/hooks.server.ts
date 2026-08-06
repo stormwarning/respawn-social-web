@@ -3,6 +3,10 @@ import { TokenRefreshError } from '@atproto/oauth-client-node'
 import { getOAuthClient } from '$lib/server/oauth/client'
 import { agentFromSession } from '$lib/atproto/agent'
 import { clearSessionCookie, readSessionCookie } from '$lib/server/session'
+import { createTimings } from '$lib/server/timing'
+
+/** Requests slower than this get their stage breakdown logged for triage. */
+const SLOW_REQUEST_MS = 1000
 
 /**
  * On every request, restore the OAuth session from the signed cookie and expose
@@ -10,12 +14,16 @@ import { clearSessionCookie, readSessionCookie } from '$lib/server/session'
  * authenticated data via SSR — no client-side auth flash.
  */
 export const handle: Handle = async ({ event, resolve }) => {
+	const requestStart = performance.now()
+	const timings = createTimings()
+	event.locals.timings = timings
 	event.locals.atSession = null
 	event.locals.agent = null
 	event.locals.user = null
 
 	const did = readSessionCookie(event.cookies)
 	if (did) {
+		const stopSession = timings.start('session')
 		try {
 			const client = await getOAuthClient()
 			const session = await client.restore(did)
@@ -30,8 +38,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 				console.error('[hooks] session restore failed', err)
 				clearSessionCookie(event.cookies)
 			}
+		} finally {
+			stopSession()
 		}
 	}
 
-	return resolve(event)
+	const stopRender = timings.start('render')
+	const response = await resolve(event)
+	stopRender()
+
+	const header = timings.header()
+	response.headers.set('Server-Timing', header)
+	if (performance.now() - requestStart > SLOW_REQUEST_MS) {
+		console.warn(`[hooks] slow request ${event.request.method} ${event.url.pathname} — ${header}`)
+	}
+
+	return response
 }

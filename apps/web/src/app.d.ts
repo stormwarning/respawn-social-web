@@ -1,5 +1,6 @@
 import type { Agent } from '@atproto/api'
 import type { OAuthSession } from '@atproto/oauth-client-node'
+import type { Timings } from '$lib/server/timing'
 
 declare global {
 	namespace App {
@@ -10,6 +11,8 @@ declare global {
 			agent: Agent | null
 			/** Lightweight current-user descriptor for SSR rendering. */
 			user: { did: string; handle?: string } | null
+			/** Per-request stopwatch; loads record stages, hooks emits Server-Timing. */
+			timings: Timings
 		}
 		// interface Error {}
 		// interface PageData {}
