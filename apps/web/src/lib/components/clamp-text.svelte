@@ -1,5 +1,5 @@
 <script lang="ts">
-const TRUNCATE_AT = 160
+const TRUNCATE_AT = 155
 
 let { text }: { text: string } = $props()
 let truncatedText = $derived(text.slice(0, 150))
@@ -27,7 +27,7 @@ function toggle() {
 	{#if needsTruncation}
 		<div class="truncated" aria-hidden="true" bind:clientHeight={truncatedHeight}>
 			<p>
-				{truncatedText} <button class="toggle" onclick={toggle} tabindex="-1">…read more</button>
+				{truncatedText} <button class="toggle" onclick={toggle} tabindex="-1">…more</button>
 			</p>
 		</div>
 	{/if}
