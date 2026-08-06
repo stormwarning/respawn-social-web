@@ -8,4 +8,31 @@ publish = "build"
 node_bundler = "esbuild"
 
 # Netlify Blobs is enabled automatically; no plugin needed.
-# adapter-netlify generates the functions + redirects at build time.
+# adapter-netlify generates the functions + redirects at build time, including
+# the immutable cache header for /_app/immutable/*.
+
+# Unhashed static assets, so they need a finite TTL rather than `immutable`.
+[[headers]]
+for = "/favicon.*"
+[headers.values]
+cache-control = "public, max-age=86400"
+
+[[headers]]
+for = "/apple-touch-icon.png"
+[headers.values]
+cache-control = "public, max-age=86400"
+
+[[headers]]
+for = "/icon-*.png"
+[headers.values]
+cache-control = "public, max-age=86400"
+
+[[headers]]
+for = "/og-image.png"
+[headers.values]
+cache-control = "public, max-age=86400"
+
+[[headers]]
+for = "/manifest.json"
+[headers.values]
+cache-control = "public, max-age=86400"
