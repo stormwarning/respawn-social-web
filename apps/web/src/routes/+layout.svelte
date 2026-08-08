@@ -82,13 +82,17 @@ $effect(() => {
 }
 
 main {
+	--block-spacing: 32px;
+	--inline-spacing: 16px;
+
+	position: relative;
 	max-width: 60rem;
 	margin: 0 auto;
-	padding: 32px 16px;
+	padding: var(--block-spacing) var(--inline-spacing);
 	container-type: inline-size;
 
 	@media (min-width: 632px) {
-		padding-inline: 48px;
+		--block-spacing: 48px;
 	}
 }
 </style>

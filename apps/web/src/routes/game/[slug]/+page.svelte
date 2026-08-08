@@ -23,25 +23,34 @@ let { game } = $derived(data)
 				<span>{game.developer}</span>
 			</div>
 		</div>
-		<CoverImage image={game.cover?.url} loading="eager" />
+
+		<div class="game-cover">
+			<CoverImage image={game.cover?.url} loading="eager" />
+		</div>
 	</header>
 
-	{#if game.summary}
-		<ClampText text={game.summary} />
-	{/if}
+	<section class="game-intro">
+		{#if game.summary}
+			<div class="summary">
+				<ClampText text={game.summary} />
+			</div>
+		{/if}
 
-	<GameActions
-		isLoggedIn={data.isLoggedIn}
-		igdbId={game.id}
-		slug={game.slug}
-		title={game.name}
-		coverUrl={game.cover?.url ?? ''}
-		played={data.played}
-		playing={data.playing}
-		liked={data.liked}
-		rating={data.rating}
-		inBacklog={data.inBacklog}
-	/>
+		<div class="actions">
+			<GameActions
+				isLoggedIn={data.isLoggedIn}
+				igdbId={game.id}
+				slug={game.slug}
+				title={game.name}
+				coverUrl={game.cover?.url ?? ''}
+				played={data.played}
+				playing={data.playing}
+				liked={data.liked}
+				rating={data.rating}
+				inBacklog={data.inBacklog}
+			/>
+		</div>
+	</section>
 
 	<section class="details">
 		<div class="details-block">
@@ -90,18 +99,33 @@ let { game } = $derived(data)
 	</ul> -->
 </article>
 
+<aside class="sidebar">
+	<CoverImage image={game.cover?.url} loading="eager" />
+</aside>
+
 <style>
 .page {
 	display: grid;
 	gap: 32px;
 	grid-template-columns: 100%;
-	padding-top: 16px;
+
+	@media (min-width: 632px) {
+		padding-right: calc(clamp(120px, 27cqi, 230px) + 16px);
+
+		.game-cover {
+			display: none;
+		}
+	}
 }
 
 .game-header {
 	display: grid;
 	grid-template-columns: 1fr min(33vw, 230px);
 	gap: 16px;
+
+	@media (min-width: 632px) {
+		grid-template-columns: 1fr;
+	}
 }
 
 .title {
@@ -113,6 +137,11 @@ let { game } = $derived(data)
 		font-size: 1.375rem;
 		font-weight: 600;
 		line-height: 1.2;
+		text-box: trim-both cap alphabetic;
+
+		@media (min-width: 632px) {
+			font-size: 2rem;
+		}
 	}
 }
 
@@ -123,12 +152,41 @@ let { game } = $derived(data)
 	letter-spacing: 0.02em;
 	line-height: 1.2;
 
+	@media (min-width: 632px) {
+		font-size: 1rem;
+		letter-spacing: 0;
+	}
+
 	> span:not([role='separator']) {
 		color: var(--color-grey-400);
 	}
 
 	> span[role='separator'] {
 		color: var(--color-grey-500);
+	}
+}
+
+.game-intro {
+	display: grid;
+	gap: 32px;
+	grid-template-columns: 100%;
+
+	@container (min-width: 600px) {
+		grid-template-columns: 240px 1fr;
+		gap: 24px;
+	}
+}
+
+.summary {
+	@container (min-width: 600px) {
+		grid-column: 2;
+	}
+}
+
+.actions {
+	@container (min-width: 600px) {
+		grid-row: 1;
+		grid-column: 1;
 	}
 }
 
@@ -179,5 +237,16 @@ let { game } = $derived(data)
 	gap: 8px;
 	padding: 0;
 	list-style: none;
+}
+
+.sidebar {
+	position: absolute;
+	top: var(--block-spacing);
+	right: var(--inline-spacing);
+	max-width: calc(clamp(120px, 27cqi, 230px) - 16px);
+
+	@media (max-width: 631px) {
+		display: none;
+	}
 }
 </style>
