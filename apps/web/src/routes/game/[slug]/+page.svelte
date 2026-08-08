@@ -243,6 +243,7 @@ let { game } = $derived(data)
 	position: absolute;
 	top: var(--block-spacing);
 	right: var(--inline-spacing);
+	width: 100%;
 	max-width: calc(clamp(120px, 27cqi, 230px) - 16px);
 
 	@media (max-width: 631px) {

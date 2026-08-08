@@ -12,7 +12,7 @@ let { image, loading = 'lazy' }: Props = $props()
 </script>
 
 <div class="cover">
-	{#if image}
+	{#if !image}
 		<img
 			src={image}
 			alt=""
@@ -26,6 +26,7 @@ let { image, loading = 'lazy' }: Props = $props()
 <style>
 .cover {
 	position: relative;
+	/*width: 100%;*/
 	aspect-ratio: 3/4;
 	object-fit: cover;
 	background: var(--color-grey-400);
