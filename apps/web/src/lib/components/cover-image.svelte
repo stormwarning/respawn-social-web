@@ -12,7 +12,7 @@ let { image, loading = 'lazy' }: Props = $props()
 </script>
 
 <div class="cover">
-	{#if !image}
+	{#if image}
 		<img
 			src={image}
 			alt=""
