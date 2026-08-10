@@ -2,6 +2,7 @@
 import { enhance } from '$app/forms'
 import AvatarImage from '$lib/components/avatar-image.svelte'
 import CoverImageStack from '$lib/components/cover-image-stack.svelte'
+import SectionHeading from '$lib/components/section-heading.svelte'
 import type { PageData } from './$types'
 
 let { data }: { data: PageData } = $props()
@@ -101,10 +102,10 @@ const playStateLabels: Record<string, string> = {
 		<aside class="sidebar">
 			{#if data.backlogCount > 0}
 				<section class="backlog">
-					<h2>
+					<SectionHeading secondary={data.backlogCount}>
 						<a href="/{data.handle}/backlog/">Backlog</a>
-						<span class="sub">({data.backlogCount})</span>
-					</h2>
+						<!-- <span class="sub">({data.backlogCount})</span> -->
+					</SectionHeading>
 					<a href="/{data.handle}/backlog/">
 						<CoverImageStack covers={data.backlogCovers} />
 					</a>
@@ -219,7 +220,7 @@ const playStateLabels: Record<string, string> = {
 
 .backlog {
 	display: grid;
-	gap: 12px;
+	gap: 16px;
 }
 
 .sub {

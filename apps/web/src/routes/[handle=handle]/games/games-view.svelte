@@ -1,6 +1,7 @@
 <script lang="ts">
 import CoverList from '$lib/components/cover-list.svelte'
 import Pagination from '$lib/components/pagination.svelte'
+import SectionHeading from '$lib/components/section-heading.svelte'
 import type { loadGamesPage } from './load'
 
 type Data = Awaited<ReturnType<typeof loadGamesPage>>
@@ -29,14 +30,14 @@ let playedHeading = $derived(data.isSelf ? 'You’ve played' : `${data.displayNa
 
 	{#if data.playing.length > 0}
 		<section>
-			<h2>{playingHeading}</h2>
+			<SectionHeading>{playingHeading}</SectionHeading>
 			{@render gameList(data.playing)}
 		</section>
 	{/if}
 
 	{#if data.played.length > 0}
 		<section>
-			<h2>{playedHeading}</h2>
+			<SectionHeading>{playedHeading}</SectionHeading>
 			{@render gameList(data.played)}
 
 			{#if data.totalPages > 1}
@@ -60,19 +61,11 @@ let playedHeading = $derived(data.isSelf ? 'You’ve played' : `${data.displayNa
 
 section {
 	display: grid;
-	gap: 24px;
+	gap: 16px;
 }
 
 h1 {
 	font-size: 1.5rem;
-	font-weight: 600;
-	line-height: 1.2;
-	text-box: trim-both cap alphabetic;
-	text-wrap: balance;
-}
-
-h2 {
-	font-size: 1.25rem;
 	font-weight: 600;
 	line-height: 1.2;
 	text-box: trim-both cap alphabetic;
