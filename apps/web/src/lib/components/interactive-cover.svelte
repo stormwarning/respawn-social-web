@@ -11,13 +11,14 @@ interface Props {
 let { href, imageUrl, title, loading = 'lazy' }: Props = $props()
 </script>
 
-<a {href} aria-label={title}>
-	<CoverImage image={imageUrl} {loading} />
+<a class="cover-link" {href} aria-label={title}>
+	<CoverImage image={imageUrl} {title} {loading} />
 </a>
 
 <style>
-a {
-	display: flex;
+.cover-link {
+	display: block;
+	width: 100%;
 	border-radius: 4px;
 
 	@supports (corner-shape: squircle) {

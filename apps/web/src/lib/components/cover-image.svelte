@@ -6,12 +6,16 @@ interface Props {
 	 * candidate, so they also get priority over the rest of the page's images.
 	 */
 	loading?: 'lazy' | 'eager'
+	title?: string
 }
 
-let { image, loading = 'lazy' }: Props = $props()
+let { image, loading = 'lazy', title }: Props = $props()
 </script>
 
 <div class="cover">
+	<div class="title" role="presentation">
+		{title}
+	</div>
 	{#if image}
 		<img
 			src={image}
@@ -26,10 +30,9 @@ let { image, loading = 'lazy' }: Props = $props()
 <style>
 .cover {
 	position: relative;
-	/*width: 100%;*/
 	aspect-ratio: 3/4;
 	object-fit: cover;
-	background: var(--color-grey-400);
+	background: var(--color-grey-600);
 	border-radius: 4px;
 	overflow: hidden;
 
@@ -52,9 +55,21 @@ let { image, loading = 'lazy' }: Props = $props()
 	}
 
 	img {
+		position: relative;
 		width: 100%;
 		max-width: 100%;
 		object-fit: contain;
+		text-decoration: none;
 	}
+}
+
+.title {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	padding: 4px;
+	font-size: 0.875rem;
+	text-align: center;
 }
 </style>

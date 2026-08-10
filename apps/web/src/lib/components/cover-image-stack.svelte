@@ -13,7 +13,7 @@ let { covers }: { covers: StackCover[] } = $props()
 <div class="stack-container">
 	<ul class="stack">
 		{#each covers as cover, index (cover.igdbId)}
-			<li style:--index={10 - index}><CoverImage image={cover.coverUrl} /></li>
+			<li style:--index={10 - index}><CoverImage image={cover.coverUrl} title={cover.title} /></li>
 		{/each}
 	</ul>
 </div>
@@ -44,7 +44,13 @@ let { covers }: { covers: StackCover[] } = $props()
 		z-index: var(--index, 1);
 		width: var(--cover-width);
 		margin-inline-start: calc(var(--cover-overlap, 0) * -1);
+		border-radius: 4px;
 		box-shadow: 2px 0 8px 0 rgb(0 0 0 / 50%);
+
+		@supports (corner-shape: squircle) {
+			border-radius: 8px;
+			corner-shape: var(--corner-shape);
+		}
 
 		&:first-child {
 			margin-inline-start: 0;

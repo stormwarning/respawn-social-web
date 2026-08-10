@@ -37,6 +37,7 @@ const EAGER_COUNT = 6
 
 	> li {
 		display: flex;
+		width: 100%;
 		aspect-ratio: 3/4;
 	}
 }
