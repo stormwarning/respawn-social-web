@@ -2,6 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit'
 import { getGameBySlug } from '$lib/server/backend'
 import type { Actions, PageServerLoad } from './$types'
 import { normalizeCoverUrl } from '$lib/server/igdb'
+import { cachePageData } from '$lib/server/page-cache'
 import {
 	loadGameRecord,
 	putGameRecord,
@@ -45,7 +46,7 @@ interface AugmentedGame extends Game {
 	publisher?: string[]
 }
 
-export const load: PageServerLoad = async ({ params, fetch, locals }) => {
+export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }) => {
 	try {
 		const game: AugmentedGame = await getGameBySlug(params.slug, fetch)
 
@@ -96,6 +97,13 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 				console.error('[game/[slug]] played lookup failed', err)
 			}
 		}
+
+		// A signed-in viewer's own played / liked / rating / backlog state is part
+		// of this payload and every action on this page changes it, so only the
+		// logged-out view — which is pure game data — is safe to hold. Set only
+		// once the load has succeeded: the catch below turns a transient backend
+		// failure into a 404, which must not be cached.
+		cachePageData(setHeaders, { viewerCanMutate: Boolean(locals.user) })
 
 		return {
 			game,

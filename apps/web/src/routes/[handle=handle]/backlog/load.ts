@@ -1,5 +1,6 @@
-import { error } from '@sveltejs/kit'
+import { error, type RequestEvent } from '@sveltejs/kit'
 import { Collections } from '@respawn-social/lexicons'
+import { cachePageData } from '$lib/server/page-cache'
 import { blobUrl, type RespawnProfileRecord } from '$lib/atproto/profile'
 import { getRecordOrNull } from '$lib/atproto/records'
 import { loadBacklog } from '$lib/atproto/backlog'
@@ -11,7 +12,12 @@ export const PAGE_SIZE = 24
  * The backlog is one record holding the whole list, so paging is a slice here
  * rather than a cursor fetch — the total is always known up front.
  */
-export async function loadBacklogPage(handle: string, page: number, locals: App.Locals) {
+export async function loadBacklogPage(
+	handle: string,
+	page: number,
+	locals: App.Locals,
+	setHeaders: RequestEvent['setHeaders'],
+) {
 	let actor
 	try {
 		actor = await resolveActor(handle)
@@ -19,6 +25,7 @@ export async function loadBacklogPage(handle: string, page: number, locals: App.
 		error(404, 'Account not found')
 	}
 	const repo = publicAgent(actor.pds)
+	const isSelf = locals.user?.did === actor.did
 
 	const [profile, backlog] = await Promise.all([
 		getRecordOrNull<RespawnProfileRecord>(repo, actor.did, Collections.profile, 'self'),
@@ -30,10 +37,14 @@ export async function loadBacklogPage(handle: string, page: number, locals: App.
 	if (page > totalPages) error(404, 'Page not found')
 	const start = (page - 1) * PAGE_SIZE
 
+	// Only this actor can add to their own backlog, so another viewer's copy of
+	// the page can't go stale under them.
+	cachePageData(setHeaders, { viewerCanMutate: isSelf })
+
 	return {
 		handle: actor.handle ?? actor.did,
 		displayName: profile?.value.displayName || (actor.handle ?? actor.did),
-		isSelf: locals.user?.did === actor.did,
+		isSelf,
 		page,
 		totalPages,
 		total: games.length,

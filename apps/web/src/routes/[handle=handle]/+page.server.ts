@@ -8,9 +8,10 @@ import { listLogs } from '$lib/atproto/log'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
 import { listLists } from '$lib/atproto/list'
 import { loadBacklog } from '$lib/atproto/backlog'
+import { cachePageData } from '$lib/server/page-cache'
 import type { RespawnGameRecord } from '$lib/atproto/game'
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 	const { timings } = locals
 	let actor
 	try {
@@ -47,6 +48,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			(await timings.track('profile.follow', () => findFollow(agent, user.did, actor.did)))?.uri ??
 			null
 	}
+
+	// A signed-in viewer can follow or unfollow from here, and the follow state is
+	// part of this payload, so only the logged-out view is safe to hold. Set only
+	// once the load has succeeded, so a resolve failure — which surfaces as a 404
+	// — isn't held for a minute.
+	cachePageData(setHeaders, { viewerCanMutate: Boolean(locals.user) })
 
 	return {
 		handle: actor.handle ?? actor.did,

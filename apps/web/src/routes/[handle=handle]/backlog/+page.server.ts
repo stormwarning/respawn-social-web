@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types'
 import { loadBacklogPage } from './load'
 
-export const load: PageServerLoad = ({ params, locals }) =>
-	loadBacklogPage(params.handle, 1, locals)
+export const load: PageServerLoad = ({ params, locals, setHeaders }) =>
+	loadBacklogPage(params.handle, 1, locals, setHeaders)

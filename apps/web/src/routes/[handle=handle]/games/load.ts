@@ -1,5 +1,6 @@
-import { error } from '@sveltejs/kit'
+import { error, type RequestEvent } from '@sveltejs/kit'
 import { Collections } from '@respawn-social/lexicons'
+import { cachePageData } from '$lib/server/page-cache'
 import { blobUrl, type RespawnProfileRecord } from '$lib/atproto/profile'
 import { listAllRecords, getRecordOrNull, type RecordEnvelope } from '$lib/atproto/records'
 import { listLogs } from '$lib/atproto/log'
@@ -9,7 +10,12 @@ import type { GameRef, RespawnGameRecord } from '$lib/atproto/game'
 
 export const PAGE_SIZE = 24
 
-export async function loadGamesPage(handle: string, page: number, locals: App.Locals) {
+export async function loadGamesPage(
+	handle: string,
+	page: number,
+	locals: App.Locals,
+	setHeaders: RequestEvent['setHeaders'],
+) {
 	let actor
 	try {
 		actor = await resolveActor(handle)
@@ -17,6 +23,7 @@ export async function loadGamesPage(handle: string, page: number, locals: App.Lo
 		error(404, 'Account not found')
 	}
 	const repo = publicAgent(actor.pds)
+	const isSelf = locals.user?.did === actor.did
 
 	const [profile, games, logs, backlog] = await Promise.all([
 		getRecordOrNull<RespawnProfileRecord>(repo, actor.did, Collections.profile, 'self'),
@@ -52,10 +59,14 @@ export async function loadGamesPage(handle: string, page: number, locals: App.Lo
 	if (page > totalPages) error(404, 'Page not found')
 	const start = (page - 1) * PAGE_SIZE
 
+	// Only this actor can write to their own repo, so another viewer's copy of the
+	// page can't go stale under them.
+	cachePageData(setHeaders, { viewerCanMutate: isSelf })
+
 	return {
 		handle: actor.handle ?? actor.did,
 		displayName: profile?.value.displayName || (actor.handle ?? actor.did),
-		isSelf: locals.user?.did === actor.did,
+		isSelf,
 		page,
 		totalPages,
 		// The playing list isn't paginated, so repeating it under every page of

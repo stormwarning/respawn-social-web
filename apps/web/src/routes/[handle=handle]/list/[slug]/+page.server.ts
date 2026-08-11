@@ -2,8 +2,9 @@ import { error } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 import { getListBySlug } from '$lib/atproto/list'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
+import { cachePageData } from '$lib/server/page-cache'
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 	let actor
 	try {
 		actor = await resolveActor(params.handle)
@@ -13,6 +14,9 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const list = await getListBySlug(publicAgent(actor.pds), actor.did, params.slug)
 	if (!list) error(404, 'List not found')
+
+	// Only this actor can edit their own list.
+	cachePageData(setHeaders, { viewerCanMutate: locals.user?.did === actor.did })
 
 	return {
 		handle: actor.handle ?? actor.did,

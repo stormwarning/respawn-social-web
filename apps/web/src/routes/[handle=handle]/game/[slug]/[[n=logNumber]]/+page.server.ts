@@ -6,6 +6,7 @@ import { createLike, deleteLike, findLike } from '$lib/atproto/like'
 import { getRecordOrNull, toPlainRecord } from '$lib/atproto/records'
 import { listLogs, type RespawnGateRecord } from '$lib/atproto/log'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
+import { cachePageData } from '$lib/server/page-cache'
 
 const MAX_COMMENT_LENGTH = 3000
 
@@ -19,7 +20,7 @@ async function loadLog(handle: string, slug: string, n: number) {
 	return { actor, repo, log: log ?? null, total: logs.length }
 }
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 	const n = params.n ? Number(params.n) : 1
 
 	let loaded
@@ -44,6 +45,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const like = await findLike(locals.agent, locals.user.did, log.uri)
 		viewerLike = like ? { rkey: like.rkey } : null
 	}
+
+	// A signed-in viewer can like or comment from here, and the like state is part
+	// of this payload, so only the logged-out view is safe to hold. Set only once
+	// the load has succeeded, so a resolve failure — which surfaces as a 404 —
+	// isn't held for a minute.
+	cachePageData(setHeaders, { viewerCanMutate: Boolean(locals.user) })
 
 	return {
 		handle: actor.handle ?? actor.did,
