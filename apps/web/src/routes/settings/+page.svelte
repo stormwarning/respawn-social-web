@@ -1,6 +1,11 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import SelectField from '$lib/components/select-field.svelte'
+import TextInput from '$lib/components/text-input.svelte'
+import Textarea from '$lib/components/textarea.svelte'
+import { PRONOUN_VALUES } from '$lib/atproto/pronouns'
 import type { ActionData, PageData } from './$types'
+import AvatarField from '$lib/components/avatar-field.svelte'
 
 let { data, form }: { data: PageData; form: ActionData } = $props()
 
@@ -17,96 +22,125 @@ const shownAvatar = $derived(avatarPreview ?? data.avatarUrl)
 </script>
 
 <svelte:head>
-	<title>Edit profile · Respawn Social</title>
+	<title>Account settings · Respawn</title>
 </svelte:head>
 
-<h1>Your Respawn profile</h1>
-<p class="hint">
-	Prefilled from your Bluesky profile. Changes here are saved as a Respawn record on your PDS.
-</p>
+<article class="page">
+	<h1>Account settings</h1>
 
-<form method="POST" enctype="multipart/form-data" class="profile" use:enhance>
-	<div class="avatar-row">
-		{#if shownAvatar}
-			<img class="avatar" src={shownAvatar} alt="Avatar preview" />
-		{:else}
-			<div class="avatar placeholder" aria-hidden="true"></div>
+	<form class="profile-settings" method="POST" enctype="multipart/form-data" use:enhance>
+		<!-- <div class="avatar-row">
+			{#if shownAvatar}
+				<img class="avatar" src={shownAvatar} alt="Avatar preview" />
+			{:else}
+				<div class="avatar placeholder" aria-hidden="true"></div>
+			{/if}
+			<div class="avatar-field">
+				<label for="avatar">Avatar</label>
+				<input
+					id="avatar"
+					name="avatar"
+					type="file"
+					accept="image/png,image/jpeg,image/webp"
+					onchange={onAvatarChange}
+				/>
+				<span class="sub">PNG, JPEG, or WebP · max 1 MB</span>
+			</div>
+		</div> -->
+		<AvatarField label="Avatar" id="avatar" name="avatar" value={data.avatarUrl} />
+
+		<!-- <label for="handle">Handle</label>
+		<input id="handle" value={data.handle} type="text" readonly /> -->
+
+		<TextInput
+			label="Display name"
+			reserveMessageSpace={false}
+			id="displayName"
+			name="displayName"
+			value={data.displayName}
+			maxlength={640}
+			autocapitalize="off"
+			autocorrect="off"
+		/>
+
+		<Textarea
+			label="Bio"
+			reserveMessageSpace={false}
+			id="description"
+			name="description"
+			value={data.description}
+			maxlength={2560}
+		/>
+
+		<SelectField
+			label="Pronouns"
+			reserveMessageSpace={false}
+			id="pronouns"
+			name="pronouns"
+			value={data.pronouns}
+		>
+			{#each PRONOUN_VALUES as value (value)}
+				<option {value}>{value}</option>
+			{/each}
+		</SelectField>
+
+		<!-- <TextInput
+			label="Channel"
+			id="channel"
+			name="channel"
+			value={data.channel}
+			type="url"
+			placeholder="https://stream.place/…"
+		/> -->
+
+		<!-- <label for="bsky">Bluesky account (DID)</label>
+		<input id="bsky" name="bsky" type="text" value={data.bsky} placeholder="did:plc:…" />
+		<span class="sub">Lets viewers open your Bluesky profile in their preferred client.</span> -->
+
+		<SelectField
+			label="Adult content"
+			reserveMessageSpace={false}
+			id="adultContent"
+			name="adultContent"
+			value={data.adultContent}
+		>
+			<option value="show">Show</option>
+			<option value="blur">Blur</option>
+			<option value="hide">Hide</option>
+		</SelectField>
+
+		{#if form?.error}
+			<p class="error">{form.error}</p>
 		{/if}
-		<div class="avatar-field">
-			<label for="avatar">Avatar</label>
-			<input
-				id="avatar"
-				name="avatar"
-				type="file"
-				accept="image/png,image/jpeg,image/webp"
-				onchange={onAvatarChange}
-			/>
-			<span class="sub">PNG, JPEG, or WebP · max 1 MB</span>
-		</div>
-	</div>
+		{#if form?.success}
+			<p class="success">Profile saved.</p>
+		{/if}
 
-	<label for="handle">Handle</label>
-	<input id="handle" value={data.handle} type="text" readonly />
-
-	<label for="displayName">Display name</label>
-	<input
-		id="displayName"
-		name="displayName"
-		type="text"
-		value={data.displayName}
-		maxlength="640"
-		placeholder="Your name"
-	/>
-
-	<label for="description">Description</label>
-	<textarea id="description" name="description" rows="4" maxlength="2560"
-		>{data.description}</textarea
-	>
-
-	<label for="pronouns">Pronouns</label>
-	<input
-		id="pronouns"
-		name="pronouns"
-		type="text"
-		value={data.pronouns}
-		maxlength="320"
-		placeholder="e.g. they/them"
-	/>
-
-	<label for="channel">Channel</label>
-	<input
-		id="channel"
-		name="channel"
-		type="url"
-		value={data.channel}
-		placeholder="https://twitch.tv/…"
-	/>
-
-	<label for="bsky">Bluesky account (DID)</label>
-	<input id="bsky" name="bsky" type="text" value={data.bsky} placeholder="did:plc:…" />
-	<span class="sub">Lets viewers open your Bluesky profile in their preferred client.</span>
-
-	<label for="adultContent">Adult content on your profile</label>
-	<select id="adultContent" name="adultContent" value={data.adultContent}>
-		<option value="show">Show</option>
-		<option value="blur">Blur</option>
-		<option value="hide">Hide</option>
-	</select>
-
-	{#if form?.error}
-		<p class="error">{form.error}</p>
-	{/if}
-	{#if form?.success}
-		<p class="success">Profile saved.</p>
-	{/if}
-
-	<button type="submit">Save profile</button>
-</form>
+		<button class="button primary" type="submit"><div>Save profile</div></button>
+	</form>
+</article>
 
 <style>
-.hint {
-	color: var(--color-muted);
-	font-size: var(--text-sm);
+.page {
+	display: grid;
+	gap: 32px;
+	padding: 32px 0;
+}
+
+h1 {
+	font-size: 1.5rem;
+	font-weight: 600;
+	line-height: 1.2;
+	text-box: trim-both cap alphabetic;
+}
+
+.profile-settings {
+	display: grid;
+	gap: 32px;
+
+	@container (min-width: 600px) {
+		max-width: 50%;
+	}
 }
 
 .profile {
@@ -151,9 +185,7 @@ label {
 	color: var(--color-muted);
 }
 
-input,
-select,
-textarea {
+input {
 	padding: var(--space-2) var(--space-3);
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius);
@@ -164,18 +196,6 @@ textarea {
 
 input[readonly] {
 	color: var(--color-muted);
-}
-
-button {
-	margin-top: var(--space-2);
-	padding: var(--space-2) var(--space-3);
-	border: none;
-	border-radius: var(--radius);
-	background: var(--color-accent);
-	color: #07101f;
-	font-weight: 600;
-	cursor: pointer;
-	align-self: flex-start;
 }
 
 .error {
