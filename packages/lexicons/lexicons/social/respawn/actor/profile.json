@@ -28,6 +28,18 @@
 					},
 					"pronouns": {
 						"type": "string",
+						"description": "The actor's pronouns. Clients default to they/their when absent.",
+						"knownValues": [
+							"they/their",
+							"she/her",
+							"she/their",
+							"he/his",
+							"he/their",
+							"xe/xyr",
+							"ze/hir",
+							"ze/zir",
+							"it/its"
+						],
 						"maxGraphemes": 32,
 						"maxLength": 320
 					},

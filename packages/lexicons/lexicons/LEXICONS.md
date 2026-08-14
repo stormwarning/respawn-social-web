@@ -99,7 +99,7 @@ Pre-filled from Bluesky profile on creation.
 - avatar: blob
 - displayName: string
 - bio: string
-- pronouns: string (enum(
+- pronouns: `'they/their' | 'she/her' | 'she/their' | 'he/his' | 'he/their' | 'xe/xyr' | 'ze/hir' | 'ze/zir' | 'it/its'` (open vocabulary; default to `they/their`)
 - faves
   - title
   - cover

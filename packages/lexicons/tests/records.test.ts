@@ -206,13 +206,21 @@ describe('social.respawn.actor.profile', () => {
 			schema.$safeParse({
 				$type: Collections.profile,
 				displayName: 'Jeff',
-				pronouns: 'he/him',
+				pronouns: 'he/his',
 				faves: [{ game }],
 				channel: 'https://twitch.tv/example',
 				bsky: did,
 				adultContent: 'blur',
 				createdAt,
 			}).success,
+		).toBe(true)
+	})
+
+	it('keeps pronouns an open vocabulary', () => {
+		// knownValues, not enum: records written by other clients (or before the
+		// option list existed) still validate.
+		expect(
+			schema.$safeParse({ $type: Collections.profile, pronouns: 'he/him', createdAt }).success,
 		).toBe(true)
 	})
 

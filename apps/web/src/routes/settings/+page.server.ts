@@ -9,6 +9,7 @@ import {
 	putRespawnProfile,
 	type RespawnProfileRecord,
 } from '$lib/atproto/profile'
+import { DEFAULT_PRONOUNS, isPronouns } from '$lib/atproto/pronouns'
 import { cachedBskyProfile, cachedRespawnProfile, forgetProfile } from '$lib/server/profile-cache'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -35,7 +36,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		displayName: respawn?.displayName ?? bsky.displayName,
 		description: respawn?.description ?? bsky.description,
 		avatarUrl,
-		pronouns: respawn?.pronouns ?? '',
+		// The lexicon vocabulary is open, so anything we don't offer in the select
+		// (including values written before the list existed) falls back to the default.
+		pronouns: isPronouns(respawn?.pronouns) ? respawn.pronouns : DEFAULT_PRONOUNS,
 		channel: respawn?.channel ?? '',
 		bsky: respawn?.bsky ?? user.did,
 		adultContent: respawn?.adultContent ?? 'blur',
@@ -69,6 +72,9 @@ export const actions: Actions = {
 		if (adultContent && !ADULT_CONTENT_VALUES.includes(adultContent as AdultContent)) {
 			return fail(400, { error: 'Invalid adult content setting.' })
 		}
+		if (pronouns && !isPronouns(pronouns)) {
+			return fail(400, { error: 'Invalid pronouns setting.' })
+		}
 
 		// Start from the existing record so unchanged fields (e.g. avatar, faves) survive.
 		const existing = (await loadRespawnProfile(agent, user.did)) ?? {}
@@ -76,7 +82,7 @@ export const actions: Actions = {
 			...existing,
 			displayName: displayName || undefined,
 			description: description || undefined,
-			pronouns: pronouns || undefined,
+			pronouns: isPronouns(pronouns) ? pronouns : DEFAULT_PRONOUNS,
 			channel: channel || undefined,
 			bsky: bsky || undefined,
 			adultContent: (adultContent as AdultContent) || undefined,

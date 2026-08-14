@@ -23,7 +23,21 @@ type Main = {
    * Small image to be displayed next to the actor's display name.
    */
   avatar?: l.BlobRef
-  pronouns?: string
+
+  /**
+   * The actor's pronouns. Clients default to they/their when absent.
+   */
+  pronouns?:
+    | 'they/their'
+    | 'she/her'
+    | 'she/their'
+    | 'he/his'
+    | 'he/their'
+    | 'xe/xyr'
+    | 'ze/hir'
+    | 'ze/zir'
+    | 'it/its'
+    | l.UnknownString
 
   /**
    * The actor's favorite games.
@@ -67,7 +81,21 @@ const main = /*#__PURE__*/ l.record<'literal:self', Main>(
       }),
     ),
     pronouns: /*#__PURE__*/ l.optional(
-      /*#__PURE__*/ l.string({ maxGraphemes: 32, maxLength: 320 }),
+      /*#__PURE__*/ l.string<{
+        knownValues: [
+          'they/their',
+          'she/her',
+          'she/their',
+          'he/his',
+          'he/their',
+          'xe/xyr',
+          'ze/hir',
+          'ze/zir',
+          'it/its',
+        ]
+        maxGraphemes: 32
+        maxLength: 320
+      }>({ maxGraphemes: 32, maxLength: 320 }),
     ),
     faves: /*#__PURE__*/ l.optional(
       /*#__PURE__*/ l.array(/*#__PURE__*/ l.ref<Fave>((() => fave) as any), {
