@@ -334,7 +334,7 @@ async function submitRating() {
 
 .actions-primary {
 	display: flex;
-	gap: 8px;
+	gap: 4px;
 }
 
 .actions-rating {
