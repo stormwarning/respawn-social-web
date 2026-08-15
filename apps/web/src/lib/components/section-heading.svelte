@@ -3,7 +3,7 @@ import type { Snippet } from 'svelte'
 
 interface Props {
 	children: Snippet
-	secondary?: Snippet
+	secondary?: Snippet | number
 }
 
 let { children, secondary }: Props = $props()

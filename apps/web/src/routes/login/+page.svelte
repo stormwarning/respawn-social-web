@@ -10,7 +10,7 @@ let { form }: { form: ActionData } = $props()
 </svelte:head>
 
 <div class="wrapper">
-	<h1 class="heading">Sign in with your ATmosphere account.</h1>
+	<h1 class="heading">Sign in with your ATmosphere account</h1>
 
 	<form class="login" method="POST">
 		<TextInput

@@ -2,6 +2,7 @@
 	font-size: 1.5rem;
 	font-weight: 600;
 	line-height: 1.2;
+	color: var(--color-grey-050);
 	text-box: trim-both cap alphabetic;
 	text-wrap: balance;
 }
