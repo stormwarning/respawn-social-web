@@ -53,6 +53,9 @@ importers:
       sharp:
         specifier: 0.35.2
         version: 0.35.2
+      svelte-dnd-action:
+        specifier: 0.9.78
+        version: 0.9.78(svelte@5.56.3)
     devDependencies:
       '@playwright/test':
         specifier: 1.61.0
@@ -2440,6 +2443,11 @@ packages:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: '>=5.0.0'
 
+  svelte-dnd-action@0.9.78:
+    resolution: {integrity: sha512-qov+j3A9Umo1Ng2b2PaQ/nTDBo1sogAw19DF1KZ35Pcx/9yJtlmnKYKVHjCz9iqUH+g1sk4XuCstxPZFFPEa/Q==}
+    peerDependencies:
+      svelte: '>=3.23.0 || ^5.0.0-next.0'
+
   svelte@5.56.3:
     resolution: {integrity: sha512-w7JvrM5IFl5cmfbY0TLik9o7mjRUJmRMhOR51tBPu708Gr/MjbGs7VnJnr/B0CaXeI4vtnOh7RKxDr0cwhMdDA==}
     engines: {node: '>=18'}
@@ -4626,6 +4634,10 @@ snapshots:
       typescript: 6.0.3
     transitivePeerDependencies:
       - picomatch
+
+  svelte-dnd-action@0.9.78(svelte@5.56.3):
+    dependencies:
+      svelte: 5.56.3
 
   svelte@5.56.3:
     dependencies:
