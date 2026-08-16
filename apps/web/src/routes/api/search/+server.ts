@@ -15,6 +15,7 @@ export const GET: RequestHandler = async ({ url, fetch }) => {
 
 	const games = await searchGames(q, fetch)
 	const results = games.slice(0, 5).map((game) => ({
+		igdbId: game.id,
 		name: game.name,
 		slug: game.slug as string,
 		year:
@@ -23,6 +24,9 @@ export const GET: RequestHandler = async ({ url, fetch }) => {
 				: null,
 		// The dialog renders these in a 42px column.
 		coverUrl: game.cover?.url ? normalizeCoverUrl(game.cover.url, 'small') : null,
+		// Untouched IGDB url. `normalizeCoverUrl` only rewrites `/t_thumb/`, so a
+		// consumer that wants a bigger variant has to start from the original.
+		rawCoverUrl: game.cover?.url ?? null,
 	}))
 
 	return json({ results })

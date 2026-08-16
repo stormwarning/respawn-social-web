@@ -26,3 +26,20 @@ export async function buildCover(agent: Agent, rawCoverUrl: string): Promise<Cov
 
 	return { image: upload.data.blob, colors: { dominant: hex } }
 }
+
+/**
+ * Fetch a game's IGDB cover and upload it as a blob, without extracting the
+ * dominant color. Used by the favourites selector, where covers are only ever
+ * rendered as images and the sharp pass would slow the save down for nothing.
+ */
+export async function uploadCover(agent: Agent, rawCoverUrl: string): Promise<CoverRef> {
+	const res = await fetch(normalizeCoverUrl(rawCoverUrl))
+	if (!res.ok) throw new Error(`cover fetch failed: ${res.status}`)
+	const bytes = new Uint8Array(await res.arrayBuffer())
+
+	const upload = await agent.com.atproto.repo.uploadBlob(bytes, {
+		encoding: res.headers.get('content-type') ?? 'image/jpeg',
+	})
+
+	return { image: upload.data.blob }
+}

@@ -1,13 +1,13 @@
 <script lang="ts">
 import InteractiveCover from './interactive-cover.svelte'
 
-let { items } = $props()
+let { items, cols } = $props()
 
 // Widest layout is 6 columns, so this covers the first row at every breakpoint.
 const EAGER_COUNT = 6
 </script>
 
-<ul class="cover-list">
+<ul class="cover-list" style="--force-cols: {cols};">
 	{#each items as item, index (item.igdbId)}
 		<li>
 			<InteractiveCover
@@ -32,7 +32,7 @@ const EAGER_COUNT = 6
 	list-style: none;
 
 	@container (min-width: 600px) {
-		--cols: 6;
+		--cols: var(--force-cols, 6);
 	}
 
 	> li {

@@ -6,6 +6,7 @@ import Textarea from '$lib/components/textarea.svelte'
 import { PRONOUN_VALUES } from '$lib/atproto/pronouns'
 import type { ActionData, PageData } from './$types'
 import AvatarField from '$lib/components/avatar-field.svelte'
+import FavesField from '$lib/components/faves-field.svelte'
 
 let { data, form }: { data: PageData; form: ActionData } = $props()
 
@@ -29,7 +30,8 @@ const shownAvatar = $derived(avatarPreview ?? data.avatarUrl)
 	<h1>Account settings</h1>
 
 	<form class="profile-settings" method="POST" enctype="multipart/form-data" use:enhance>
-		<!-- <div class="avatar-row">
+		<fieldset class="main">
+			<!-- <div class="avatar-row">
 			{#if shownAvatar}
 				<img class="avatar" src={shownAvatar} alt="Avatar preview" />
 			{:else}
@@ -47,44 +49,44 @@ const shownAvatar = $derived(avatarPreview ?? data.avatarUrl)
 				<span class="sub">PNG, JPEG, or WebP · max 1 MB</span>
 			</div>
 		</div> -->
-		<AvatarField label="Avatar" id="avatar" name="avatar" value={data.avatarUrl} />
+			<AvatarField label="Avatar" id="avatar" name="avatar" value={data.avatarUrl} />
 
-		<!-- <label for="handle">Handle</label>
+			<!-- <label for="handle">Handle</label>
 		<input id="handle" value={data.handle} type="text" readonly /> -->
 
-		<TextInput
-			label="Display name"
-			reserveMessageSpace={false}
-			id="displayName"
-			name="displayName"
-			value={data.displayName}
-			maxlength={640}
-			autocapitalize="off"
-			autocorrect="off"
-		/>
+			<TextInput
+				label="Display name"
+				reserveMessageSpace={false}
+				id="displayName"
+				name="displayName"
+				value={data.displayName}
+				maxlength={640}
+				autocapitalize="off"
+				autocorrect="off"
+			/>
 
-		<Textarea
-			label="Bio"
-			reserveMessageSpace={false}
-			id="description"
-			name="description"
-			value={data.description}
-			maxlength={2560}
-		/>
+			<Textarea
+				label="Bio"
+				reserveMessageSpace={false}
+				id="description"
+				name="description"
+				value={data.description}
+				maxlength={2560}
+			/>
 
-		<SelectField
-			label="Pronouns"
-			reserveMessageSpace={false}
-			id="pronouns"
-			name="pronouns"
-			value={data.pronouns}
-		>
-			{#each PRONOUN_VALUES as value (value)}
-				<option {value}>{value}</option>
-			{/each}
-		</SelectField>
+			<SelectField
+				label="Pronouns"
+				reserveMessageSpace={false}
+				id="pronouns"
+				name="pronouns"
+				value={data.pronouns}
+			>
+				{#each PRONOUN_VALUES as value (value)}
+					<option {value}>{value}</option>
+				{/each}
+			</SelectField>
 
-		<!-- <TextInput
+			<!-- <TextInput
 			label="Channel"
 			id="channel"
 			name="channel"
@@ -93,21 +95,31 @@ const shownAvatar = $derived(avatarPreview ?? data.avatarUrl)
 			placeholder="https://stream.place/…"
 		/> -->
 
-		<!-- <label for="bsky">Bluesky account (DID)</label>
+			<!-- <label for="bsky">Bluesky account (DID)</label>
 		<input id="bsky" name="bsky" type="text" value={data.bsky} placeholder="did:plc:…" />
 		<span class="sub">Lets viewers open your Bluesky profile in their preferred client.</span> -->
 
-		<SelectField
-			label="Adult content"
-			reserveMessageSpace={false}
-			id="adultContent"
-			name="adultContent"
-			value={data.adultContent}
-		>
-			<option value="show">Show</option>
-			<option value="blur">Blur</option>
-			<option value="hide">Hide</option>
-		</SelectField>
+			<SelectField
+				label="Adult content"
+				reserveMessageSpace={false}
+				id="adultContent"
+				name="adultContent"
+				value={data.adultContent}
+			>
+				<option value="show">Show</option>
+				<option value="blur">Blur</option>
+				<option value="hide">Hide</option>
+			</SelectField>
+		</fieldset>
+
+		<fieldset class="sidebar">
+			<FavesField
+				label="Favourite games"
+				reserveMessageSpace={false}
+				name="faves"
+				value={data.faves}
+			/>
+		</fieldset>
 
 		{#if form?.error}
 			<p class="error">{form.error}</p>
@@ -116,7 +128,9 @@ const shownAvatar = $derived(avatarPreview ?? data.avatarUrl)
 			<p class="success">Profile saved.</p>
 		{/if}
 
-		<button class="button primary" type="submit"><div>Save profile</div></button>
+		<div>
+			<button class="button primary" type="submit"><div>Save profile</div></button>
+		</div>
 	</form>
 </article>
 
@@ -139,8 +153,21 @@ h1 {
 	gap: 32px;
 
 	@container (min-width: 600px) {
-		max-width: 50%;
+		/*max-width: 50%;*/
+		grid-template-columns: 1fr 1fr;
 	}
+}
+
+.main {
+	display: grid;
+	gap: 32px;
+	padding: 0;
+	border: 0;
+}
+
+.sidebar {
+	padding: 0;
+	border: 0;
 }
 
 .profile {

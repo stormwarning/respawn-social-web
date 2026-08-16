@@ -2,6 +2,7 @@
 import { enhance } from '$app/forms'
 import AvatarImage from '$lib/components/avatar-image.svelte'
 import CoverImageStack from '$lib/components/cover-image-stack.svelte'
+import CoverList from '$lib/components/cover-list.svelte'
 import SectionHeading from '$lib/components/section-heading.svelte'
 import type { PageData } from './$types'
 
@@ -71,11 +72,7 @@ const playStateLabels: Record<string, string> = {
 					<p>{data.profile.description}</p>
 				</div>
 			{/if}
-		</div>
-	</header>
 
-	<main class="layout">
-		<section class="body">
 			<p class="sub">
 				<a href="/{data.handle}/games/">{data.gameCount} games</a> · {data.logCount} logs ·
 				<a href="/{data.handle}/backlog/">{data.backlogCount} in backlog</a>
@@ -88,14 +85,16 @@ const playStateLabels: Record<string, string> = {
 					>
 				{/if}
 			</p>
+		</div>
+	</header>
 
-			{#if data.profile?.faves?.length}
-				<h2>Favorites</h2>
-				<ul>
-					{#each data.profile.faves as fave (fave.game.igdbId)}
-						<li><a href="/game/{fave.game.slug}/">{fave.game.title}</a></li>
-					{/each}
-				</ul>
+	<main class="layout">
+		<section class="body">
+			{#if data.faves.length}
+				<div class="faves">
+					<SectionHeading>Favourite games</SectionHeading>
+					<CoverList items={data.faves} cols={4} />
+				</div>
 			{/if}
 		</section>
 
@@ -104,7 +103,6 @@ const playStateLabels: Record<string, string> = {
 				<section class="backlog">
 					<SectionHeading secondary={data.backlogCount}>
 						<a href="/{data.handle}/backlog/">Backlog</a>
-						<!-- <span class="sub">({data.backlogCount})</span> -->
 					</SectionHeading>
 					<a href="/{data.handle}/backlog/">
 						<CoverImageStack covers={data.backlogCovers} />
@@ -112,7 +110,7 @@ const playStateLabels: Record<string, string> = {
 				</section>
 			{/if}
 
-			<h2>Recent logs</h2>
+			<!-- <h2>Recent logs</h2>
 			{#if data.recentLogs.length === 0}
 				<p class="sub">No logs yet.</p>
 			{:else}
@@ -131,7 +129,7 @@ const playStateLabels: Record<string, string> = {
 						</li>
 					{/each}
 				</ul>
-			{/if}
+			{/if} -->
 
 			{#if data.lists.length}
 				<h2>Lists</h2>
@@ -207,10 +205,16 @@ const playStateLabels: Record<string, string> = {
 .layout {
 	display: grid;
 	gap: 64px;
+	align-items: start;
 
 	@container (min-width: 600px) {
 		grid-template-columns: 1fr 256px;
 	}
+}
+
+.faves {
+	display: grid;
+	gap: 16px;
 }
 
 .sidebar {

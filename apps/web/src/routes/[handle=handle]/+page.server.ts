@@ -72,6 +72,12 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 		})),
 		logCount: logs.length,
 		gameCount: games.length,
+		faves: (profile?.value.faves ?? []).map((fave) => ({
+			igdbId: fave.game.igdbId,
+			slug: fave.game.slug,
+			title: fave.game.title,
+			coverUrl: blobUrl(actor.pds, actor.did, fave.cover?.image),
+		})),
 		lists: lists.map((list) => ({
 			slug: list.value.slug,
 			name: list.value.name,
