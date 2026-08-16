@@ -9,17 +9,6 @@ import AvatarField from '$lib/components/avatar-field.svelte'
 import FavesField from '$lib/components/faves-field.svelte'
 
 let { data, form }: { data: PageData; form: ActionData } = $props()
-
-// Live preview for a newly picked avatar before submit.
-let avatarPreview = $state<string | null>(null)
-
-function onAvatarChange(event: Event) {
-	const input = event.currentTarget as HTMLInputElement
-	const file = input.files?.[0]
-	avatarPreview = file ? URL.createObjectURL(file) : null
-}
-
-const shownAvatar = $derived(avatarPreview ?? data.avatarUrl)
 </script>
 
 <svelte:head>
@@ -31,24 +20,6 @@ const shownAvatar = $derived(avatarPreview ?? data.avatarUrl)
 
 	<form class="profile-settings" method="POST" enctype="multipart/form-data" use:enhance>
 		<fieldset class="main">
-			<!-- <div class="avatar-row">
-			{#if shownAvatar}
-				<img class="avatar" src={shownAvatar} alt="Avatar preview" />
-			{:else}
-				<div class="avatar placeholder" aria-hidden="true"></div>
-			{/if}
-			<div class="avatar-field">
-				<label for="avatar">Avatar</label>
-				<input
-					id="avatar"
-					name="avatar"
-					type="file"
-					accept="image/png,image/jpeg,image/webp"
-					onchange={onAvatarChange}
-				/>
-				<span class="sub">PNG, JPEG, or WebP · max 1 MB</span>
-			</div>
-		</div> -->
 			<AvatarField label="Avatar" id="avatar" name="avatar" value={data.avatarUrl} />
 
 			<!-- <label for="handle">Handle</label>
@@ -168,61 +139,6 @@ h1 {
 .sidebar {
 	padding: 0;
 	border: 0;
-}
-
-.profile {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-2);
-	max-width: 30rem;
-}
-
-.avatar-row {
-	display: flex;
-	align-items: center;
-	gap: var(--space-3);
-	margin-bottom: var(--space-2);
-}
-
-.avatar {
-	width: 4rem;
-	height: 4rem;
-	border-radius: 50%;
-	object-fit: cover;
-	border: 1px solid var(--color-border);
-}
-
-.avatar.placeholder {
-	background: var(--color-surface);
-}
-
-.avatar-field {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-1);
-}
-
-label {
-	font-size: var(--text-sm);
-	color: var(--color-muted);
-}
-
-.sub {
-	font-size: var(--text-sm);
-	color: var(--color-muted);
-}
-
-input {
-	padding: var(--space-2) var(--space-3);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius);
-	background: var(--color-surface);
-	color: var(--color-text);
-	font: inherit;
-}
-
-input[readonly] {
-	color: var(--color-muted);
 }
 
 .error {
