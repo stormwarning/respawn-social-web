@@ -1,7 +1,12 @@
 <script lang="ts">
 import InteractiveCover from './interactive-cover.svelte'
 
-let { items, cols } = $props()
+interface Props {
+	items: any[]
+	cols?: number
+}
+
+let { items, cols }: Props = $props()
 
 // Widest layout is 6 columns, so this covers the first row at every breakpoint.
 const EAGER_COUNT = 6
