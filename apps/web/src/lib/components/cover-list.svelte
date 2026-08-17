@@ -6,7 +6,7 @@ interface Props {
 	cols?: number
 }
 
-let { items, cols }: Props = $props()
+let { items, cols = 6 }: Props = $props()
 
 // Widest layout is 6 columns, so this covers the first row at every breakpoint.
 const EAGER_COUNT = 6

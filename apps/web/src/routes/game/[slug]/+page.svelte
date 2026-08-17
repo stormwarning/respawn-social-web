@@ -2,7 +2,9 @@
 import Chip from '$lib/components/chip.svelte'
 import ClampText from '$lib/components/clamp-text.svelte'
 import CoverImage from '$lib/components/cover-image.svelte'
+import CoverList from '$lib/components/cover-list.svelte'
 import GameActions from '$lib/components/game-actions.svelte'
+import SectionHeading from '$lib/components/section-heading.svelte'
 import type { PageData } from './$types'
 
 let { data }: { data: PageData } = $props()
@@ -97,6 +99,13 @@ let { game } = $derived(data)
 	<ul>
 		{#each data.game.external_games as item}<li>{item.url}</li>{/each}
 	</ul> -->
+
+	{#if game.similar_games && game.similar_games.length > 0}
+		<section class="similar">
+			<SectionHeading>Similar games</SectionHeading>
+			<CoverList items={game.similar_games.slice(0, 4)} cols={4} />
+		</section>
+	{/if}
 </article>
 
 <aside class="sidebar">
@@ -237,6 +246,11 @@ let { game } = $derived(data)
 	gap: 8px;
 	padding: 0;
 	list-style: none;
+}
+
+.similar {
+	display: grid;
+	gap: 16px;
 }
 
 .sidebar {

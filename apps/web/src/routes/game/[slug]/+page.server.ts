@@ -44,6 +44,7 @@ function parseGameForm(
 interface AugmentedGame extends Game {
 	developer?: string[]
 	publisher?: string[]
+	similar_games?: Array<{ title: string; slug: string; coverUrl?: string }>
 }
 
 export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }) => {
@@ -64,6 +65,13 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 
 		game.developer = names('developer')
 		game.publisher = names('publisher')
+
+		if (game.similar_games) {
+			game.similar_games.forEach((g) => {
+				g.igdbId = g.id
+				if (g.cover?.url) g.coverUrl = normalizeCoverUrl(g.cover.url)
+			})
+		}
 
 		let site = game.websites?.find((w) => w.type.id === 1)?.url
 
