@@ -6,7 +6,7 @@ import type { PageData } from './$types'
 let { data }: { data: PageData } = $props()
 </script>
 
-<svelte:head><title>Search results for {data.query} 🞍 Respawn</title></svelte:head>
+<svelte:head><title>Search results for {data.query} ▪︎ Respawn</title></svelte:head>
 
 <article class="page">
 	<h1>Results for “{data.query}”</h1>
