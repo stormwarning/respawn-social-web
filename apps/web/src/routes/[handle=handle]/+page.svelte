@@ -28,7 +28,7 @@ const playStateLabels: Record<string, string> = {
 </script>
 
 <svelte:head>
-	<title>{displayName}’s profile 🞍 Respawn</title>
+	<title>{displayName}’s profile ▪ Respawn</title>
 </svelte:head>
 
 <article class="profile">

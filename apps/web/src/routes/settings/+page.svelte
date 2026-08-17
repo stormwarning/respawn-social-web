@@ -12,7 +12,7 @@ let { data, form }: { data: PageData; form: ActionData } = $props()
 </script>
 
 <svelte:head>
-	<title>Account settings · Respawn</title>
+	<title>Account settings ▪ Respawn</title>
 </svelte:head>
 
 <article class="page">

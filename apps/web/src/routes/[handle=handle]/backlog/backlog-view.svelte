@@ -12,7 +12,7 @@ let year = (releaseDate: string | null) => releaseDate?.slice(0, 4) ?? ''
 </script>
 
 <svelte:head>
-	<title>{title}{data.page > 1 ? ` · Page ${data.page}` : ''} 🞍 Respawn</title>
+	<title>{title}{data.page > 1 ? ` ▪ Page ${data.page}` : ''} ▪ Respawn</title>
 </svelte:head>
 
 <article class="page">

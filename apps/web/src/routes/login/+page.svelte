@@ -6,7 +6,7 @@ let { form }: { form: ActionData } = $props()
 </script>
 
 <svelte:head>
-	<title>Sign in 🞍 Respawn</title>
+	<title>Sign in ▪ Respawn</title>
 </svelte:head>
 
 <div class="wrapper">

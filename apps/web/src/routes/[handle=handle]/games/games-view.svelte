@@ -18,7 +18,7 @@ let playedHeading = $derived(data.isSelf ? 'You’ve played' : `${data.displayNa
 {/snippet}
 
 <svelte:head>
-	<title>{title}{data.page > 1 ? ` · Page ${data.page}` : ''} 🞍 Respawn</title>
+	<title>{title}{data.page > 1 ? ` ▪ Page ${data.page}` : ''} ▪ Respawn</title>
 </svelte:head>
 
 <article class="page">

@@ -10,7 +10,7 @@ let { game } = $derived(data)
 </script>
 
 <svelte:head>
-	<title>{game.name} 🞍 Respawn</title>
+	<title>{game.name} ▪ Respawn</title>
 </svelte:head>
 
 <article class="page">
@@ -19,7 +19,7 @@ let { game } = $derived(data)
 			<h1>{game.name}</h1>
 			<div class="title-meta">
 				<span>{game.releaseYear}</span>
-				{#if game.releaseYear && game.developer}<span role="separator">🞍</span>{/if}
+				{#if game.releaseYear && game.developer}<span role="separator">▪</span>{/if}
 				<span>{game.developer}</span>
 			</div>
 		</div>
