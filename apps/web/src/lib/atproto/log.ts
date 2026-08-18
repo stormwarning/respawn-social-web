@@ -140,7 +140,7 @@ export async function deleteLog(agent: Agent, did: string, rkey: string): Promis
 /**
  * List log records from a repo (own or public), newest first, optionally
  * filtered to one game. Uses `listRecords` pagination — fine at repo scale;
- * cross-user aggregation waits for the appview.
+ * cross-user aggregation waits for HappyView to index logs.
  */
 export async function listLogs(
 	agent: Agent,

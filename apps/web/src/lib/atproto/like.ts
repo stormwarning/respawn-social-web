@@ -40,7 +40,7 @@ export async function deleteLike(agent: Agent, did: string, rkey: string): Promi
 
 /**
  * Find the viewer's own like of a subject, or null. Scans the viewer's like
- * collection — fine at own-repo scale until the appview lands.
+ * collection — fine at own-repo scale until HappyView indexes likes.
  */
 export async function findLike(
 	agent: Agent,

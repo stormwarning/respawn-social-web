@@ -13,7 +13,7 @@ export interface ResolvedActor {
 /**
  * Resolve a handle or DID to the actor's repo location. `listRecords` /
  * `getRecord` against a PDS are public, so profile/log/list pages for any
- * actor work without auth — only cross-repo aggregation needs the appview.
+ * actor work without auth — only cross-repo aggregation needs HappyView.
  */
 export async function resolveActor(input: string): Promise<ResolvedActor> {
 	const trimmed = input.trim().replace(/^@/, '')

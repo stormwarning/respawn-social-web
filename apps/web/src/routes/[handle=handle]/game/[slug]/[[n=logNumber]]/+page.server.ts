@@ -32,7 +32,8 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 	const { actor, repo, log, total } = loaded
 	if (!log) error(404, 'Log not found')
 
-	// Gate record shares the log's rkey. Enforcement is advisory until the appview.
+	// Gate record shares the log's rkey. Enforcement is advisory until HappyView
+	// can apply it on read.
 	const gate = await getRecordOrNull<RespawnGateRecord>(repo, actor.did, Collections.gate, log.rkey)
 	const allow = gate?.value.allow
 	const commentsClosed =

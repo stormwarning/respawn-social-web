@@ -1,18 +1,15 @@
 <script lang="ts">
 import type { PageData } from './$types'
+import type { FeedActor } from '$lib/server/feed'
 
 let { data }: { data: PageData } = $props()
 
-const playStateLabels: Record<string, string> = {
-	played: 'played',
-	completed: 'completed',
-	abandoned: 'abandoned',
-	retired: 'retired',
-	shelved: 'shelved',
+function actorPath(actor: FeedActor): string {
+	return `/${actor.handle ?? actor.did}/`
 }
 
-function authorPath(author: { handle: string | null; did: string }): string {
-	return `/${author.handle ?? author.did}/`
+function actorName(actor: FeedActor): string {
+	return actor.displayName ?? actor.handle ?? actor.did
 }
 </script>
 
@@ -24,38 +21,29 @@ function authorPath(author: { handle: string | null; did: string }): string {
 {#if data.loggedIn}
 	<h1>Your feed</h1>
 	{#if !data.appviewConfigured}
-		<p class="sub">The following feed isn't configured yet (APPVIEW_URL).</p>
+		<p class="sub">The following feed isn't configured yet (HAPPYVIEW_URL).</p>
 	{:else if data.feedError}
 		<p class="sub">Couldn't load your feed. Try again in a moment.</p>
-	{:else if data.timeline && data.timeline.feed.length === 0}
+	{:else if data.timeline && data.timeline.items.length === 0}
 		<p class="sub">
-			Nothing here yet — follow people from their profile pages and their logs will show up.
+			Nothing here yet — follow people from their profile pages and their activity will show up.
 		</p>
 	{:else if data.timeline}
 		<ol class="feed">
-			{#each data.timeline.feed as item (item.uri)}
-				{@const author = item.author}
-				{@const rec = item.record}
+			{#each data.timeline.items as item (item.uri)}
 				<li class="feed-item">
 					<p>
-						<a href={authorPath(author)}>{author.displayName ?? author.handle ?? author.did}</a>
-						logged
-						<a href="/game/{rec.game.slug}/">{rec.game.title}</a>
-						{#if rec.finishedPlaying}as {playStateLabels[rec.finishedPlaying] ??
-								rec.finishedPlaying}{/if}
-						{#if rec.rating}· {rec.rating}/10{/if}
-						{#if rec.liked}· ♥{/if}
+						<a href={actorPath(item.actor)}>{actorName(item.actor)}</a>
+						{#if item.type === 'backlogAdd' && item.game}
+							added <a href="/game/{item.game.slug}/">{item.game.title}</a> to their backlog
+						{:else if item.type === 'follow' && item.subject}
+							followed <a href={actorPath(item.subject)}>{actorName(item.subject)}</a>
+						{/if}
 					</p>
-					{#if rec.review?.text && !rec.review.containsSpoilers}
-						<blockquote>{rec.review.text}</blockquote>
-					{:else if rec.review?.containsSpoilers}
-						<p class="sub">Review hidden (spoilers).</p>
+					{#if item.coverUrl && item.game}
+						<img class="cover" src={item.coverUrl} alt="" width="60" height="80" />
 					{/if}
-					<p class="sub">
-						{new Date(item.createdAt).toLocaleDateString()}
-						· {item.likeCount} likes · {item.commentCount} comments
-						{#if item.viewer?.like}· liked by you{/if}
-					</p>
+					<p class="sub">{new Date(item.createdAt).toLocaleDateString()}</p>
 				</li>
 			{/each}
 		</ol>
@@ -133,11 +121,9 @@ function authorPath(author: { handle: string | null; did: string }): string {
 	padding: var(--space-3);
 }
 
-blockquote {
+.cover {
 	margin: var(--space-2) 0;
-	padding-left: var(--space-3);
-	border-left: 2px solid var(--color-border);
-	color: var(--color-muted);
-	white-space: pre-wrap;
+	border-radius: var(--radius);
+	object-fit: cover;
 }
 </style>

@@ -1,7 +1,7 @@
 /**
  * Per-request stopwatch surfaced as a `Server-Timing` response header.
  *
- * Every page here renders from a chain of PDS / appview / PLC round trips, so
+ * Every page here renders from a chain of PDS / HappyView / PLC round trips, so
  * "the page is slow" is only actionable once you know which hop spent the time.
  * Marks show up in the devtools Network timing panel and in the header itself,
  * which also survives into Netlify function logs for the slow-request warning.
