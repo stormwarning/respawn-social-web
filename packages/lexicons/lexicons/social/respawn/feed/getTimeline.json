@@ -1,0 +1,87 @@
+{
+	"lexicon": 1,
+	"id": "social.respawn.feed.getTimeline",
+	"defs": {
+		"main": {
+			"type": "query",
+			"description": "Activity from the accounts a viewer follows, newest first.",
+			"parameters": {
+				"type": "params",
+				"required": ["viewer"],
+				"properties": {
+					"viewer": {
+						"type": "string",
+						"format": "did"
+					},
+					"limit": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 50,
+						"default": 30
+					},
+					"cursor": {
+						"type": "string"
+					}
+				}
+			},
+			"output": {
+				"encoding": "application/json",
+				"schema": {
+					"type": "object",
+					"required": ["feed"],
+					"properties": {
+						"feed": {
+							"type": "array",
+							"items": {
+								"type": "ref",
+								"ref": "#feedItem"
+							}
+						},
+						"cursor": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		},
+		"feedItem": {
+			"type": "object",
+			"description": "One activity event. `type` selects which optional fields are present.",
+			"required": ["type", "uri", "did", "createdAt"],
+			"properties": {
+				"type": {
+					"type": "string",
+					"knownValues": ["backlogAdd", "follow"]
+				},
+				"uri": {
+					"type": "string",
+					"format": "at-uri"
+				},
+				"did": {
+					"type": "string",
+					"format": "did",
+					"description": "The actor who performed the action."
+				},
+				"createdAt": {
+					"type": "string",
+					"format": "datetime"
+				},
+				"game": {
+					"type": "ref",
+					"ref": "social.respawn.defs#gameRef",
+					"description": "Present on backlogAdd."
+				},
+				"cover": {
+					"type": "ref",
+					"ref": "social.respawn.defs#cover",
+					"description": "Present on backlogAdd."
+				},
+				"subject": {
+					"type": "string",
+					"format": "did",
+					"description": "Present on follow: the account followed."
+				}
+			}
+		}
+	}
+}

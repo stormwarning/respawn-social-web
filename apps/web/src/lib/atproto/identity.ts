@@ -16,6 +16,7 @@ import { createMemo } from '$lib/server/memo'
 // per request on a warm container.
 const didByHandle = createMemo<Did | AtprotoDid>({ ttlMs: 5 * 60_000 })
 const pdsByDid = createMemo<string | undefined>({ ttlMs: 15 * 60_000 })
+const handleByDid = createMemo<string | null>({ ttlMs: 15 * 60_000 })
 
 const handleResolver = new CompositeHandleResolver({
 	strategy: 'race',
@@ -42,6 +43,18 @@ export async function resolveToDid(input: string): Promise<Did | AtprotoDid> {
 	if (isDid(value)) return value
 	if (isHandle(value)) return didByHandle.get(value, () => handleResolver.resolve(value))
 	throw new Error(`Not a valid handle or DID: ${input}`)
+}
+
+/**
+ * Reverse of `resolveToDid`, for display: the handle a DID claims in its
+ * document. Unverified — good enough for labelling feed rows, not for auth.
+ */
+export async function resolveHandleForDid(did: string): Promise<string | null> {
+	return handleByDid.get(did, async () => {
+		const doc = await docResolver.resolve(did as AtprotoDid)
+		const aka = doc.alsoKnownAs?.find((uri) => uri.startsWith('at://'))
+		return aka ? aka.slice('at://'.length) : null
+	})
 }
 
 /**

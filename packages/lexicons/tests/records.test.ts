@@ -235,22 +235,21 @@ describe('social.respawn.actor.profile', () => {
 	})
 })
 
-describe('social.respawn.actor.backlog', () => {
-	const schema = social.respawn.actor.backlog.main
+describe('social.respawn.backlog.item', () => {
+	const schema = social.respawn.backlog.item.main
 
-	it('accepts backlog items', () => {
+	it('accepts a backlog item', () => {
 		expect(
 			schema.$safeParse({
-				$type: Collections.backlog,
-				games: [{ game, dateAdded: createdAt, releaseDate: '2019-05-28T00:00:00.000Z' }],
+				$type: Collections.backlogItem,
+				game,
+				releaseDate: '2019-05-28T00:00:00.000Z',
 				createdAt,
 			}).success,
 		).toBe(true)
 	})
 
-	it('requires dateAdded per item', () => {
-		expect(
-			schema.$safeParse({ $type: Collections.backlog, games: [{ game }], createdAt }).success,
-		).toBe(false)
+	it('requires createdAt', () => {
+		expect(schema.$safeParse({ $type: Collections.backlogItem, game }).success).toBe(false)
 	})
 })

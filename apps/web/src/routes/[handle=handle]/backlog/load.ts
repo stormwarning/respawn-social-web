@@ -3,14 +3,14 @@ import { Collections } from '@respawn-social/lexicons'
 import { cachePageData } from '$lib/server/page-cache'
 import { blobUrl, type RespawnProfileRecord } from '$lib/atproto/profile'
 import { getRecordOrNull } from '$lib/atproto/records'
-import { loadBacklog } from '$lib/atproto/backlog'
+import { loadBacklog, migrateLegacyBacklog } from '$lib/atproto/backlog'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
 
 export const PAGE_SIZE = 24
 
 /**
- * The backlog is one record holding the whole list, so paging is a slice here
- * rather than a cursor fetch — the total is always known up front.
+ * Backlog items are listed in full, so paging is a slice here rather than a
+ * cursor fetch — the total is always known up front.
  */
 export async function loadBacklogPage(
 	handle: string,
@@ -27,12 +27,13 @@ export async function loadBacklogPage(
 	const repo = publicAgent(actor.pds)
 	const isSelf = locals.user?.did === actor.did
 
-	const [profile, backlog] = await Promise.all([
+	if (isSelf && locals.agent) await migrateLegacyBacklog(locals.agent, actor.did)
+
+	const [profile, games] = await Promise.all([
 		getRecordOrNull<RespawnProfileRecord>(repo, actor.did, Collections.profile, 'self'),
 		loadBacklog(repo, actor.did),
 	])
 
-	const games = (backlog?.games ?? []).toReversed()
 	const totalPages = Math.max(1, Math.ceil(games.length / PAGE_SIZE))
 	if (page > totalPages) error(404, 'Page not found')
 	const start = (page - 1) * PAGE_SIZE

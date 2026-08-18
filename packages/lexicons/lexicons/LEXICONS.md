@@ -109,14 +109,17 @@ Pre-filled from Bluesky profile on creation.
 - bskyApp
 - adultContent: `'show' | 'blur' | 'hide'` (default to `blur`)
 
-## `social.respawn.actor.backlog`
+## `social.respawn.backlog.item`
 
-- games
-  - title
+One record per game, rkey is the IGDB id.
+
+- game
+  - igdbId
   - slug
-  - cover
-    - image: blob
-    - colors
-      - dominant: string (hex)
-  - releaseDate
-  - dateAdded
+  - title
+- cover
+  - image: blob
+  - colors
+    - dominant: string (hex)
+- releaseDate
+- createdAt

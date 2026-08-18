@@ -1,0 +1,33 @@
+{
+	"lexicon": 1,
+	"id": "social.respawn.backlog.item",
+	"defs": {
+		"main": {
+			"type": "record",
+			"description": "A single game in the actor's backlog. One record per game, keyed by IGDB id.",
+			"key": "any",
+			"record": {
+				"type": "object",
+				"required": ["game", "createdAt"],
+				"properties": {
+					"game": {
+						"type": "ref",
+						"ref": "social.respawn.defs#gameRef"
+					},
+					"cover": {
+						"type": "ref",
+						"ref": "social.respawn.defs#cover"
+					},
+					"releaseDate": {
+						"type": "string",
+						"format": "datetime"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "datetime"
+					}
+				}
+			}
+		}
+	}
+}

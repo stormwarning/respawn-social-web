@@ -11,7 +11,7 @@ export const Collections = {
 	follow: 'social.respawn.graph.follow',
 	block: 'social.respawn.graph.block',
 	profile: 'social.respawn.actor.profile',
-	backlog: 'social.respawn.actor.backlog',
+	backlogItem: 'social.respawn.backlog.item',
 } as const
 
 export type CollectionNsid = (typeof Collections)[keyof typeof Collections]

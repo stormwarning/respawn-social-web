@@ -35,7 +35,7 @@ export async function loadGamesPage(
 	// Game records only carried a title from mid-2026 on. For older ones, borrow
 	// the ref off any other record that names the same game.
 	const refs = new Map<number, GameRef>()
-	for (const item of backlog?.games ?? []) refs.set(item.game.igdbId, item.game)
+	for (const item of backlog) refs.set(item.game.igdbId, item.game)
 	for (const fave of profile?.value.faves ?? []) refs.set(fave.game.igdbId, fave.game)
 	for (const log of logs) refs.set(log.value.game.igdbId, log.value.game)
 

@@ -11,7 +11,12 @@ import {
 	type RespawnGameRecord,
 } from '$lib/atproto/game'
 import { createLog, listLogs, type GateAllowRule, type RespawnLogRecord } from '$lib/atproto/log'
-import { addToBacklog, loadBacklog, removeFromBacklog } from '$lib/atproto/backlog'
+import {
+	addToBacklog,
+	isInBacklog,
+	migrateLegacyBacklog,
+	removeFromBacklog,
+} from '$lib/atproto/backlog'
 import { buildCover } from '$lib/server/cover'
 import type { Game } from '$lib/types/game'
 
@@ -83,16 +88,16 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 		let ownLogs: Array<{ n: number; createdAt: string; rating: number | null }> = []
 		if (locals.user && locals.agent) {
 			try {
-				const [rec, logs, backlog] = await Promise.all([
+				const [rec, logs, backlogged] = await Promise.all([
 					loadGameRecord(locals.agent, locals.user.did, game.id),
 					listLogs(locals.agent, locals.user.did, { igdbId: game.id }),
-					loadBacklog(locals.agent, locals.user.did),
+					isInBacklog(locals.agent, locals.user.did, game.id),
 				])
 				played = rec?.played != null
 				playing = rec?.playing === true
 				liked = rec?.liked === true
 				rating = rec?.rating ?? 0
-				inBacklog = backlog?.games.some((entry) => entry.game.igdbId === game.id) ?? false
+				inBacklog = backlogged
 				// listLogs is newest first; number chronologically.
 				ownLogs = logs
 					.map((log, i) => ({
@@ -293,6 +298,8 @@ export const actions: Actions = {
 		const inBacklog = form.get('inBacklog') === 'true'
 
 		try {
+			await migrateLegacyBacklog(agent, user.did)
+
 			if (inBacklog) {
 				await removeFromBacklog(agent, user.did, igdbId)
 				return { inBacklog: false }

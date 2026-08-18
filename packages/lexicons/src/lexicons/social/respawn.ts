@@ -3,6 +3,7 @@
  */
 
 export * as actor from './respawn/actor.ts'
+export * as backlog from './respawn/backlog.ts'
 export * as defs from './respawn/defs.ts'
 export * as feed from './respawn/feed.ts'
 export * as game from './respawn/game.ts'

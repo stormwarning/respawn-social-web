@@ -83,17 +83,14 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 			name: list.value.name,
 			itemCount: list.value.items?.length ?? 0,
 		})),
-		backlogCount: backlog?.games.length ?? 0,
+		backlogCount: backlog.length,
 		// Same order as the backlog page (most recently added first), so the
 		// preview matches the first covers you see after following the link.
-		backlogCovers: (backlog?.games ?? [])
-			.toReversed()
-			.slice(0, 6)
-			.map((item) => ({
-				igdbId: item.game.igdbId,
-				title: item.game.title,
-				coverUrl: blobUrl(actor.pds, actor.did, item.cover?.image),
-			})),
+		backlogCovers: backlog.slice(0, 6).map((item) => ({
+			igdbId: item.game.igdbId,
+			title: item.game.title,
+			coverUrl: blobUrl(actor.pds, actor.did, item.cover?.image),
+		})),
 		isSelf,
 		isLoggedIn: !!locals.user,
 		followUri,
