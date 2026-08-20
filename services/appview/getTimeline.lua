@@ -6,6 +6,10 @@
 -- db.query can't filter by a set of DIDs and orders by index time rather than
 -- the record's own createdAt, so this goes through db.raw. Placeholders and JSON
 -- access differ per backend, hence the db.backend() branches.
+--
+-- Every `db` call lives inside handle(): HappyView validates an uploaded script
+-- by executing the chunk in a sandbox where only `env` exists, so touching `db`
+-- at the top level fails the upload with "attempt to index a nil value".
 
 local BACKLOG = 'social.respawn.backlog.item'
 local FOLLOW = 'social.respawn.graph.follow'
@@ -13,26 +17,25 @@ local MAX_FOLLOWS = 500
 local DEFAULT_LIMIT = 30
 local MAX_LIMIT = 50
 
-local backend = db.backend()
-local is_pg = backend == 'postgres'
+-- SQL varies by backend: `$1,$2,…` vs `?` placeholders, and JSON field access.
+local function dialect()
+	local is_pg = db.backend() == 'postgres'
+	local d = {}
 
--- $1,$2,… on Postgres; ? on SQLite.
-local function ph(n)
-	if is_pg then return '$' .. n end
-	return '?'
+	function d.ph(n)
+		if is_pg then return '$' .. n end
+		return '?'
+	end
+
+	function d.json_text(field)
+		if is_pg then return "(record->>'" .. field .. "')" end
+		return "json_extract(record, '$." .. field .. "')"
+	end
+
+	d.record_text = is_pg and 'record::text' or 'record'
+	d.created_at = d.json_text('createdAt')
+	return d
 end
-
-local function json_text(field)
-	if is_pg then return "(record->>'" .. field .. "')" end
-	return "json_extract(record, '$." .. field .. "')"
-end
-
-local function record_text()
-	if is_pg then return 'record::text' end
-	return 'record'
-end
-
-local CREATED_AT = json_text('createdAt')
 
 local function clamp_limit(raw)
 	local n = tonumber(raw) or DEFAULT_LIMIT
@@ -50,17 +53,17 @@ local function split_cursor(cursor)
 	return string.sub(cursor, 1, at - 1), string.sub(cursor, at + 2)
 end
 
-local function follow_subjects(viewer)
+local function follow_subjects(d, viewer)
 	local sql = 'SELECT '
-		.. json_text('subject')
+		.. d.json_text('subject')
 		.. ' AS subject FROM happyview_records WHERE collection = '
-		.. ph(1)
+		.. d.ph(1)
 		.. ' AND did = '
-		.. ph(2)
+		.. d.ph(2)
 		.. ' ORDER BY '
-		.. CREATED_AT
+		.. d.created_at
 		.. ' DESC LIMIT '
-		.. ph(3)
+		.. d.ph(3)
 	local rows = db.raw(sql, { FOLLOW, viewer, MAX_FOLLOWS })
 
 	local dids, seen = {}, {}
@@ -81,8 +84,9 @@ function handle()
 		error('viewer is required')
 	end
 	local limit = clamp_limit(params.limit)
+	local d = dialect()
 
-	local dids = follow_subjects(viewer)
+	local dids = follow_subjects(d, viewer)
 	if #dids == 0 then
 		return { feed = toarray({}) }
 	end
@@ -91,7 +95,7 @@ function handle()
 	local placeholders = {}
 	for _, did in ipairs(dids) do
 		table.insert(binds, did)
-		table.insert(placeholders, ph(#binds))
+		table.insert(placeholders, d.ph(#binds))
 	end
 
 	local cursor_clause = ''
@@ -100,17 +104,17 @@ function handle()
 		-- SQLite's `?` is positional, so the timestamp is bound once per use
 		-- rather than reusing a single placeholder.
 		table.insert(binds, cursor_ts)
-		local ts_lt_ph = ph(#binds)
+		local ts_lt_ph = d.ph(#binds)
 		table.insert(binds, cursor_ts)
-		local ts_eq_ph = ph(#binds)
+		local ts_eq_ph = d.ph(#binds)
 		table.insert(binds, cursor_uri)
-		local uri_ph = ph(#binds)
+		local uri_ph = d.ph(#binds)
 		cursor_clause = ' AND ('
-			.. CREATED_AT
+			.. d.created_at
 			.. ' < '
 			.. ts_lt_ph
 			.. ' OR ('
-			.. CREATED_AT
+			.. d.created_at
 			.. ' = '
 			.. ts_eq_ph
 			.. ' AND uri < '
@@ -120,16 +124,16 @@ function handle()
 
 	-- One extra row tells us whether another page exists.
 	table.insert(binds, limit + 1)
-	local limit_ph = ph(#binds)
+	local limit_ph = d.ph(#binds)
 
 	local sql = 'SELECT uri, did, collection, '
-		.. record_text()
+		.. d.record_text
 		.. ' AS record, '
-		.. CREATED_AT
+		.. d.created_at
 		.. ' AS ts FROM happyview_records WHERE collection IN ('
-		.. ph(1)
+		.. d.ph(1)
 		.. ', '
-		.. ph(2)
+		.. d.ph(2)
 		.. ') AND did IN ('
 		.. table.concat(placeholders, ', ')
 		.. ')'

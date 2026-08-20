@@ -74,14 +74,53 @@ curl -H "Authorization: Bearer $HAPPYVIEW_API_KEY" \
 
 ## Local development
 
-Run HappyView locally with its Docker Compose file (or `cargo run` from source);
-SQLite is the default, so no database setup is needed. Use
-`PUBLIC_URL=http://127.0.0.1:3000` — **not** `localhost`, which breaks the OAuth
-callback — and set `HAPPYVIEW_URL` to the same value. Lexicon and script upload
-are the same dashboard steps as above.
+Run HappyView from a clone of its repo with `docker compose up`. SQLite is the
+default, so there's no database to set up. Lexicon and script upload are the same
+dashboard steps as above.
 
-The script runs on both backends: it branches on `db.backend()` for placeholder
-style (`$1` vs `?`) and JSON access (`record->>'x'` vs `json_extract`).
+**Browse the Caddy port, `http://127.0.0.1:3080`.** The dev stack runs three
+services and only Caddy is a complete front door: it serves the dashboard and
+proxies `/xrpc`, `/admin`, `/auth`, and `/config` to the Rust service. The other
+published ports are half the app — `:3001` is the Next dev server with no API
+behind it, `:3000` is the API with no dashboard.
+
+Use `127.0.0.1`, not `localhost`, which breaks the OAuth callback. Set
+`HAPPYVIEW_URL` in `apps/web/.env` to the same origin you browse.
+
+### If you get `Failed to load config: Config fetch failed: 421`
+
+HappyView resolves every request against a table of known domains (seeded from
+`PUBLIC_URL` on first boot, re-synced to it on later boots) and answers `421
+Misdirected Request` for any host it doesn't recognise. A 421 means the host in
+your address bar isn't the one HappyView knows about.
+
+The usual cause is the Cloudflare tunnel: `scripts/entrypoint.sh` overwrites
+`PUBLIC_URL` with the tunnel URL whenever `TUNNEL_URL_FILE` is set, which the
+compose file always sets. So the registered domain becomes
+`*.trycloudflare.com`, and `127.0.0.1` gets rejected however you reach it.
+Either browse the tunnel URL, or go local-only: stop the tunnel container,
+delete the shared `tunnel-url` file so the entrypoint falls back to your `.env`,
+set `PUBLIC_URL=http://127.0.0.1:3080`, and restart. No manual database edit is
+needed — HappyView re-points the primary domain row at `PUBLIC_URL` on boot.
+
+### Ports
+
+HappyView's compose publishes `3000` (API), `3001` (dashboard dev server), and
+`3080` (Caddy). The IGDB API in `respawn-social-api` defaults to `8000` to stay
+clear of them; if you change either, check for a collision first — two services
+on one port fail confusingly, with requests silently hitting the wrong one.
+
+### The feed script
+
+`getTimeline.lua` runs on both database backends: it branches on `db.backend()`
+for placeholder style (`$1` vs `?`) and JSON access (`record->>'x'` vs
+`json_extract`).
+
+Keep every `db`, `json`, and `toarray` call inside `handle()`. HappyView
+validates an uploaded script by executing the chunk in a sandbox where only
+`env` is defined, so touching any other injected global at the top level fails
+the upload with `attempt to index a nil value (global 'db')` — the script itself
+is fine, it just ran too early.
 
 ## How the feed query works
 
