@@ -51,7 +51,17 @@ async function xrpc<T>(
 	const headers: Record<string, string> = { accept: 'application/json' }
 	if (env.HAPPYVIEW_API_KEY) headers.authorization = `Bearer ${env.HAPPYVIEW_API_KEY}`
 	const res = await fetchFn(url, { headers })
-	if (!res.ok) throw new Error(`happyview ${nsid} -> ${res.status} ${res.statusText}`)
+	if (!res.ok) {
+		// HappyView reports the useful part — a Lua error, a missing lexicon, a
+		// rejected key — in the body, so a status line alone says nothing.
+		const detail = await res.text().catch(() => '')
+		throw new Error(
+			`happyview ${nsid} -> ${res.status} ${res.statusText}` +
+				`\n  url: ${url.origin}${url.pathname}?${url.searchParams}` +
+				(detail ? `\n  body: ${detail.slice(0, 1000)}` : '') +
+				(env.HAPPYVIEW_API_KEY ? '' : '\n  note: HAPPYVIEW_API_KEY is not set'),
+		)
+	}
 	return res.json() as Promise<T>
 }
 
