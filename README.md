@@ -57,14 +57,13 @@ openssl rand -hex 32            # -> paste into COOKIE_SECRET
 
 ### Environment
 
-| Var                 | Required | Notes                                                                                             |
-| ------------------- | -------- | ------------------------------------------------------------------------------------------------- |
-| `APP_URL`           | prod     | This app's origin. **Unset in dev** → uses the loopback OAuth client (no hosted metadata needed). |
-| `BACKEND_API_URL`   | yes      | Base URL of the backend API service.                                                              |
-| `PRIVATE_JWK`       | prod     | ES256 private JWK (single-line JSON) for `private_key_jwt`.                                       |
-| `COOKIE_SECRET`     | yes      | 32+ byte hex, signs the session cookie.                                                           |
-| `HAPPYVIEW_URL`     | no       | Base URL of the HappyView appview. Unset → PDS-direct reads only (no following feed).             |
-| `HAPPYVIEW_API_KEY` | no       | HappyView API key, sent as `Authorization: Bearer hv_…`.                                          |
+| Var               | Required | Notes                                                                                             |
+| ----------------- | -------- | ------------------------------------------------------------------------------------------------- |
+| `APP_URL`         | prod     | This app's origin. **Unset in dev** → uses the loopback OAuth client (no hosted metadata needed). |
+| `BACKEND_API_URL` | yes      | Base URL of the backend API service.                                                              |
+| `PRIVATE_JWK`     | prod     | ES256 private JWK (single-line JSON) for `private_key_jwt`.                                       |
+| `COOKIE_SECRET`   | yes      | 32+ byte hex, signs the session cookie.                                                           |
+| `HAPPYVIEW_URL`   | no       | Base URL of the HappyView appview. Unset → PDS-direct reads only (no following feed).             |
 
 ### Appview (`services/appview`)
 

@@ -48,18 +48,18 @@ async function xrpc<T>(
 	for (const [key, value] of Object.entries(params)) {
 		if (value != null && value !== '') url.searchParams.set(key, String(value))
 	}
-	const headers: Record<string, string> = { accept: 'application/json' }
-	if (env.HAPPYVIEW_API_KEY) headers.authorization = `Bearer ${env.HAPPYVIEW_API_KEY}`
-	const res = await fetchFn(url, { headers })
+	// No Authorization header: HappyView's XRPC routes reject Bearer API keys
+	// outright (those are for the admin API) and serve public records
+	// anonymously. The feed takes its viewer as a parameter, not from auth.
+	const res = await fetchFn(url, { headers: { accept: 'application/json' } })
 	if (!res.ok) {
-		// HappyView reports the useful part — a Lua error, a missing lexicon, a
-		// rejected key — in the body, so a status line alone says nothing.
+		// HappyView reports the useful part — a Lua error, an unregistered
+		// lexicon, an unknown host — in the body, so the status alone says little.
 		const detail = await res.text().catch(() => '')
 		throw new Error(
 			`happyview ${nsid} -> ${res.status} ${res.statusText}` +
 				`\n  url: ${url.origin}${url.pathname}?${url.searchParams}` +
-				(detail ? `\n  body: ${detail.slice(0, 1000)}` : '') +
-				(env.HAPPYVIEW_API_KEY ? '' : '\n  note: HAPPYVIEW_API_KEY is not set'),
+				(detail ? `\n  body: ${detail.slice(0, 1000)}` : ''),
 		)
 	}
 	return res.json() as Promise<T>

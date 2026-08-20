@@ -49,9 +49,15 @@ when game pages need cross-user counts.
    kicks off a backfill job; watch the per-collection counts on the dashboard.
 2. **Query lexicon** — upload `social.respawn.feed.getTimeline`, then attach
    `getTimeline.lua` to it as `xrpc.query:social.respawn.feed.getTimeline`. The
-   default query behaviour (list by DID/URI) can't do the follow-set join, so
-   the script is required, not optional.
-3. **API key** — create one scoped to queries. It's shown once.
+   script isn't optional: without one, HappyView falls back to its default list
+   query, which needs a `target_collection` this lexicon doesn't have, and every
+   request fails with `has no target_collection configured for list queries`.
+
+No API key is involved. HappyView's API keys authenticate the **admin API**
+only; its XRPC routes reject `Authorization: Bearer hv_…` with a 401 and serve
+public records anonymously. The feed takes its viewer as a query parameter, so
+anonymous is what we want — but note that anyone who can reach the appview can
+read any DID's feed, which is why it holds public records only.
 
 ## Point the web app at it
 
@@ -59,17 +65,15 @@ Set in `apps/web/.env` (and in the Netlify site env for production):
 
 ```sh
 HAPPYVIEW_URL=https://your-happyview.up.railway.app
-HAPPYVIEW_API_KEY=hv_…
 ```
 
 Unset `HAPPYVIEW_URL` falls back to PDS-direct reads, which means no following
 feed — the home page says so rather than erroring.
 
-Smoke test:
+Smoke test (no auth header, deliberately):
 
 ```sh
-curl -H "Authorization: Bearer $HAPPYVIEW_API_KEY" \
-  "$HAPPYVIEW_URL/xrpc/social.respawn.feed.getTimeline?viewer=did:plc:…&limit=5"
+curl "$HAPPYVIEW_URL/xrpc/social.respawn.feed.getTimeline?viewer=did:plc:…&limit=5"
 ```
 
 ## Local development
@@ -98,10 +102,23 @@ The usual cause is the Cloudflare tunnel: `scripts/entrypoint.sh` overwrites
 `PUBLIC_URL` with the tunnel URL whenever `TUNNEL_URL_FILE` is set, which the
 compose file always sets. So the registered domain becomes
 `*.trycloudflare.com`, and `127.0.0.1` gets rejected however you reach it.
-Either browse the tunnel URL, or go local-only: stop the tunnel container,
-delete the shared `tunnel-url` file so the entrypoint falls back to your `.env`,
-set `PUBLIC_URL=http://127.0.0.1:3080`, and restart. No manual database edit is
+
+This bites the SvelteKit server too, not just the browser: `HAPPYVIEW_URL` has
+to be a host HappyView knows itself by, so pointing it at `127.0.0.1` while the
+tunnel owns the domain row fails with a 421 even though the dashboard loads fine
+in your browser.
+
+Two ways out. Quickest is to set `HAPPYVIEW_URL` to the tunnel URL — but the
+quick-tunnel hostname is regenerated every time the tunnel restarts, so it goes
+stale. Durable is to go local-only: stop the tunnel container, delete the shared
+`tunnel-url` file so the entrypoint falls back to your `.env`, set
+`PUBLIC_URL=http://127.0.0.1:3080`, and restart. No manual database edit is
 needed — HappyView re-points the primary domain row at `PUBLIC_URL` on boot.
+
+Adding `127.0.0.1` as a _second_ domain through the dashboard doesn't work while
+the tunnel is up: `POST /admin/domains` rejects a non-https URL unless the
+running `PUBLIC_URL` is itself loopback, which it isn't when the tunnel has
+replaced it.
 
 ### Ports
 
