@@ -9,20 +9,22 @@ This directory holds only what we configure it with:
 
 | File              | Purpose                                                |
 | ----------------- | ------------------------------------------------------ |
-| `getTimeline.lua` | Query script backing `social.respawn.feed.getTimeline` |
+| `getActivity.lua` | Query script backing `social.respawn.feed.getActivity` |
 
 Lexicons live in `packages/lexicons/lexicons/`; the ones HappyView needs are
 listed below.
 
 ## What's indexed
 
-Only the collections behind the following feed:
+Only the collections behind the activity feeds:
 
 - `social.respawn.backlog.item` — "added a game to their backlog"
 - `social.respawn.graph.follow` — "followed someone"
 
 Plays, ratings, and likes are deliberately not indexed yet. Add those lexicons
-when game pages need cross-user counts.
+when game pages need cross-user counts. Until likes and comments are indexed,
+the `incoming` filter can only ever mean "someone followed you" — follow is the
+one indexed collection whose records name another account as their subject.
 
 ## Deploy (Railway)
 
@@ -47,15 +49,18 @@ when game pages need cross-user counts.
    `social.respawn.backlog.item` and `social.respawn.graph.follow`. Both
    reference `social.respawn.defs`, so upload that too. Adding a record lexicon
    kicks off a backfill job; watch the per-collection counts on the dashboard.
-2. **Query lexicon** — upload `social.respawn.feed.getTimeline`, then attach
-   `getTimeline.lua` to it as `xrpc.query:social.respawn.feed.getTimeline`. The
+2. **Query lexicon** — upload `social.respawn.feed.getActivity`, then attach
+   `getActivity.lua` to it as `xrpc.query:social.respawn.feed.getActivity`. The
    script isn't optional: without one, HappyView falls back to its default list
    query, which needs a `target_collection` this lexicon doesn't have, and every
    request fails with `has no target_collection configured for list queries`.
 
+If you are upgrading an appview that still serves `social.respawn.feed.getTimeline`,
+delete that lexicon after `getActivity` is up: nothing calls it any more.
+
 No API key is involved. HappyView's API keys authenticate the **admin API**
 only; its XRPC routes reject `Authorization: Bearer hv_…` with a 401 and serve
-public records anonymously. The feed takes its viewer as a query parameter, so
+public records anonymously. The feed takes the actor it is about as a query parameter, so
 anonymous is what we want — but note that anyone who can reach the appview can
 read any DID's feed, which is why it holds public records only.
 
@@ -67,13 +72,13 @@ Set in `apps/web/.env` (and in the Netlify site env for production):
 HAPPYVIEW_URL=https://your-happyview.up.railway.app
 ```
 
-Unset `HAPPYVIEW_URL` falls back to PDS-direct reads, which means no following
-feed — the home page says so rather than erroring.
+Unset `HAPPYVIEW_URL` falls back to PDS-direct reads, which means no activity
+feeds — the activity pages say so rather than erroring.
 
 Smoke test (no auth header, deliberately):
 
 ```sh
-curl "$HAPPYVIEW_URL/xrpc/social.respawn.feed.getTimeline?viewer=did:plc:…&limit=5"
+curl "$HAPPYVIEW_URL/xrpc/social.respawn.feed.getActivity?actor=did:plc:…&filter=all&limit=5"
 ```
 
 ## Local development
@@ -129,7 +134,7 @@ on one port fail confusingly, with requests silently hitting the wrong one.
 
 ### The feed script
 
-`getTimeline.lua` runs on both database backends: it branches on `db.backend()`
+`getActivity.lua` runs on both database backends: it branches on `db.backend()`
 for placeholder style (`$1` vs `?`) and JSON access (`record->>'x'` vs
 `json_extract`).
 
@@ -141,15 +146,34 @@ is fine, it just ran too early.
 
 ## How the feed query works
 
+`getActivity` takes the DID it is about as `actor` — which is not necessarily the
+signed-in viewer, since `/[handle]/activity/following/` asks for someone else's
+following feed — plus a `filter` naming the slice:
+
+| `filter`    | Rows                                                                 |
+| ----------- | -------------------------------------------------------------------- |
+| `author`    | records `actor` wrote                                                |
+| `following` | records written by the accounts `actor` follows, minus `actor`'s own |
+| `incoming`  | records by others naming `actor` as their subject                    |
+| `all`       | the union of the three (default)                                     |
+
 `db.query` can't filter by a set of DIDs, and it orders by index time rather
 than the record's own `createdAt` — which would put backfilled history at the
-top. So `getTimeline.lua` uses `db.raw`:
+top. So `getActivity.lua` uses `db.raw`:
 
-1. Read the viewer's follows (capped at 500) and collect the subject DIDs.
-2. One query over both collections filtered to those DIDs, ordered by the
-   record's `createdAt` descending, `uri` breaking ties.
+1. Resolve the filter to a set of author DIDs — `actor` alone, their follows
+   (capped at 500), both, or none — and a subject predicate for the filters that
+   include incoming activity.
+2. One query over both collections, `WHERE` the author set `OR` the subject
+   predicate, ordered by the record's `createdAt` descending, `uri` breaking
+   ties. A row matching both sides is still one row, so no dedupe is needed.
 3. Fetch `limit + 1` rows; if the extra row exists, return a cursor of
    `<createdAt>::<uri>` and resume with a keyset comparison on the next call.
 
+`following` short-circuits to an empty feed when the actor follows nobody;
+`all` does not, since their own and incoming activity still apply.
+
 Adding a new event type to the feed means adding its collection to the
-`collection IN (…)` list and mapping its record fields to a `#feedItem`.
+`collection IN (…)` list, mapping its record fields to a `#feedItem`, and — if
+it names a subject — widening the incoming clause, which is currently scoped to
+follows so the JSON comparison never touches backlog rows.

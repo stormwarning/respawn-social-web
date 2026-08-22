@@ -1,17 +1,24 @@
 {
 	"lexicon": 1,
-	"id": "social.respawn.feed.getTimeline",
+	"id": "social.respawn.feed.getActivity",
 	"defs": {
 		"main": {
 			"type": "query",
-			"description": "Activity from the accounts a viewer follows, newest first.",
+			"description": "Activity events involving an actor, newest first. `filter` selects the slice.",
 			"parameters": {
 				"type": "params",
-				"required": ["viewer"],
+				"required": ["actor"],
 				"properties": {
-					"viewer": {
+					"actor": {
 						"type": "string",
-						"format": "did"
+						"format": "did",
+						"description": "The account the feed is about, which is not necessarily the viewer."
+					},
+					"filter": {
+						"type": "string",
+						"knownValues": ["all", "author", "incoming", "following"],
+						"default": "all",
+						"description": "author: records the actor wrote. following: records written by the accounts the actor follows. incoming: records by others naming the actor as their subject. all: the union of the three."
 					},
 					"limit": {
 						"type": "integer",

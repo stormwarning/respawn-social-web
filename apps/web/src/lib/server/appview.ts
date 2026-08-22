@@ -14,7 +14,7 @@ export interface FeedCover {
 }
 
 /**
- * One activity event, matching `social.respawn.feed.getTimeline#feedItem`.
+ * One activity event, matching `social.respawn.feed.getActivity#feedItem`.
  * `type` selects which optional fields are set.
  */
 export interface FeedItem {
@@ -65,8 +65,19 @@ async function xrpc<T>(
 	return res.json() as Promise<T>
 }
 
-export const getTimeline = (
-	viewer: string,
-	{ limit, cursor }: { limit?: number; cursor?: string | null } = {},
+/**
+ * Which slice of an actor's activity to fetch. `author` is what they did,
+ * `incoming` is what others did to them, `following` is what the accounts they
+ * follow did, and `all` is the union.
+ */
+export type ActivityFilter = 'all' | 'author' | 'incoming' | 'following'
+
+export const getActivity = (
+	actor: string,
+	{
+		filter,
+		limit,
+		cursor,
+	}: { filter?: ActivityFilter; limit?: number; cursor?: string | null } = {},
 	fetchFn?: typeof fetch,
-) => xrpc<FeedPage>('social.respawn.feed.getTimeline', { viewer, limit, cursor }, fetchFn)
+) => xrpc<FeedPage>('social.respawn.feed.getActivity', { actor, filter, limit, cursor }, fetchFn)

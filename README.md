@@ -63,16 +63,16 @@ openssl rand -hex 32            # -> paste into COOKIE_SECRET
 | `BACKEND_API_URL` | yes      | Base URL of the backend API service.                                                              |
 | `PRIVATE_JWK`     | prod     | ES256 private JWK (single-line JSON) for `private_key_jwt`.                                       |
 | `COOKIE_SECRET`   | yes      | 32+ byte hex, signs the session cookie.                                                           |
-| `HAPPYVIEW_URL`   | no       | Base URL of the HappyView appview. Unset → PDS-direct reads only (no following feed).             |
+| `HAPPYVIEW_URL`   | no       | Base URL of the HappyView appview. Unset → PDS-direct reads only (no activity feeds).             |
 
 ### Appview (`services/appview`)
 
-Cross-user reads (the following feed) come from
+Cross-user reads (the activity feeds) come from
 [HappyView](https://happyview.dev), a lexicon-driven AppView run as a hosted
 service rather than code in this repo: upload lexicons, it indexes matching
 records off Jetstream and serves `/xrpc/…`. It indexes
 `social.respawn.backlog.item` and `social.respawn.graph.follow`, and serves
-`social.respawn.feed.getTimeline` via a Lua query script.
+`social.respawn.feed.getActivity` via a Lua query script.
 
 See [`services/appview/README.md`](services/appview/README.md) for the deploy,
 lexicon upload, and local-development runbook.

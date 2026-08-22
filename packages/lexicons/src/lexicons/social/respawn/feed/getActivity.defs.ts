@@ -5,12 +5,20 @@
 import { l } from '@atproto/lex'
 import * as RespawnDefs from '../defs.defs.ts'
 
-const $nsid = 'social.respawn.feed.getTimeline'
+const $nsid = 'social.respawn.feed.getActivity'
 
 export { $nsid }
 
 export const $params = /*#__PURE__*/ l.params({
-  viewer: /*#__PURE__*/ l.string({ format: 'did' }),
+  actor: /*#__PURE__*/ l.string({ format: 'did' }),
+  filter: /*#__PURE__*/ l.optional(
+    /*#__PURE__*/ l.withDefault(
+      /*#__PURE__*/ l.string<{
+        knownValues: ['all', 'author', 'incoming', 'following']
+      }>(),
+      'all',
+    ),
+  ),
   limit: /*#__PURE__*/ l.optional(
     /*#__PURE__*/ l.withDefault(
       /*#__PURE__*/ l.integer({ minimum: 1, maximum: 50 }),
@@ -35,7 +43,7 @@ export type $OutputBody<B = l.BinaryData> = l.InferPayloadBody<
   B
 >
 
-/** Activity from the accounts a viewer follows, newest first. */
+/** Activity events involving an actor, newest first. `filter` selects the slice. */
 const main = /*#__PURE__*/ l.query($nsid, $params, $output)
 
 export { main }
@@ -44,7 +52,7 @@ export const $lxm = $nsid
 
 /** One activity event. `type` selects which optional fields are present. */
 type FeedItem = {
-  $type?: 'social.respawn.feed.getTimeline#feedItem'
+  $type?: 'social.respawn.feed.getActivity#feedItem'
   type: 'backlogAdd' | 'follow' | l.UnknownString
   uri: l.AtUriString
 

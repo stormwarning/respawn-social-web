@@ -4,6 +4,6 @@
 
 export * as comment from './feed/comment.ts'
 export * as gate from './feed/gate.ts'
-export * as getTimeline from './feed/getTimeline.ts'
+export * as getActivity from './feed/getActivity.ts'
 export * as like from './feed/like.ts'
 export * as log from './feed/log.ts'

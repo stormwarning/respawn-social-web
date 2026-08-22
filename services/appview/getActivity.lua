@@ -1,7 +1,16 @@
--- social.respawn.feed.getTimeline
+-- social.respawn.feed.getActivity
 --
--- Activity from the accounts `viewer` follows: backlog adds and follows, newest
--- first. Attach in HappyView as `xrpc.query:social.respawn.feed.getTimeline`.
+-- Activity events involving `actor`, newest first. `filter` picks the slice:
+-- `author` (records they wrote), `following` (records by the accounts they
+-- follow), `incoming` (records by others naming them as subject), or `all`
+-- (the union). Attach in HappyView as
+-- `xrpc.query:social.respawn.feed.getActivity`.
+--
+-- `incoming` only ever means "someone followed you" for now: follow is the
+-- single indexed collection carrying a subject. Indexing likes or comments
+-- means adding the collection to the `collection IN (…)` list, mapping its
+-- record onto a #feedItem, and widening the incoming clause to its subject
+-- field.
 --
 -- db.query can't filter by a set of DIDs and orders by index time rather than
 -- the record's own createdAt, so this goes through db.raw. Placeholders and JSON
@@ -16,6 +25,7 @@ local FOLLOW = 'social.respawn.graph.follow'
 local MAX_FOLLOWS = 500
 local DEFAULT_LIMIT = 30
 local MAX_LIMIT = 50
+local FILTERS = { all = true, author = true, incoming = true, following = true }
 
 -- SQL varies by backend: `$1,$2,…` vs `?` placeholders, and JSON field access.
 local function dialect()
@@ -53,7 +63,7 @@ local function split_cursor(cursor)
 	return string.sub(cursor, 1, at - 1), string.sub(cursor, at + 2)
 end
 
-local function follow_subjects(d, viewer)
+local function follow_subjects(d, actor)
 	local sql = 'SELECT '
 		.. d.json_text('subject')
 		.. ' AS subject FROM happyview_records WHERE collection = '
@@ -64,13 +74,13 @@ local function follow_subjects(d, viewer)
 		.. d.created_at
 		.. ' DESC LIMIT '
 		.. d.ph(3)
-	local rows = db.raw(sql, { FOLLOW, viewer, MAX_FOLLOWS })
+	local rows = db.raw(sql, { FOLLOW, actor, MAX_FOLLOWS })
 
 	local dids, seen = {}, {}
 	for _, row in ipairs(rows) do
 		local subject = row.subject
-		-- Never surface the viewer's own activity back to them.
-		if subject and subject ~= '' and subject ~= viewer and not seen[subject] then
+		-- The actor's own activity belongs to the `author` slice, not this one.
+		if subject and subject ~= '' and subject ~= actor and not seen[subject] then
 			seen[subject] = true
 			table.insert(dids, subject)
 		end
@@ -78,25 +88,78 @@ local function follow_subjects(d, viewer)
 	return dids
 end
 
+-- Which authors the requested slice covers. `incoming` filters on subject
+-- instead, so it contributes nobody here.
+local function author_dids(d, filter, actor)
+	if filter == 'author' then return { actor } end
+	if filter == 'following' then return follow_subjects(d, actor) end
+	if filter == 'all' then
+		local dids = follow_subjects(d, actor)
+		table.insert(dids, actor)
+		return dids
+	end
+	return {}
+end
+
 function handle()
-	local viewer = params.viewer
-	if not viewer or viewer == '' then
-		error('viewer is required')
+	local actor = params.actor
+	if not actor or actor == '' then
+		error('actor is required')
+	end
+	local filter = params.filter
+	if not filter or filter == '' then filter = 'all' end
+	if not FILTERS[filter] then
+		error('unknown filter: ' .. tostring(filter))
 	end
 	local limit = clamp_limit(params.limit)
 	local d = dialect()
 
-	local dids = follow_subjects(d, viewer)
-	if #dids == 0 then
+	local dids = author_dids(d, filter, actor)
+	local want_incoming = filter == 'incoming' or filter == 'all'
+	-- `all` still has work to do with zero follows; `following` does not.
+	if #dids == 0 and not want_incoming then
 		return { feed = toarray({}) }
 	end
 
+	-- Binds are positional on SQLite, so every value is appended in the order its
+	-- placeholder appears in the finished statement.
 	local binds = { BACKLOG, FOLLOW }
-	local placeholders = {}
-	for _, did in ipairs(dids) do
-		table.insert(binds, did)
-		table.insert(placeholders, d.ph(#binds))
+	local clauses = {}
+
+	if #dids > 0 then
+		local placeholders = {}
+		for _, did in ipairs(dids) do
+			table.insert(binds, did)
+			table.insert(placeholders, d.ph(#binds))
+		end
+		table.insert(clauses, 'did IN (' .. table.concat(placeholders, ', ') .. ')')
 	end
+
+	if want_incoming then
+		-- Scoped to follows: no other indexed collection has a subject, and the
+		-- narrower clause keeps the JSON comparison off every backlog row.
+		table.insert(binds, FOLLOW)
+		local collection_ph = d.ph(#binds)
+		table.insert(binds, actor)
+		local subject_ph = d.ph(#binds)
+		table.insert(binds, actor)
+		local author_ph = d.ph(#binds)
+		table.insert(
+			clauses,
+			'(collection = '
+				.. collection_ph
+				.. ' AND '
+				.. d.json_text('subject')
+				.. ' = '
+				.. subject_ph
+				.. ' AND did <> '
+				.. author_ph
+				.. ')'
+		)
+	end
+
+	-- A row matching both clauses is still one row, so the OR needs no dedupe.
+	local scope_clause = ' AND (' .. table.concat(clauses, ' OR ') .. ')'
 
 	local cursor_clause = ''
 	local cursor_ts, cursor_uri = split_cursor(params.cursor)
@@ -134,9 +197,8 @@ function handle()
 		.. d.ph(1)
 		.. ', '
 		.. d.ph(2)
-		.. ') AND did IN ('
-		.. table.concat(placeholders, ', ')
 		.. ')'
+		.. scope_clause
 		.. cursor_clause
 		.. ' ORDER BY ts DESC, uri DESC LIMIT '
 		.. limit_ph
