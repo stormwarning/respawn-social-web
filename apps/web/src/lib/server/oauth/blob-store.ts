@@ -11,6 +11,15 @@ import type {
  * OAuth state + session stores need durable storage that survives across
  * invocations and token refreshes.
  *
+ * Reads are pinned to strong consistency. Blobs defaults to eventual
+ * consistency, and the OAuth session store is read-after-write on the hot path:
+ * the callback writes the session, then the very next request restores it, and
+ * every token refresh rewrites it. An eventually-consistent read that misses
+ * makes @atproto/oauth-client throw TokenRefreshError ("The session was deleted
+ * by another process"), which deletes the session and forces a fresh login. It
+ * also breaks that library's concurrent-refresh recovery, which re-reads the
+ * stored session to detect that another instance already rotated the tokens.
+ *
  * Outside the Netlify runtime (e.g. plain `vite dev`), Blobs is unavailable and
  * `getStore` throws. We fall back to a process-local Map so local dev still
  * boots — this is NOT durable and must never be relied on in production.
@@ -24,10 +33,16 @@ interface TextKV {
 
 const memory = new Map<string, string>()
 let warned = false
+let cachedStore: TextKV | null = null
 
 function resolveStore(): TextKV {
+	if (cachedStore) return cachedStore
 	try {
-		return getStore('atproto-oauth') as unknown as TextKV
+		cachedStore = getStore({
+			name: 'atproto-oauth',
+			consistency: 'strong',
+		}) as unknown as TextKV
+		return cachedStore
 	} catch {
 		if (!warned) {
 			console.warn(
@@ -35,7 +50,7 @@ function resolveStore(): TextKV {
 			)
 			warned = true
 		}
-		return {
+		cachedStore = {
 			async get(key: string) {
 				return memory.get(key) ?? null
 			},
@@ -46,6 +61,7 @@ function resolveStore(): TextKV {
 				memory.delete(key)
 			},
 		}
+		return cachedStore
 	}
 }
 

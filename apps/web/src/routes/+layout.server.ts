@@ -7,7 +7,17 @@ import type { LayoutServerLoad } from './$types'
 export const trailingSlash = 'always'
 
 /** Expose the current user to every page for SSR rendering. */
-export const load: LayoutServerLoad = async ({ locals }) => {
+export const load: LayoutServerLoad = async ({ depends, locals, url }) => {
+	// SvelteKit only re-runs a server load on client-side navigation when
+	// something it *read* changed. This load reads `locals`, which SvelteKit
+	// cannot track, so without a tracked dependency the header keeps rendering
+	// the old user for the rest of the session once the session goes away —
+	// pages render signed out while the header still shows an avatar. Touching
+	// `url` makes every navigation re-run it; `depends` lets client code force a
+	// refresh via `invalidate('app:session')`.
+	void url.pathname
+	depends('app:session')
+
 	if (!locals.user || !locals.agent) {
 		return { user: null }
 	}

@@ -1,5 +1,5 @@
 import type { Handle } from '@sveltejs/kit'
-import { TokenRefreshError } from '@atproto/oauth-client-node'
+import { isExpectedSessionError } from '@atproto/oauth-client-node'
 import { getOAuthClient } from '$lib/server/oauth/client'
 import { agentFromSession } from '$lib/atproto/agent'
 import { clearSessionCookie, readSessionCookie } from '$lib/server/session'
@@ -31,12 +31,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 			event.locals.agent = agentFromSession(session)
 			event.locals.user = { did: session.did }
 		} catch (err) {
-			// Session expired or refresh failed — drop the cookie, treat as logged out.
-			if (err instanceof TokenRefreshError) {
+			// Only drop the cookie when the session is genuinely unusable (revoked,
+			// refresh rejected, malformed). A transient failure — Blobs hiccup, DNS,
+			// PDS 5xx — must not log the user out: it renders this one request as
+			// signed out and the next request restores normally.
+			if (isExpectedSessionError(err)) {
 				clearSessionCookie(event.cookies)
 			} else {
-				console.error('[hooks] session restore failed', err)
-				clearSessionCookie(event.cookies)
+				console.error('[hooks] session restore failed (keeping cookie)', err)
 			}
 		} finally {
 			stopSession()
