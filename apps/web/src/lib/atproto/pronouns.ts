@@ -23,3 +23,12 @@ export const DEFAULT_PRONOUNS: Pronouns = 'they/their'
 export function isPronouns(value: string | undefined): value is Pronouns {
 	return PRONOUN_VALUES.includes(value as Pronouns)
 }
+
+/**
+ * The possessive half of a pronoun string ("she/her" → "her"). The lexicon
+ * vocabulary is open, so anything unparseable falls back to the default.
+ */
+export function possessivePronoun(pronouns: string | null | undefined): string {
+	const possessive = pronouns?.split('/')[1]?.trim()
+	return possessive || DEFAULT_PRONOUNS.split('/')[1]
+}

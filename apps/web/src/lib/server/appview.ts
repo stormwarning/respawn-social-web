@@ -50,8 +50,21 @@ async function xrpc<T>(
 	}
 	// No Authorization header: HappyView's XRPC routes reject Bearer API keys
 	// outright (those are for the admin API) and serve public records
-	// anonymously. The feed takes its viewer as a parameter, not from auth.
-	const res = await fetchFn(url, { headers: { accept: 'application/json' } })
+	// anonymously. The feed takes the actor it is about as a parameter, not
+	// from auth.
+	//
+	// `credentials: 'omit'` stops SvelteKit's fetch from attaching our cookies.
+	// It forwards them whenever the target hostname is the app's hostname or a
+	// subdomain of it, ignoring the port — so in dev, where the app is on
+	// 127.0.0.1:5173 and HappyView on 127.0.0.1:3080, a HappyView dashboard
+	// session cookie set by the browser rides along and the appview answers 401
+	// `Missing client identification`: it sees an authenticated caller with no
+	// client key. Omitting also keeps our session cookie out of the appview if
+	// it is ever hosted on a subdomain of the app.
+	const res = await fetchFn(url, {
+		headers: { accept: 'application/json' },
+		credentials: 'omit',
+	})
 	if (!res.ok) {
 		// HappyView reports the useful part — a Lua error, an unregistered
 		// lexicon, an unknown host — in the body, so the status alone says little.

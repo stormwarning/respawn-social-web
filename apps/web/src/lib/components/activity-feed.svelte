@@ -1,5 +1,8 @@
 <script lang="ts">
 import type { HydratedFeed, FeedActor } from '$lib/server/feed'
+import ActivityBacklog from './activity-backlog.svelte'
+import ActivityFollow from './activity-follow.svelte'
+import Divider from './divider.svelte'
 
 interface Props {
 	feed: HydratedFeed | null
@@ -17,6 +20,18 @@ function actorPath(actor: FeedActor): string {
 function actorName(actor: FeedActor): string {
 	return actor.displayName ?? actor.handle ?? actor.did
 }
+
+/** Shape the activity components expect, built from the hydrated feed actor. */
+function activityActor(actor: FeedActor) {
+	const url = actorPath(actor)
+	return {
+		did: actor.did,
+		name: actorName(actor),
+		url,
+		backlogUrl: `${url}backlog/`,
+		pronouns: actor.pronouns,
+	}
+}
 </script>
 
 {#if !appviewConfigured}
@@ -27,21 +42,25 @@ function actorName(actor: FeedActor): string {
 	<p class="sub">{emptyText}</p>
 {:else if feed}
 	<ol class="feed">
-		{#each feed.items as item (item.uri)}
+		{#each feed.items as item, index (item.uri)}
 			<li class="feed-item">
-				<p>
-					<a href={actorPath(item.actor)}>{actorName(item.actor)}</a>
-					{#if item.type === 'backlogAdd' && item.game}
-						added <a href="/game/{item.game.slug}/">{item.game.title}</a> to their backlog
-					{:else if item.type === 'follow' && item.subject}
-						followed <a href={actorPath(item.subject)}>{actorName(item.subject)}</a>
-					{/if}
-				</p>
-				{#if item.coverUrl && item.game}
-					<img class="cover" src={item.coverUrl} alt="" width="60" height="80" />
+				{#if item.type === 'backlogAdd' && item.game}
+					<ActivityBacklog
+						actor={activityActor(item.actor)}
+						game={{ slug: item.game.slug, title: item.game.title }}
+						createdAt={item.createdAt}
+					/>
+				{:else if item.type === 'follow' && item.subject}
+					<ActivityFollow
+						actor={activityActor(item.actor)}
+						subject={activityActor(item.subject)}
+						createdAt={item.createdAt}
+					/>
 				{/if}
-				<p class="sub">{new Date(item.createdAt).toLocaleDateString()}</p>
 			</li>
+			{#if index < feed.items.length - 1}
+				<Divider />
+			{/if}
 		{/each}
 	</ol>
 	{#if feed.cursor}
@@ -62,18 +81,5 @@ function actorName(actor: FeedActor): string {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
-}
-
-.feed-item {
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius);
-	background: var(--color-surface);
-	padding: var(--space-3);
-}
-
-.cover {
-	margin: var(--space-2) 0;
-	border-radius: var(--radius);
-	object-fit: cover;
 }
 </style>

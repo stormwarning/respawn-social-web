@@ -10,6 +10,8 @@ export interface FeedActor {
 	did: string
 	handle: string | null
 	displayName: string | null
+	/** Raw lexicon value, e.g. "she/her"; null when the profile didn't load. */
+	pronouns: string | null
 }
 
 export interface HydratedFeedItem {
@@ -49,6 +51,7 @@ export async function hydrateFeed(page: FeedPage): Promise<HydratedFeed> {
 			])
 			pdsByDid.set(did, pds)
 			let displayName: string | null = null
+			let pronouns: string | null = null
 			if (pds) {
 				const profile = await getRecordOrNull<RespawnProfileRecord>(
 					publicAgent(pds),
@@ -57,13 +60,14 @@ export async function hydrateFeed(page: FeedPage): Promise<HydratedFeed> {
 					'self',
 				).catch(() => null)
 				displayName = profile?.value.displayName || null
+				pronouns = profile?.value.pronouns || null
 			}
-			actors.set(did, { did, handle, displayName })
+			actors.set(did, { did, handle, displayName, pronouns })
 		}),
 	)
 
 	const actorFor = (did: string): FeedActor =>
-		actors.get(did) ?? { did, handle: null, displayName: null }
+		actors.get(did) ?? { did, handle: null, displayName: null, pronouns: null }
 
 	return {
 		cursor: page.cursor,
