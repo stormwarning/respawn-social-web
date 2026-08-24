@@ -30,6 +30,7 @@ function activityActor(actor: FeedActor) {
 		url,
 		backlogUrl: `${url}backlog/`,
 		pronouns: actor.pronouns,
+		avatar: actor.avatarUrl,
 	}
 }
 </script>
