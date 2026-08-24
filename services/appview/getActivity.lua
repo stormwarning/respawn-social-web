@@ -37,8 +37,11 @@ local function dialect()
 		return '?'
 	end
 
+	-- `record` is TEXT on Postgres (migration 20260318000000 converted it from
+	-- JSONB), so `->>` has no operator without a cast. The cast is a no-op on an
+	-- instance old enough to still store JSONB.
 	function d.json_text(field)
-		if is_pg then return "(record->>'" .. field .. "')" end
+		if is_pg then return "(record::jsonb->>'" .. field .. "')" end
 		return "json_extract(record, '$." .. field .. "')"
 	end
 

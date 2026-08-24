@@ -135,8 +135,14 @@ on one port fail confusingly, with requests silently hitting the wrong one.
 ### The feed script
 
 `getActivity.lua` runs on both database backends: it branches on `db.backend()`
-for placeholder style (`$1` vs `?`) and JSON access (`record->>'x'` vs
+for placeholder style (`$1` vs `?`) and JSON access (`record::jsonb->>'x'` vs
 `json_extract`).
+
+The `::jsonb` cast is not optional on Postgres. HappyView's migration
+`20260318000000_uuid_to_text` converted `records.record` from `JSONB` to `TEXT`,
+and `->>` has no operator on `text` — without the cast every query dies with
+`operator does not exist: text ->> unknown`. SQLite hides this, so a script that
+works locally can still fail on a Postgres deployment.
 
 Keep every `db`, `json`, and `toarray` call inside `handle()`. HappyView
 validates an uploaded script by executing the chunk in a sandbox where only
