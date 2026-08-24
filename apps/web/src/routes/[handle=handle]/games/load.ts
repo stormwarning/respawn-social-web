@@ -1,7 +1,7 @@
 import { error, type RequestEvent } from '@sveltejs/kit'
 import { Collections } from '@respawn-social/lexicons'
 import { cachePageData } from '$lib/server/page-cache'
-import { blobUrl, type RespawnProfileRecord } from '$lib/atproto/profile'
+import { avatarUrlForBlob, blobUrl, type RespawnProfileRecord } from '$lib/atproto/profile'
 import { listAllRecords, getRecordOrNull, type RecordEnvelope } from '$lib/atproto/records'
 import { listLogs } from '$lib/atproto/log'
 import { loadBacklog } from '$lib/atproto/backlog'
@@ -66,6 +66,7 @@ export async function loadGamesPage(
 	return {
 		handle: actor.handle ?? actor.did,
 		displayName: profile?.value.displayName || (actor.handle ?? actor.did),
+		avatarUrl: avatarUrlForBlob(actor.pds, actor.did, profile?.value.avatar),
 		isSelf,
 		page,
 		totalPages,

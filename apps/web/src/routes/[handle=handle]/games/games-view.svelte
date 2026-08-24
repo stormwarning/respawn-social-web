@@ -1,6 +1,7 @@
 <script lang="ts">
 import CoverList from '$lib/components/cover-list.svelte'
 import Pagination from '$lib/components/pagination.svelte'
+import ProfileNav from '$lib/components/profile-nav.svelte'
 import SectionHeading from '$lib/components/section-heading.svelte'
 import type { loadGamesPage } from './load'
 
@@ -22,7 +23,12 @@ let playedHeading = $derived(data.isSelf ? 'You’ve played' : `${data.displayNa
 </svelte:head>
 
 <article class="page">
-	<h1>{title}</h1>
+	<ProfileNav
+		handle={data.handle}
+		displayName={data.displayName}
+		avatarUrl={data.avatarUrl}
+		isSelf={data.isSelf}
+	/>
 
 	{#if data.playing.length === 0 && data.played.length === 0}
 		<p>{data.isSelf ? 'You haven’t tracked any games yet.' : 'No games tracked yet.'}</p>
@@ -53,22 +59,8 @@ let playedHeading = $derived(data.isSelf ? 'You’ve played' : `${data.displayNa
 </article>
 
 <style>
-.page {
-	display: grid;
-	gap: 32px;
-	padding: 32px 0;
-}
-
 section {
 	display: grid;
 	gap: 16px;
-}
-
-h1 {
-	font-size: 1.5rem;
-	font-weight: 600;
-	line-height: 1.2;
-	text-box: trim-both cap alphabetic;
-	text-wrap: balance;
 }
 </style>

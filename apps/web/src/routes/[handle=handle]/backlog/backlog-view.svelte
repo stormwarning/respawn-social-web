@@ -1,6 +1,7 @@
 <script lang="ts">
 import CoverList from '$lib/components/cover-list.svelte'
 import Pagination from '$lib/components/pagination.svelte'
+import ProfileNav from '$lib/components/profile-nav.svelte'
 import SectionHeading from '$lib/components/section-heading.svelte'
 import type { loadBacklogPage } from './load'
 
@@ -16,28 +17,35 @@ let year = (releaseDate: string | null) => releaseDate?.slice(0, 4) ?? ''
 </svelte:head>
 
 <article class="page">
-	<SectionHeading>{heading}</SectionHeading>
+	<ProfileNav
+		handle={data.handle}
+		displayName={data.displayName}
+		avatarUrl={data.avatarUrl}
+		isSelf={data.isSelf}
+	/>
 
-	{#if data.items.length === 0}
-		<p>{data.isSelf ? 'Nothing in your backlog yet.' : 'Nothing in this backlog yet.'}</p>
-	{:else}
-		<CoverList items={data.items} />
+	<section>
+		{#if data.items.length === 0}
+			<p>{data.isSelf ? 'Nothing in your backlog yet.' : 'Nothing in this backlog yet.'}</p>
+		{:else}
+			<SectionHeading>{heading}</SectionHeading>
+			<CoverList items={data.items} />
 
-		{#if data.totalPages > 1}
-			<Pagination
-				page={data.page}
-				totalPages={data.totalPages}
-				basePath="/{data.handle}/backlog"
-				label="Backlog pages"
-			/>
+			{#if data.totalPages > 1}
+				<Pagination
+					page={data.page}
+					totalPages={data.totalPages}
+					basePath="/{data.handle}/backlog"
+					label="Backlog pages"
+				/>
+			{/if}
 		{/if}
-	{/if}
+	</section>
 </article>
 
 <style>
-.page {
+section {
 	display: grid;
-	gap: 32px;
-	padding: 32px 0;
+	gap: 16px;
 }
 </style>

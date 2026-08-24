@@ -1,5 +1,8 @@
 import { error, redirect, type RequestEvent } from '@sveltejs/kit'
-import { resolveActor } from '$lib/atproto/public'
+import { Collections } from '@respawn-social/lexicons'
+import { avatarUrlForBlob, type RespawnProfileRecord } from '$lib/atproto/profile'
+import { publicAgent, resolveActor } from '$lib/atproto/public'
+import { getRecordOrNull } from '$lib/atproto/records'
 import { loadActivity } from '$lib/server/activity'
 import type { ActivityFilter } from '$lib/server/appview'
 
@@ -23,8 +26,23 @@ export async function loadHandleActivity(
 	}
 	if (locals.user?.did === actor.did) redirect(302, selfPath)
 
+	const name = actor.handle ?? actor.did
+	// The nav needs the actor's avatar and display name; the feed doesn't wait on
+	// them, so both requests go out together.
+	const [profile, activity] = await Promise.all([
+		getRecordOrNull<RespawnProfileRecord>(
+			publicAgent(actor.pds),
+			actor.did,
+			Collections.profile,
+			'self',
+		),
+		loadActivity(actor.did, filter, url, fetch),
+	])
+
 	return {
-		handle: actor.handle ?? actor.did,
-		...(await loadActivity(actor.did, filter, url, fetch)),
+		handle: name,
+		displayName: profile?.value.displayName || name,
+		avatarUrl: avatarUrlForBlob(actor.pds, actor.did, profile?.value.avatar),
+		...activity,
 	}
 }

@@ -1,7 +1,7 @@
 import { error, type RequestEvent } from '@sveltejs/kit'
 import { Collections } from '@respawn-social/lexicons'
 import { cachePageData } from '$lib/server/page-cache'
-import { blobUrl, type RespawnProfileRecord } from '$lib/atproto/profile'
+import { avatarUrlForBlob, blobUrl, type RespawnProfileRecord } from '$lib/atproto/profile'
 import { getRecordOrNull } from '$lib/atproto/records'
 import { loadBacklog, migrateLegacyBacklog } from '$lib/atproto/backlog'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
@@ -45,6 +45,7 @@ export async function loadBacklogPage(
 	return {
 		handle: actor.handle ?? actor.did,
 		displayName: profile?.value.displayName || (actor.handle ?? actor.did),
+		avatarUrl: avatarUrlForBlob(actor.pds, actor.did, profile?.value.avatar),
 		isSelf,
 		page,
 		totalPages,

@@ -18,6 +18,7 @@ $effect(() => {
 })
 
 const displayName = $derived(data.profile?.displayName || data.handle)
+const activityUrl = $derived(data.isSelf ? '/activity/' : data.handle + '/activity/')
 const playStateLabels: Record<string, string> = {
 	played: 'Played',
 	completed: 'Completed',
@@ -109,6 +110,10 @@ const playStateLabels: Record<string, string> = {
 					</a>
 				</section>
 			{/if}
+
+			<section class="backlog">
+				<SectionHeading><a href={activityUrl}>Activity</a></SectionHeading>
+			</section>
 
 			<!-- <h2>Recent logs</h2>
 			{#if data.recentLogs.length === 0}
