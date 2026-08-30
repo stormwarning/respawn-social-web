@@ -42,6 +42,27 @@ $effect(() => {
 	{@render children()}
 </main>
 
+<footer>
+	<nav>
+		<a
+			href="https://userinput.app/s/did:plc:hiabolqnnpdnrb5grmdaaepg/3ms4izobjf222?lang=en"
+			target="_blank"
+			rel="noopener noreferrer">Feedback</a
+		>
+		<a href="https://bsky.app/profile/respawn.social" target="_blank" rel="noopener noreferrer"
+			>Bluesky</a
+		>
+	</nav>
+	<p>
+		© Respawn Social. Made by <a
+			href="https://tidaltheory.io/"
+			target="_blank"
+			rel="noopener noreferrer">Tidal Theory</a
+		>. Game data from
+		<a href="https://www.igdb.com/" target="_blank" rel="noopener noreferrer">IGDB</a>.
+	</p>
+</footer>
+
 <style>
 .nav-progress {
 	position: fixed;
@@ -86,6 +107,8 @@ main {
 	--inline-spacing: 16px;
 
 	position: relative;
+	flex: 1 1 100%;
+	width: 100%;
 	max-width: 60rem;
 	margin: 0 auto;
 	padding: var(--block-spacing) var(--inline-spacing);
@@ -93,6 +116,66 @@ main {
 
 	@media (min-width: 632px) {
 		--block-spacing: 48px;
+	}
+}
+
+footer {
+	--h-padding: 16px;
+	--rad-num: 8px;
+	--radius: clamp(0px, (100vw - 100%) * 1e5, var(--rad-num));
+
+	display: grid;
+	justify-items: center;
+	gap: 16px;
+	width: 100%;
+	max-width: 60rem;
+	padding: 32px var(--h-padding) calc(env(safe-area-inset-top) + 32px);
+	margin: 0 auto;
+	background-color: var(--color-grey-700);
+	border-radius: var(--radius) var(--radius) 0 0;
+
+	@supports (corner-shape: squircle) {
+		--rad-num: 16px;
+
+		corner-shape: squircle;
+	}
+
+	@media (min-width: 600px) {
+		--h-padding: 32px;
+
+		justify-items: start;
+	}
+
+	nav {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+
+		a {
+			font-size: 0.875rem;
+			font-weight: 600;
+			color: var(--color-grey-300);
+			text-decoration: none;
+			letter-spacing: 0.01em;
+			text-box: trim-both cap alphabetic;
+
+			&:hover {
+				color: var(--color-grey-100);
+			}
+		}
+	}
+
+	p {
+		font-size: 0.75rem;
+		color: var(--color-grey-400);
+		letter-spacing: 0.01em;
+		text-box: trim-both cap alphabetic;
+
+		a {
+			&:hover {
+				color: var(--color-grey-200);
+			}
+		}
 	}
 }
 </style>
