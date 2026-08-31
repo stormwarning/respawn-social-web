@@ -47,7 +47,7 @@ function parseGameForm(
 }
 
 interface AugmentedGame extends Game {
-	developer?: string[]
+	developer?: string
 	publisher?: string[]
 	similar_games?: Array<{ title: string; slug: string; coverUrl?: string }>
 }
@@ -68,7 +68,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 			game.releaseYear = new Date(game.first_release_date * 1000).getUTCFullYear()
 		}
 
-		game.developer = names('developer')
+		game.developer = names('developer')?.join(', ')
 		game.publisher = names('publisher')
 
 		if (game.similar_games) {
