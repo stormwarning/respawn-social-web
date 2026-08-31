@@ -169,6 +169,7 @@ footer {
 		font-size: 0.75rem;
 		color: var(--color-grey-400);
 		letter-spacing: 0.01em;
+		text-align: center;
 		text-box: trim-both cap alphabetic;
 
 		a {

@@ -46,7 +46,10 @@ let { data, onsearch } = $props()
 	z-index: 10;
 	display: flex;
 	justify-content: space-between;
+	width: 100%;
+	max-width: 60rem;
 	padding-inline: 16px;
+	margin: 0 auto;
 
 	&::before {
 		position: absolute;
@@ -106,6 +109,7 @@ let { data, onsearch } = $props()
 	display: flex;
 	align-items: center;
 	gap: 8px;
+	padding-top: calc(env(safe-area-inset-top) + 0);
 }
 
 .who {
