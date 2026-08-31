@@ -29,5 +29,6 @@
 
 	--color-green-500: oklch(69.6% 0.17 162.48);
 
+	--font-ui: MDUI, system-ui, sans-serif;
 	--corner-shape: squircle;
 }

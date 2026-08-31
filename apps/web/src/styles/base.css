@@ -1,3 +1,18 @@
+@font-face {
+	font-family: MDUI;
+	font-weight: 400;
+	src:
+		local('MDUI Regular'),
+		url('/fonts/mdui-regular.woff2') format('woff2');
+}
+@font-face {
+	font-family: MDUI;
+	font-weight: 600;
+	src:
+		local('MDUI Semibold'),
+		url('/fonts/mdui-semibold.woff2') format('woff2');
+}
+
 *,
 *::before,
 *::after {
@@ -26,7 +41,7 @@ body {
 	min-height: 100dvh;
 	background: var(--color-grey-900);
 	color: var(--color-grey-200);
-	font-family: var(--font-sans);
+	font-family: var(--font-ui);
 	font-size: var(--text-base);
 	line-height: 1.4;
 	-webkit-font-smoothing: antialiased;

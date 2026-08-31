@@ -167,6 +167,7 @@ footer {
 
 	p {
 		font-size: 0.75rem;
+		font-feature-settings: 'ss01';
 		color: var(--color-grey-400);
 		letter-spacing: 0.01em;
 		text-align: center;
