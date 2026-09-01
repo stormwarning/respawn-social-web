@@ -111,7 +111,9 @@ main {
 	width: 100%;
 	max-width: 60rem;
 	margin: 0 auto;
-	padding: var(--block-spacing) var(--inline-spacing);
+	padding-block: var(--block-spacing);
+	padding-inline-end: calc(env(safe-area-inset-right) + var(--inline-spacing));
+	padding-inline-start: calc(env(safe-area-inset-left) + var(--inline-spacing));
 	container-type: inline-size;
 
 	@media (min-width: 632px) {
@@ -129,7 +131,9 @@ footer {
 	gap: 16px;
 	width: 100%;
 	max-width: 60rem;
-	padding: 32px var(--h-padding) calc(env(safe-area-inset-top) + 32px);
+	padding-block: 32px calc(env(safe-area-inset-bottom) + 32px);
+	padding-inline-end: calc(env(safe-area-inset-right) + var(--h-padding));
+	padding-inline-start: calc(env(safe-area-inset-left) + var(--h-padding));
 	margin: 0 auto;
 	background-color: var(--color-grey-700);
 	border-radius: var(--radius) var(--radius) 0 0;
