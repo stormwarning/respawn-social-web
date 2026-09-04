@@ -70,6 +70,12 @@ export interface FoldedMember {
 	displayName: string
 	/** The name without the parent title's prefix, e.g. "Blood and Wine". */
 	shortName: string
+	/**
+	 * Which member this one hangs off, when that is not the title itself —
+	 * "Cataclysm", "Shadowlands". The fold is transitive, so a title can absorb
+	 * several editions that share a name while being different products.
+	 */
+	parentName: string | null
 	coverImageId: string | null
 	coverUrl: string | null
 	releaseYear: number | null

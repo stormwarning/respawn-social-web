@@ -5,51 +5,14 @@ import CoverImage from '$lib/components/cover-image.svelte'
 import CoverList from '$lib/components/cover-list.svelte'
 import GameActions from '$lib/components/game-actions.svelte'
 import SectionHeading from '$lib/components/section-heading.svelte'
+import { groupFolded } from '$lib/folded'
 import type { PageData } from './$types'
 
 let { data }: { data: PageData } = $props()
 let { game } = $derived(data)
 let developers = $derived(game.developers.join(', '))
 
-/**
- * Everything folded into this title, grouped by what it is.
- *
- * Two things are filtered out here rather than in the API, because both are
- * presentation calls:
- *
- *   - Ports. They merge platforms and contribute nothing a reader wants listed;
- *     "Halo (Xbox 360)" under Halo is noise.
- *   - Members whose name is just the title's own. 4,430 of them exist — version
- *     children IGDB filed with no version title — and "Includes: Grand Theft
- *     Auto V" on the Grand Theft Auto V page says nothing.
- *
- * Both are still in `game.folded` for anything that wants the full set.
- */
-const FOLD_ORDER = ['expansion', 'dlc', 'remaster', 'version', 'override'] as const
-const FOLD_HEADING: Record<string, string> = {
-	expansion: 'Expansions',
-	dlc: 'DLC',
-	remaster: 'Remasters',
-	version: 'Editions',
-	override: 'Editions',
-}
-
-let foldedGroups = $derived(
-	FOLD_ORDER.reduce<Array<{ heading: string; names: string[] }>>((groups, foldType) => {
-		const names = game.folded
-			.filter((m) => m.foldType === foldType)
-			.map((m) => m.shortName)
-			.filter((name) => name.toLowerCase() !== game.displayName.toLowerCase())
-		if (names.length === 0) return groups
-
-		// `version` and `override` both read as editions, so they share a row.
-		const heading = FOLD_HEADING[foldType]
-		const existing = groups.find((g) => g.heading === heading)
-		if (existing) existing.names.push(...names)
-		else groups.push({ heading, names })
-		return groups
-	}, []),
-)
+let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 </script>
 
 <svelte:head>
