@@ -1,7 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit'
-import { getGameBySlug } from '$lib/server/backend'
+import { getTitleBySlug } from '$lib/server/backend'
 import type { Actions, PageServerLoad } from './$types'
-import { normalizeCoverUrl } from '$lib/server/igdb'
 import { cachePageData } from '$lib/server/page-cache'
 import {
 	loadGameRecord,
@@ -18,7 +17,7 @@ import {
 	removeFromBacklog,
 } from '$lib/atproto/backlog'
 import { buildCover } from '$lib/server/cover'
-import type { Game } from '$lib/types/game'
+import type { Title } from '$lib/types/game'
 
 const PLAY_STATES = new Set(['played', 'completed', 'abandoned', 'retired', 'shelved'])
 const GATE_RULES = new Set(['nobody', 'following', 'followers'])
@@ -46,39 +45,28 @@ function parseGameForm(
 	}
 }
 
-interface AugmentedGame extends Game {
-	developer?: string
-	publisher?: string[]
-	similar_games?: Array<{ title: string; slug: string; coverUrl?: string }>
+/** The `CoverList` item shape, which keys on `igdbId` and renders `title`. */
+function toCoverItem(similar: Title['similar'][number]) {
+	return {
+		igdbId: similar.id,
+		slug: similar.slug,
+		title: similar.displayName,
+		coverUrl: similar.coverUrl ?? undefined,
+	}
 }
+
+/** IGDB website type 1 is the game's own site. */
+const OFFICIAL_SITE = 1
 
 export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }) => {
 	try {
-		const game: AugmentedGame = await getGameBySlug(params.slug, fetch)
+		// Everything this page used to assemble by hand — developer and publisher
+		// names, the release year, cover URLs, similar-game shaping — now arrives
+		// already derived. See §10 of docs/PLAN-igdb-mirror.md in the API repo.
+		const game = await getTitleBySlug(params.slug, fetch)
 
-		const names = (flag: 'developer' | 'publisher') =>
-			game.involved_companies
-				?.filter((c) => c[flag])
-				.map((c) => c.company?.name ?? '')
-				.filter(Boolean)
-
-		if (game.cover?.url) game.cover.url = normalizeCoverUrl(game.cover.url)
-
-		if (typeof game.first_release_date === 'number') {
-			game.releaseYear = new Date(game.first_release_date * 1000).getUTCFullYear()
-		}
-
-		game.developer = names('developer')?.join(', ')
-		game.publisher = names('publisher')
-
-		if (game.similar_games) {
-			game.similar_games.forEach((g) => {
-				g.igdbId = g.id
-				if (g.cover?.url) g.coverUrl = normalizeCoverUrl(g.cover.url)
-			})
-		}
-
-		let site = game.websites?.find((w) => w.type.id === 1)?.url
+		const site = game.websites.find((w) => w.type === OFFICIAL_SITE)?.url
+		const similar = game.similar.slice(0, 4).map(toCoverItem)
 
 		let played = false
 		let playing = false
@@ -120,6 +108,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 
 		return {
 			game,
+			similar,
 			site,
 			played,
 			playing,
@@ -347,11 +336,12 @@ export const actions: Actions = {
 
 		try {
 			// Refetch the game server-side so the denormalized ref can't drift.
-			const game = await getGameBySlug(params.slug, fetch)
+			const game = await getTitleBySlug(params.slug, fetch)
 			const createdAt = new Date().toISOString()
 
 			const log: RespawnLogRecord = {
-				game: { igdbId: game.id, slug: params.slug, title: game.name },
+				// `displayName`, not `name`: the ref is what other people see.
+				game: { igdbId: game.id, slug: params.slug, title: game.displayName },
 				platform: platform || undefined,
 				datePlayed: datePlayed ? new Date(`${datePlayed}T00:00:00Z`).toISOString() : undefined,
 				finishedPlaying: (finishedPlaying as PlayedState) || undefined,
@@ -374,9 +364,9 @@ export const actions: Actions = {
 				playing: finishedPlaying ? undefined : existing?.playing,
 				createdAt: existing?.createdAt ?? createdAt,
 			}
-			if (!gameRecord.cover && game.cover?.url) {
+			if (!gameRecord.cover && game.coverUrl) {
 				try {
-					gameRecord.cover = await buildCover(agent, game.cover.url)
+					gameRecord.cover = await buildCover(agent, game.coverUrl)
 				} catch (err) {
 					console.error('[game/[slug]] cover build failed, logging without it', err)
 				}

@@ -9,32 +9,33 @@ import type { PageData } from './$types'
 
 let { data }: { data: PageData } = $props()
 let { game } = $derived(data)
+let developers = $derived(game.developers.join(', '))
 </script>
 
 <svelte:head>
-	<title>{game.name} ▪ Respawn</title>
+	<title>{game.displayName} ▪ Respawn</title>
 </svelte:head>
 
 <article class="page">
 	<header class="game-header">
 		<div class="title">
-			<h1>{game.name}</h1>
+			<h1>{game.displayName}</h1>
 			<div class="title-meta">
 				<span>{game.releaseYear}</span>
-				{#if game.releaseYear && game.developer}<span role="separator">▪</span>{/if}
-				<span>{game.developer}</span>
+				{#if game.releaseYear && developers}<span role="separator">▪</span>{/if}
+				<span>{developers}</span>
 			</div>
 		</div>
 
 		<div class="game-cover">
-			<CoverImage image={game.cover?.url} loading="eager" />
+			<CoverImage image={game.coverUrl} loading="eager" />
 		</div>
 	</header>
 
 	<section class="game-intro">
-		{#if game.summary}
+		{#if game.summaryDisplay}
 			<div class="summary">
-				<ClampText text={game.summary} />
+				<ClampText text={game.summaryDisplay} />
 			</div>
 		{/if}
 
@@ -43,8 +44,8 @@ let { game } = $derived(data)
 				isLoggedIn={data.isLoggedIn}
 				igdbId={game.id}
 				slug={game.slug}
-				title={game.name}
-				coverUrl={game.cover?.url ?? ''}
+				title={game.displayName}
+				coverUrl={game.coverUrl ?? ''}
 				played={data.played}
 				playing={data.playing}
 				liked={data.liked}
@@ -58,7 +59,7 @@ let { game } = $derived(data)
 		<div class="details-block">
 			<h4>Publishers</h4>
 			<ul class="list">
-				{#each game.publisher as publisher}
+				{#each game.publishers as publisher}
 					<li><Chip>{publisher}</Chip></li>
 				{/each}
 			</ul>
@@ -67,7 +68,7 @@ let { game } = $derived(data)
 			<h4>Platforms</h4>
 			<ul class="list">
 				{#each game.platforms as platform}
-					<li><Chip>{platform.name}</Chip></li>
+					<li><Chip>{platform.displayName}</Chip></li>
 				{/each}
 			</ul>
 		</div>
@@ -75,15 +76,15 @@ let { game } = $derived(data)
 			<h4>Genres</h4>
 			<ul class="list">
 				{#each game.genres as genre}
-					<li><Chip>{genre.name}</Chip></li>
+					<li><Chip>{genre.displayName}</Chip></li>
 				{/each}
 			</ul>
 		</div>
-		{#if game.url || data.site}
+		{#if game.igdbUrl || data.site}
 			<div class="details-more">
 				<span>More at</span>
-				{#if game.url}
-					<a class="outline-button small" href={game.url} rel="noopener noreferrer">
+				{#if game.igdbUrl}
+					<a class="outline-button small" href={game.igdbUrl} rel="noopener noreferrer">
 						<span>IGDB</span>
 					</a>
 				{/if}
@@ -97,19 +98,19 @@ let { game } = $derived(data)
 	</section>
 	<!-- <p>Where to play:</p>
 	<ul>
-		{#each data.game.external_games as item}<li>{item.url}</li>{/each}
+		{#each data.game.externalGames as item}<li>{item.url}</li>{/each}
 	</ul> -->
 
-	{#if game.similar_games && game.similar_games.length > 0}
+	{#if data.similar.length > 0}
 		<section class="similar">
 			<SectionHeading>Similar games</SectionHeading>
-			<CoverList items={game.similar_games.slice(0, 4)} cols={4} />
+			<CoverList items={data.similar} cols={4} />
 		</section>
 	{/if}
 </article>
 
 <aside class="sidebar">
-	<CoverImage image={game.cover?.url} loading="eager" />
+	<CoverImage image={game.coverUrl} loading="eager" />
 </aside>
 
 <style>

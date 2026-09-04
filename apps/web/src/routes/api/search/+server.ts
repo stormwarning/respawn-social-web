@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit'
 
-import { searchGames } from '$lib/server/backend'
-import { normalizeCoverUrl } from '$lib/server/igdb'
+import { searchTitles } from '$lib/server/backend'
 
 import type { RequestHandler } from './$types'
 
@@ -13,20 +12,20 @@ export const GET: RequestHandler = async ({ url, fetch }) => {
 	const q = url.searchParams.get('q')?.trim() ?? ''
 	if (q.length < 2) return json({ results: [] })
 
-	const games = await searchGames(q, fetch)
-	const results = games.slice(0, 5).map((game) => ({
-		igdbId: game.id,
-		name: game.name,
-		slug: game.slug as string,
-		year:
-			typeof game.first_release_date === 'number'
-				? new Date(game.first_release_date * 1000).getUTCFullYear()
-				: null,
-		// The dialog renders these in a 42px column.
-		coverUrl: game.cover?.url ? normalizeCoverUrl(game.cover.url, 'small') : null,
-		// Untouched IGDB url. `normalizeCoverUrl` only rewrites `/t_thumb/`, so a
-		// consumer that wants a bigger variant has to start from the original.
-		rawCoverUrl: game.cover?.url ?? null,
+	const hits = await searchTitles(q, fetch, 5)
+	const results = hits.map(({ title, matchedTerm, kind }) => ({
+		igdbId: title.id,
+		name: title.displayName,
+		slug: title.slug,
+		year: title.releaseYear,
+		// The dialog renders these in a 42px column; the backend already picked
+		// the small variant.
+		coverUrl: title.coverUrl,
+		// A full-size cover for consumers that want one, built from the same id.
+		rawCoverUrl: title.coverImageId
+			? `https://images.igdb.com/igdb/image/upload/t_cover_big/${title.coverImageId}.jpg`
+			: null,
+		matchedTerm: kind === 'root_name' ? null : matchedTerm,
 	}))
 
 	return json({ results })

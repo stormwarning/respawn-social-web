@@ -27,10 +27,13 @@ let { data }: { data: PageData } = $props()
 								<span class="year">{game.year}</span>
 							{/if}
 						</span>
+						{#if game.matchedTerm}
+							<span class="matched">Includes {game.matchedTerm}</span>
+						{/if}
 						{#if game.platforms}
 							<div class="platforms">
 								{#each game.platforms as platform}
-									<Chip>{platform.name}</Chip>
+									<Chip>{platform}</Chip>
 								{/each}
 							</div>
 						{/if}
@@ -49,6 +52,13 @@ let { data }: { data: PageData } = $props()
 	display: grid;
 	gap: 32px;
 	padding: 32px 0;
+}
+
+/* Why this result matched, when it was not the title's own name. */
+.matched {
+	font-size: 0.75rem;
+	color: var(--color-grey-400);
+	letter-spacing: 0.01em;
 }
 
 h1 {
