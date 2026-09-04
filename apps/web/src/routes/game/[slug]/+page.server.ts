@@ -164,7 +164,7 @@ export const actions: Actions = {
 				: { game: ref, played: 'played', createdAt: new Date().toISOString() }
 
 			if (!record.cover && coverUrl) {
-				record.cover = await buildCover(agent, coverUrl)
+				record.cover = await buildCover(agent, coverUrl, fetch)
 			}
 
 			await putGameRecord(agent, user.did, igdbId, record)
@@ -202,7 +202,7 @@ export const actions: Actions = {
 				: { game: ref, playing: true, createdAt: new Date().toISOString() }
 
 			if (!record.cover && coverUrl) {
-				record.cover = await buildCover(agent, coverUrl)
+				record.cover = await buildCover(agent, coverUrl, fetch)
 			}
 
 			await putGameRecord(agent, user.did, igdbId, record)
@@ -240,7 +240,7 @@ export const actions: Actions = {
 				: { game: ref, liked: true, createdAt: new Date().toISOString() }
 
 			if (!record.cover && coverUrl) {
-				record.cover = await buildCover(agent, coverUrl)
+				record.cover = await buildCover(agent, coverUrl, fetch)
 			}
 
 			await putGameRecord(agent, user.did, igdbId, record)
@@ -286,7 +286,7 @@ export const actions: Actions = {
 				: { game: ref, rating, createdAt: new Date().toISOString() }
 
 			if (!record.cover && coverUrl) {
-				record.cover = await buildCover(agent, coverUrl)
+				record.cover = await buildCover(agent, coverUrl, fetch)
 			}
 
 			await putGameRecord(agent, user.did, igdbId, record)
@@ -297,7 +297,7 @@ export const actions: Actions = {
 		}
 	},
 
-	backlog: async ({ request, locals }) => {
+	backlog: async ({ request, fetch, locals }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user } = locals
 
@@ -321,7 +321,7 @@ export const actions: Actions = {
 
 			await addToBacklog(agent, user.did, {
 				game,
-				cover: coverUrl ? await buildCover(agent, coverUrl) : undefined,
+				cover: coverUrl ? await buildCover(agent, coverUrl, fetch) : undefined,
 			})
 			return { inBacklog: true }
 		} catch (err) {
@@ -388,7 +388,7 @@ export const actions: Actions = {
 			}
 			if (!gameRecord.cover && game.coverUrl) {
 				try {
-					gameRecord.cover = await buildCover(agent, game.coverUrl)
+					gameRecord.cover = await buildCover(agent, game.coverUrl, fetch)
 				} catch (err) {
 					console.error('[game/[slug]] cover build failed, logging without it', err)
 				}

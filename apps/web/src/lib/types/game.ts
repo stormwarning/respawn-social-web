@@ -116,6 +116,14 @@ export interface ResolveResult {
 	redirectedFrom?: number
 }
 
+/** Colours extracted from a cover, keyed by IGDB's content-addressed image id. */
+export interface CoverColors {
+	/** `#rrggbb`. */
+	dominant: string
+	/** Most common colours in the artwork, most frequent first. */
+	palette: Array<{ hex: string; population: number }> | null
+}
+
 export interface SearchHit {
 	title: TitleSummary
 	/**

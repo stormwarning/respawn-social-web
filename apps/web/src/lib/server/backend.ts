@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private'
-import type { ResolveResult, SearchHit, Title } from '$lib/types/game'
+import type { CoverColors, ResolveResult, SearchHit, Title } from '$lib/types/game'
 
 function baseUrl(): string {
 	const url = env.BACKEND_API_URL
@@ -112,6 +112,24 @@ export async function resolveIds(
 		Object.assign(out, resolved)
 	}
 	return out
+}
+
+/**
+ * A cover's colours, computed once by the backend and shared.
+ *
+ * Returns null for a cover with none — a missing image, or one that could not
+ * be decoded. Callers treat a tint as optional, which it is.
+ */
+export async function getCoverColors(
+	imageId: string,
+	fetchFn?: typeof fetch,
+): Promise<CoverColors | null> {
+	try {
+		return await api<CoverColors>(`/covers/${encodeURIComponent(imageId)}/colors`, fetchFn)
+	} catch (err) {
+		if (err instanceof BackendError && err.isNotFound) return null
+		throw err
+	}
 }
 
 export async function searchTitles(
