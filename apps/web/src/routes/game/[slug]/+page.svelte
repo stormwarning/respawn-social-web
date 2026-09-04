@@ -10,6 +10,46 @@ import type { PageData } from './$types'
 let { data }: { data: PageData } = $props()
 let { game } = $derived(data)
 let developers = $derived(game.developers.join(', '))
+
+/**
+ * Everything folded into this title, grouped by what it is.
+ *
+ * Two things are filtered out here rather than in the API, because both are
+ * presentation calls:
+ *
+ *   - Ports. They merge platforms and contribute nothing a reader wants listed;
+ *     "Halo (Xbox 360)" under Halo is noise.
+ *   - Members whose name is just the title's own. 4,430 of them exist — version
+ *     children IGDB filed with no version title — and "Includes: Grand Theft
+ *     Auto V" on the Grand Theft Auto V page says nothing.
+ *
+ * Both are still in `game.folded` for anything that wants the full set.
+ */
+const FOLD_ORDER = ['expansion', 'dlc', 'remaster', 'version', 'override'] as const
+const FOLD_HEADING: Record<string, string> = {
+	expansion: 'Expansions',
+	dlc: 'DLC',
+	remaster: 'Remasters',
+	version: 'Editions',
+	override: 'Editions',
+}
+
+let foldedGroups = $derived(
+	FOLD_ORDER.reduce<Array<{ heading: string; names: string[] }>>((groups, foldType) => {
+		const names = game.folded
+			.filter((m) => m.foldType === foldType)
+			.map((m) => m.shortName)
+			.filter((name) => name.toLowerCase() !== game.displayName.toLowerCase())
+		if (names.length === 0) return groups
+
+		// `version` and `override` both read as editions, so they share a row.
+		const heading = FOLD_HEADING[foldType]
+		const existing = groups.find((g) => g.heading === heading)
+		if (existing) existing.names.push(...names)
+		else groups.push({ heading, names })
+		return groups
+	}, []),
+)
 </script>
 
 <svelte:head>
@@ -20,6 +60,12 @@ let developers = $derived(game.developers.join(', '))
 	<header class="game-header">
 		<div class="title">
 			<h1>{game.displayName}</h1>
+			{#if game.parent}
+				<p class="parent-of">
+					{game.relationToParent ?? 'Version'} of
+					<a href="/game/{game.parent.slug}/">{game.parent.displayName}</a>
+				</p>
+			{/if}
 			<div class="title-meta">
 				<span>{game.releaseYear}</span>
 				{#if game.releaseYear && developers}<span role="separator">▪</span>{/if}
@@ -80,6 +126,33 @@ let developers = $derived(game.developers.join(', '))
 				{/each}
 			</ul>
 		</div>
+		{#if foldedGroups.length > 0}
+			<div class="details-block">
+				<h4>Includes</h4>
+				<ul class="folded">
+					{#each foldedGroups as group}
+						<li>
+							<span class="folded-heading">{group.heading}</span>
+							<span class="folded-names">{group.names.join(', ')}</span>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
+		{#if game.related.length > 0}
+			<div class="details-block">
+				<h4>Released separately</h4>
+				<ul class="related">
+					{#each game.related as item}
+						<li>
+							<a href="/game/{item.slug}/">{item.displayName}</a>
+							{#if item.relation}<span class="related-kind">{item.relation}</span>{/if}
+							{#if item.releaseYear}<span class="related-year">{item.releaseYear}</span>{/if}
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
 		{#if game.igdbUrl || data.site}
 			<div class="details-more">
 				<span>More at</span>
@@ -143,6 +216,11 @@ let developers = $derived(game.developers.join(', '))
 	align-content: start;
 	gap: 24px;
 
+	/* The parent line belongs with the heading, not a third of the way down. */
+	> h1 + .parent-of {
+		margin-top: -16px;
+	}
+
 	h1 {
 		font-size: 1.375rem;
 		font-weight: 600;
@@ -152,6 +230,22 @@ let developers = $derived(game.developers.join(', '))
 		@media (min-width: 632px) {
 			font-size: 2rem;
 		}
+	}
+}
+
+.parent-of {
+	font-size: 0.8125rem;
+	color: var(--color-grey-400);
+	letter-spacing: 0.01em;
+	line-height: 1.2;
+	text-box: trim-both cap alphabetic;
+
+	@media (min-width: 632px) {
+		font-size: 0.875rem;
+	}
+
+	> a {
+		color: var(--color-grey-200);
 	}
 }
 
@@ -239,6 +333,65 @@ let developers = $derived(game.developers.join(', '))
 		letter-spacing: 0.01em;
 		text-box: trim-both cap alphabetic;
 	}
+}
+
+.folded {
+	display: grid;
+	gap: 8px;
+	padding: 0;
+	list-style: none;
+
+	> li {
+		display: grid;
+		gap: 2px;
+
+		@container (min-width: 520px) {
+			grid-template-columns: 108px 1fr;
+			gap: 12px;
+		}
+	}
+}
+
+.folded-heading {
+	font-size: 0.75rem;
+	color: var(--color-grey-400);
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	text-box: trim-both cap alphabetic;
+}
+
+.folded-names {
+	font-size: 0.875rem;
+	line-height: 1.4;
+	text-wrap: pretty;
+}
+
+.related {
+	display: grid;
+	gap: 8px;
+	padding: 0;
+	list-style: none;
+
+	> li {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 8px;
+		font-size: 0.875rem;
+		line-height: 1.3;
+	}
+}
+
+.related-kind {
+	font-size: 0.6875rem;
+	color: var(--color-grey-400);
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.related-year {
+	font-size: 0.75rem;
+	color: var(--color-grey-500);
 }
 
 .list {

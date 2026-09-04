@@ -47,6 +47,34 @@ export interface TitleExternalGame {
 	source: number | null
 }
 
+/** A pointer to another title, with what it is relative to the one you asked for. */
+export interface TitleRef {
+	id: number
+	slug: string
+	displayName: string
+	coverImageId: string | null
+	coverUrl: string | null
+	releaseYear: number | null
+	gameType: number | null
+	/** "Remake", "Expansion", "Fork" — null on `parent`, see `relationToParent`. */
+	relation: string | null
+}
+
+/** A game absorbed into a title and given no page of its own. */
+export interface FoldedMember {
+	id: number
+	foldType: 'root' | 'port' | 'dlc' | 'expansion' | 'remaster' | 'version' | 'override'
+	/** "DLC", "Expansion", "Remaster", "Edition", "Port". */
+	label: string
+	/** The full name, e.g. "The Witcher 3: Wild Hunt – Blood and Wine". */
+	displayName: string
+	/** The name without the parent title's prefix, e.g. "Blood and Wine". */
+	shortName: string
+	coverImageId: string | null
+	coverUrl: string | null
+	releaseYear: number | null
+}
+
 export interface Title {
 	v: number
 	id: number
@@ -79,6 +107,14 @@ export interface Title {
 	sourceHash: string
 	/** Every IGDB id that resolves to this title, including its own. */
 	members: number[]
+	/** The title this one is a remake/expansion/enhanced release of. */
+	parent: TitleRef | null
+	/** What this title is relative to `parent`: "Remake", "Expansion", … */
+	relationToParent: string | null
+	/** Folded in and given no page of their own: DLC, expansions, editions. */
+	folded: FoldedMember[]
+	/** Descendants that kept their own page. */
+	related: TitleRef[]
 	/**
 	 * Set when the request used a folded child's id. A user's saved record may
 	 * point at a DLC that has since folded into its parent; this is how we know
