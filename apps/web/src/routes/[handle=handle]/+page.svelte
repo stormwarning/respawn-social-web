@@ -18,7 +18,7 @@ $effect(() => {
 })
 
 const displayName = $derived(data.profile?.displayName || data.handle)
-const activityUrl = $derived(data.isSelf ? '/activity/' : data.handle + '/activity/')
+const activityUrl = $derived(data.isSelf ? '/activity/' : `/${data.handle}/activity/`)
 const playStateLabels: Record<string, string> = {
 	played: 'Played',
 	completed: 'Completed',
