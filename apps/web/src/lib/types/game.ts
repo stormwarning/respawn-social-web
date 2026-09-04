@@ -100,6 +100,22 @@ export interface TitleSummary {
 	platforms: string[]
 }
 
+/**
+ * Where a saved IGDB id points now.
+ *
+ *   members  — the id belongs to a title, as its root or as something folded in
+ *   redirect — the game was deleted and the backend worked out its replacement
+ *   tombstone— deleted with no known replacement; the title, if any, still
+ *              renders from last known data
+ *   unknown  — never mirrored
+ */
+export interface ResolveResult {
+	titleId: number | null
+	status: 'live' | 'folded' | 'deleted'
+	via: 'members' | 'redirect' | 'tombstone' | 'unknown'
+	redirectedFrom?: number
+}
+
 export interface SearchHit {
 	title: TitleSummary
 	/**

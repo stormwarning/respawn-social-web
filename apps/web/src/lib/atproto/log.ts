@@ -142,15 +142,29 @@ export async function deleteLog(agent: Agent, did: string, rkey: string): Promis
  * filtered to one game. Uses `listRecords` pagination — fine at repo scale;
  * cross-user aggregation waits for HappyView to index logs.
  */
+/**
+ * A user's logs, optionally for one game.
+ *
+ * `igdbIds` rather than a single id, because a title is made of several IGDB
+ * ids: someone who logged a DLC in 2023 and the base game in 2025 has both
+ * under one title now, and filtering on a single id would split their history
+ * in two and restart the numbering. Callers pass `title.members`.
+ *
+ * Logs are never rewritten or moved. They are history, and the fold is resolved
+ * at read time — see §7.4 of docs/PLAN-igdb-mirror.md in the API repo.
+ */
 export async function listLogs(
 	agent: Agent,
 	did: string,
-	{ igdbId, slug }: { igdbId?: number; slug?: string } = {},
+	{ igdbId, igdbIds, slug }: { igdbId?: number; igdbIds?: number[]; slug?: string } = {},
 ): Promise<RecordEnvelope<RespawnLogRecord>[]> {
 	const all = await listAllRecords<RespawnLogRecord>(agent, did, RESPAWN_LOG_COLLECTION)
+	const wanted = igdbIds ? new Set(igdbIds) : igdbId != null ? new Set([igdbId]) : null
+
 	return all
 		.filter((log) => {
-			if (igdbId != null && log.value.game?.igdbId !== igdbId) return false
+			const id = log.value.game?.igdbId
+			if (wanted !== null && (id == null || !wanted.has(id))) return false
 			if (slug != null && log.value.game?.slug !== slug) return false
 			return true
 		})

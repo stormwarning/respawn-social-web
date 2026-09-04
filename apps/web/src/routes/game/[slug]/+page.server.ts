@@ -17,6 +17,7 @@ import {
 	removeFromBacklog,
 } from '$lib/atproto/backlog'
 import { buildCover } from '$lib/server/cover'
+import { loadConsolidatedGameRecord } from '$lib/atproto/title-identity'
 import type { Title } from '$lib/types/game'
 
 const PLAY_STATES = new Set(['played', 'completed', 'abandoned', 'retired', 'shelved'])
@@ -78,7 +79,10 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 			try {
 				const [rec, logs, backlogged] = await Promise.all([
 					loadGameRecord(locals.agent, locals.user.did, game.id),
-					listLogs(locals.agent, locals.user.did, { igdbId: game.id }),
+					// Every id this title is made of, not just its current one. A user
+					// who logged the DLC before it folded in still has one continuous
+					// history here rather than two split by IGDB's reorganisation.
+					listLogs(locals.agent, locals.user.did, { igdbIds: game.members }),
 					isInBacklog(locals.agent, locals.user.did, game.id),
 				])
 				played = rec?.played != null
@@ -132,7 +136,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 }
 
 export const actions: Actions = {
-	played: async ({ request, locals }) => {
+	played: async ({ request, fetch, locals }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user } = locals
 
@@ -142,7 +146,10 @@ export const actions: Actions = {
 		const ref = game ?? undefined
 
 		try {
-			const existing = await loadGameRecord(agent, user.did, igdbId)
+			// Fold in any record left under an id that has since folded into this
+			// title, so acting on it does not create a second one. Lazy: one user,
+			// one action, no bulk job over other people's repos.
+			const existing = await loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch)
 
 			// Already played → drop the played field but keep the record (cover survives).
 			if (existing?.played != null) {
@@ -168,7 +175,7 @@ export const actions: Actions = {
 		}
 	},
 
-	playing: async ({ request, locals }) => {
+	playing: async ({ request, fetch, locals }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user } = locals
 
@@ -178,7 +185,10 @@ export const actions: Actions = {
 		const ref = game ?? undefined
 
 		try {
-			const existing = await loadGameRecord(agent, user.did, igdbId)
+			// Fold in any record left under an id that has since folded into this
+			// title, so acting on it does not create a second one. Lazy: one user,
+			// one action, no bulk job over other people's repos.
+			const existing = await loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch)
 
 			// Already playing → drop the playing field but keep the record (cover survives).
 			if (existing?.playing) {
@@ -203,7 +213,7 @@ export const actions: Actions = {
 		}
 	},
 
-	like: async ({ request, locals }) => {
+	like: async ({ request, fetch, locals }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user } = locals
 
@@ -213,7 +223,10 @@ export const actions: Actions = {
 		const ref = game ?? undefined
 
 		try {
-			const existing = await loadGameRecord(agent, user.did, igdbId)
+			// Fold in any record left under an id that has since folded into this
+			// title, so acting on it does not create a second one. Lazy: one user,
+			// one action, no bulk job over other people's repos.
+			const existing = await loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch)
 
 			// Already liked → drop the liked field but keep the record (cover survives).
 			if (existing?.liked) {
@@ -238,7 +251,7 @@ export const actions: Actions = {
 		}
 	},
 
-	rate: async ({ request, locals }) => {
+	rate: async ({ request, fetch, locals }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user } = locals
 
@@ -254,7 +267,10 @@ export const actions: Actions = {
 		}
 
 		try {
-			const existing = await loadGameRecord(agent, user.did, igdbId)
+			// Fold in any record left under an id that has since folded into this
+			// title, so acting on it does not create a second one. Lazy: one user,
+			// one action, no bulk job over other people's repos.
+			const existing = await loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch)
 
 			// The lexicon's minimum is 1, so clearing means dropping the field, not writing 0.
 			if (rating === 0) {

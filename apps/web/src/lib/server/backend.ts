@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private'
-import type { SearchHit, Title } from '$lib/types/game'
+import type { ResolveResult, SearchHit, Title } from '$lib/types/game'
 
 function baseUrl(): string {
 	const url = env.BACKEND_API_URL
@@ -84,6 +84,34 @@ export async function getMembers(
 	fetchFn?: typeof fetch,
 ): Promise<{ titleId: number; memberIds: number[] }> {
 	return api<{ titleId: number; memberIds: number[] }>(`/games/${id}/members`, fetchFn)
+}
+
+/**
+ * Where do these saved ids point now?
+ *
+ * Batched: a profile page holds a hundred records and one request each would
+ * cost more than rendering the page. The backend caps a request at 200 ids, so
+ * anything larger is chunked here rather than failing.
+ */
+const RESOLVE_CHUNK = 200
+
+export async function resolveIds(
+	ids: number[],
+	fetchFn?: typeof fetch,
+): Promise<Record<string, ResolveResult>> {
+	const unique = [...new Set(ids)].filter((id) => Number.isInteger(id) && id > 0)
+	if (unique.length === 0) return {}
+
+	const out: Record<string, ResolveResult> = {}
+	for (let i = 0; i < unique.length; i += RESOLVE_CHUNK) {
+		const chunk = unique.slice(i, i + RESOLVE_CHUNK)
+		const { resolved } = await api<{ resolved: Record<string, ResolveResult> }>(
+			`/games/resolve?ids=${chunk.join(',')}`,
+			fetchFn,
+		)
+		Object.assign(out, resolved)
+	}
+	return out
 }
 
 export async function searchTitles(
