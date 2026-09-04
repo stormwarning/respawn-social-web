@@ -1,5 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit'
-import { getTitleBySlug } from '$lib/server/backend'
+import { BackendError, getTitleBySlug } from '$lib/server/backend'
 import type { Actions, PageServerLoad } from './$types'
 import { cachePageData } from '$lib/server/page-cache'
 import {
@@ -121,7 +121,13 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 		}
 	} catch (err) {
 		console.error('[game/[slug]] load failed', err)
-		error(404, 'Game not found')
+		// Only a real 404 from the backend means the game is not there. Anything
+		// else — the API down, a 500, a timeout — is our problem, and saying
+		// "Game not found" would hide an outage behind a plausible-looking page.
+		if (err instanceof BackendError && err.isNotFound) {
+			error(404, 'Game not found')
+		}
+		error(503, 'Game data is unavailable right now. Try again shortly.')
 	}
 }
 

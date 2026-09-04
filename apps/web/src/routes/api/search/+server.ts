@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit'
 
-import { searchTitles } from '$lib/server/backend'
+import { BackendError, searchTitles } from '$lib/server/backend'
 
 import type { RequestHandler } from './$types'
 
@@ -12,7 +12,19 @@ export const GET: RequestHandler = async ({ url, fetch }) => {
 	const q = url.searchParams.get('q')?.trim() ?? ''
 	if (q.length < 2) return json({ results: [] })
 
-	const hits = await searchTitles(q, fetch, 5)
+	let hits
+	try {
+		hits = await searchTitles(q, fetch, 5)
+	} catch (err) {
+		console.error('[api/search] failed', err)
+		// The typeahead must not render "no results" when the backend is down —
+		// the dialog would silently tell the user their game does not exist.
+		if (err instanceof BackendError) {
+			return json({ results: [], error: 'unavailable' }, { status: 503 })
+		}
+		throw err
+	}
+
 	const results = hits.map(({ title, matchedTerm, kind }) => ({
 		igdbId: title.id,
 		name: title.displayName,
