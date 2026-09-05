@@ -177,3 +177,12 @@ export interface SearchHit {
 	kind: 'root_name' | 'alt_name' | 'member_name' | 'version_title' | 'edition'
 	score: number
 }
+
+/** One page of the catalogue, from `/games/browse`. */
+export interface BrowseResult {
+	items: TitleSummary[]
+	/** Titles matching the filter, across every page. */
+	total: number
+	page: number
+	pageSize: number
+}

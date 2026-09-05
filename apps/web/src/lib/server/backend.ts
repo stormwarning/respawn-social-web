@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private'
-import type { CoverColors, ResolveResult, SearchHit, Title } from '$lib/types/game'
+import type { BrowseResult, CoverColors, ResolveResult, SearchHit, Title } from '$lib/types/game'
 
 function baseUrl(): string {
 	const url = env.BACKEND_API_URL
@@ -141,4 +141,24 @@ export async function searchTitles(
 	if (limit) params.set('limit', String(limit))
 	const { results } = await api<{ results: SearchHit[] }>(`/games/search?${params}`, fetchFn)
 	return results
+}
+
+export interface BrowseQuery {
+	/** A single release year. */
+	year?: number
+	/** The first year of a decade: 2010 for the 2010s. Exclusive with `year`. */
+	decade?: number
+	page: number
+	limit: number
+}
+
+/** A page of the catalogue, most popular first, optionally within a year or decade. */
+export async function browseTitles(
+	query: BrowseQuery,
+	fetchFn?: typeof fetch,
+): Promise<BrowseResult> {
+	const params = new URLSearchParams({ page: String(query.page), limit: String(query.limit) })
+	if (query.year !== undefined) params.set('year', String(query.year))
+	if (query.decade !== undefined) params.set('decade', String(query.decade))
+	return api<BrowseResult>(`/games/browse?${params}`, fetchFn)
 }
