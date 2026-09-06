@@ -40,7 +40,8 @@ function toggle() {
 
 .text {
 	height: var(--clamp-height, auto);
-	overflow: hidden;
+	overflow-x: visible;
+	overflow-y: clip;
 	opacity: 0;
 	interpolate-size: allow-keywords;
 	transition:

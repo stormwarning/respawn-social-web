@@ -52,6 +52,7 @@ p {
 	font-size: 0.9375rem;
 	color: var(--color-grey-300);
 	text-wrap: pretty;
+	hanging-punctuation: first;
 }
 
 a {
