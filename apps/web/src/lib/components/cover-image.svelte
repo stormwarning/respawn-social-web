@@ -24,14 +24,22 @@ let { image, loading = 'lazy', title }: Props = $props()
 			decoding="async"
 			fetchpriority={loading === 'eager' ? 'high' : 'auto'}
 		/>
+		<img
+			src={image}
+			alt=""
+			{loading}
+			decoding="async"
+			fetchpriority={loading === 'eager' ? 'high' : 'auto'}
+		/>
 	{/if}
 </div>
 
 <style>
 .cover {
 	position: relative;
+	display: grid;
 	aspect-ratio: 3/4;
-	object-fit: cover;
+	max-width: 100%;
 	background: var(--color-grey-600);
 	border-radius: 4px;
 	overflow: hidden;
@@ -55,17 +63,23 @@ let { image, loading = 'lazy', title }: Props = $props()
 	}
 
 	img {
-		position: relative;
+		grid-area: 1 / 1;
 		width: 100%;
-		max-width: 100%;
+		height: 100%;
 		object-fit: contain;
 		text-decoration: none;
+		scale: 1;
+
+		&:not(:last-of-type) {
+			object-fit: cover;
+			scale: 1.2;
+			filter: blur(8px);
+		}
 	}
 }
 
 .title {
-	position: absolute;
-	inset: 0;
+	grid-area: 1 / 1;
 	display: grid;
 	place-items: center;
 	padding: 4px;

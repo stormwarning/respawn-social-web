@@ -19,6 +19,7 @@ let { href, imageUrl, title, loading = 'lazy' }: Props = $props()
 .cover-link {
 	display: block;
 	width: 100%;
+	text-decoration: none;
 	border-radius: 4px;
 
 	@supports (corner-shape: squircle) {
