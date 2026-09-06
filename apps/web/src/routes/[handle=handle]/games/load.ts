@@ -47,10 +47,11 @@ export async function loadGamesPage(
 		if (at > (lastPlayed.get(id) ?? '')) lastPlayed.set(id, at)
 	}
 
-	const entries = games
-		.map((rec) => toEntry(rec, refs, lastPlayed, actor.pds, actor.did))
-		.filter((entry) => entry !== null)
-		.toSorted((a, b) => (a.sortedAt < b.sortedAt ? 1 : -1))
+	const entries = sortByReleaseDate(
+		games
+			.map((rec) => toEntry(rec, refs, lastPlayed, actor.pds, actor.did))
+			.filter((entry) => entry !== null),
+	)
 
 	const playing = entries.filter((entry) => entry.playing)
 	const played = entries.filter((entry) => entry.played != null)
@@ -82,7 +83,24 @@ interface Entry extends GameRef {
 	coverUrl: string | null
 	playing: boolean
 	played?: string
+	releaseDate?: string
 	sortedAt: string
+}
+
+/**
+ * Profile game lists default to release order. Activity breaks ties and keeps
+ * older records without a release date in a stable, useful order at the end.
+ */
+export function sortByReleaseDate<T extends { releaseDate?: string | null; sortedAt: string }>(
+	entries: T[],
+): T[] {
+	const releasedAt = (value: string | null | undefined) =>
+		value ? Date.parse(value) : Number.NEGATIVE_INFINITY
+
+	return entries.toSorted((a, b) => {
+		const releaseOrder = releasedAt(b.releaseDate) - releasedAt(a.releaseDate)
+		return releaseOrder || b.sortedAt.localeCompare(a.sortedAt)
+	})
 }
 
 function toEntry(
@@ -105,6 +123,7 @@ function toEntry(
 		coverUrl: blobUrl(pds, did, rec.value.cover?.image),
 		playing: rec.value.playing === true,
 		played: rec.value.played,
+		releaseDate: rec.value.releaseDate,
 		sortedAt: lastPlayed.get(igdbId) ?? rec.value.createdAt,
 	}
 }

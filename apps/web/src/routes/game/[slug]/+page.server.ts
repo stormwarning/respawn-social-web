@@ -31,19 +31,33 @@ const GATE_RULES = new Set(['nobody', 'following', 'followers'])
  */
 function parseGameForm(
 	form: FormData,
-): { igdbId: number; game: GameRef | null; coverUrl: string } | { error: string } {
+):
+	| { igdbId: number; game: GameRef | null; coverUrl: string; releaseDate?: string }
+	| { error: string } {
 	const igdbId = Number(form.get('igdbId'))
 	if (!Number.isInteger(igdbId) || igdbId < 1) return { error: 'Invalid game id.' }
 
 	const slug = String(form.get('slug') ?? '').trim()
 	const title = String(form.get('title') ?? '').trim()
 	const usable = slug && slug.length <= 200 && title && title.length <= 2000
+	const releaseDateRaw = String(form.get('releaseDate') ?? '')
+	const releaseTimestamp = Date.parse(releaseDateRaw)
 
 	return {
 		igdbId,
 		game: usable ? { igdbId, slug, title } : null,
 		coverUrl: String(form.get('coverUrl') ?? ''),
+		releaseDate: Number.isFinite(releaseTimestamp)
+			? new Date(releaseTimestamp).toISOString()
+			: undefined,
 	}
+}
+
+function withReleaseDate(
+	record: RespawnGameRecord,
+	releaseDate: string | undefined,
+): RespawnGameRecord {
+	return releaseDate && releaseDate !== record.releaseDate ? { ...record, releaseDate } : record
 }
 
 /** The `CoverList` item shape, which keys on `igdbId` and renders `title`. */
@@ -142,7 +156,7 @@ export const actions: Actions = {
 
 		const parsed = parseGameForm(await request.formData())
 		if ('error' in parsed) return fail(400, parsed)
-		const { igdbId, game, coverUrl } = parsed
+		const { igdbId, game, coverUrl, releaseDate } = parsed
 		const ref = game ?? undefined
 
 		try {
@@ -154,7 +168,12 @@ export const actions: Actions = {
 			// Already played → drop the played field but keep the record (cover survives).
 			if (existing?.played != null) {
 				const { played: _drop, ...rest } = existing
-				await putGameRecord(agent, user.did, igdbId, { ...rest, game: rest.game ?? ref })
+				await putGameRecord(
+					agent,
+					user.did,
+					igdbId,
+					withReleaseDate({ ...rest, game: rest.game ?? ref }, releaseDate),
+				)
 				return { played: false }
 			}
 
@@ -167,7 +186,7 @@ export const actions: Actions = {
 				record.cover = await buildCover(agent, coverUrl, fetch)
 			}
 
-			await putGameRecord(agent, user.did, igdbId, record)
+			await putGameRecord(agent, user.did, igdbId, withReleaseDate(record, releaseDate))
 			return { played: true }
 		} catch (err) {
 			console.error('[game/[slug]] played failed', err)
@@ -181,7 +200,7 @@ export const actions: Actions = {
 
 		const parsed = parseGameForm(await request.formData())
 		if ('error' in parsed) return fail(400, parsed)
-		const { igdbId, game, coverUrl } = parsed
+		const { igdbId, game, coverUrl, releaseDate } = parsed
 		const ref = game ?? undefined
 
 		try {
@@ -193,7 +212,12 @@ export const actions: Actions = {
 			// Already playing → drop the playing field but keep the record (cover survives).
 			if (existing?.playing) {
 				const { playing: _drop, ...rest } = existing
-				await putGameRecord(agent, user.did, igdbId, { ...rest, game: rest.game ?? ref })
+				await putGameRecord(
+					agent,
+					user.did,
+					igdbId,
+					withReleaseDate({ ...rest, game: rest.game ?? ref }, releaseDate),
+				)
 				return { playing: false }
 			}
 
@@ -205,7 +229,7 @@ export const actions: Actions = {
 				record.cover = await buildCover(agent, coverUrl, fetch)
 			}
 
-			await putGameRecord(agent, user.did, igdbId, record)
+			await putGameRecord(agent, user.did, igdbId, withReleaseDate(record, releaseDate))
 			return { playing: true }
 		} catch (err) {
 			console.error('[game/[slug]] playing failed', err)
@@ -304,7 +328,7 @@ export const actions: Actions = {
 		const form = await request.formData()
 		const parsed = parseGameForm(form)
 		if ('error' in parsed) return fail(400, parsed)
-		const { igdbId, game, coverUrl } = parsed
+		const { igdbId, game, coverUrl, releaseDate } = parsed
 		// The client already knows the current state; trust it rather than re-reading.
 		const inBacklog = form.get('inBacklog') === 'true'
 
@@ -322,6 +346,7 @@ export const actions: Actions = {
 			await addToBacklog(agent, user.did, {
 				game,
 				cover: coverUrl ? await buildCover(agent, coverUrl, fetch) : undefined,
+				releaseDate,
 			})
 			return { inBacklog: true }
 		} catch (err) {
@@ -384,6 +409,7 @@ export const actions: Actions = {
 				liked: liked || existing?.liked || undefined,
 				played: (finishedPlaying as PlayedState) || existing?.played,
 				playing: finishedPlaying ? undefined : existing?.playing,
+				releaseDate: game.firstReleaseDate ?? existing?.releaseDate,
 				createdAt: existing?.createdAt ?? createdAt,
 			}
 			if (!gameRecord.cover && game.coverUrl) {

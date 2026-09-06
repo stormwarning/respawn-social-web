@@ -55,6 +55,7 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 				slug={game.slug}
 				title={game.displayName}
 				coverUrl={game.coverUrl ?? ''}
+				releaseDate={game.firstReleaseDate ?? ''}
 				played={data.played}
 				playing={data.playing}
 				liked={data.liked}

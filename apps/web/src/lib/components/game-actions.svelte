@@ -16,6 +16,7 @@ let {
 	slug,
 	title,
 	coverUrl = '',
+	releaseDate = '',
 	played: playedProp,
 	playing: playingProp,
 	liked: likedProp,
@@ -27,6 +28,7 @@ let {
 	slug: string
 	title: string
 	coverUrl?: string
+	releaseDate?: string
 	played: boolean
 	playing: boolean
 	liked: boolean
@@ -89,6 +91,7 @@ async function submitRating() {
 				<input type="hidden" name="slug" value={slug} />
 				<input type="hidden" name="title" value={title} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
+				<input type="hidden" name="releaseDate" value={releaseDate} />
 				<button
 					class="action-button has-icon is-playing"
 					type="submit"
@@ -123,6 +126,7 @@ async function submitRating() {
 				<input type="hidden" name="slug" value={slug} />
 				<input type="hidden" name="title" value={title} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
+				<input type="hidden" name="releaseDate" value={releaseDate} />
 				<button
 					class="action-button has-icon has-played"
 					type="submit"
@@ -157,6 +161,7 @@ async function submitRating() {
 				<input type="hidden" name="slug" value={slug} />
 				<input type="hidden" name="title" value={title} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
+				<input type="hidden" name="releaseDate" value={releaseDate} />
 				<input type="hidden" name="inBacklog" value={inBacklog} />
 				<button
 					class="action-button has-icon is-backlog"

@@ -34,6 +34,11 @@
 						"type": "ref",
 						"ref": "social.respawn.defs#cover"
 					},
+					"releaseDate": {
+						"type": "string",
+						"format": "datetime",
+						"description": "The game's first release date, used to order profile game lists."
+					},
 					"createdAt": {
 						"type": "string",
 						"format": "datetime"

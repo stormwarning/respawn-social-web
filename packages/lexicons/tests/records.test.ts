@@ -152,9 +152,21 @@ describe('social.respawn.game', () => {
 				liked: true,
 				playing: false,
 				played: 'completed',
+				releaseDate: '2025-10-02T00:00:00.000Z',
 				createdAt,
 			}).success,
 		).toBe(true)
+	})
+
+	it('rejects an invalid release date', () => {
+		expect(
+			schema.$safeParse({
+				$type: Collections.game,
+				game,
+				releaseDate: 'not-a-date',
+				createdAt,
+			}).success,
+		).toBe(false)
 	})
 
 	it('accepts an entry written before the game ref existed', () => {

@@ -37,6 +37,8 @@ export interface RespawnGameRecord {
 	/** Absent means not played. */
 	played?: PlayedState
 	cover?: CoverRef
+	/** The title's first release date, used to order profile game lists. */
+	releaseDate?: string
 	createdAt: string
 }
 

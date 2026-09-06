@@ -22,6 +22,11 @@ type Main = {
   playing?: boolean
   played?: RespawnDefs.PlayState
   cover?: RespawnDefs.Cover
+
+  /**
+   * The game's first release date, used to order profile game lists.
+   */
+  releaseDate?: l.DatetimeString
   createdAt: l.DatetimeString
 }
 
@@ -49,6 +54,9 @@ const main = /*#__PURE__*/ l.record<'any', Main>(
     ),
     cover: /*#__PURE__*/ l.optional(
       /*#__PURE__*/ l.ref<RespawnDefs.Cover>((() => RespawnDefs.cover) as any),
+    ),
+    releaseDate: /*#__PURE__*/ l.optional(
+      /*#__PURE__*/ l.string({ format: 'datetime' }),
     ),
     createdAt: /*#__PURE__*/ l.string({ format: 'datetime' }),
   }),
