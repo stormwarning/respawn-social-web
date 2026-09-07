@@ -1,7 +1,12 @@
 <script lang="ts">
+import { page } from '$app/state'
 import type { PageData } from './$types'
+import Holographic from '$lib/components/holographic.svelte'
 
 let { data }: { data: PageData } = $props()
+
+// `?seed=…` previews the holographic mark with a different seed.
+const seed = $derived(page.url.searchParams.get('seed') ?? 'respawn')
 </script>
 
 <svelte:head>
@@ -19,7 +24,10 @@ let { data }: { data: PageData } = $props()
 {:else}
 	<article class="page">
 		<section class="hero">
-			<h1><span>Re</span>spawn</h1>
+			<div class="hero-brand">
+				<div class="hero-logo"><Holographic {seed} /></div>
+				<h1><span>Re</span>spawn</h1>
+			</div>
 			<div class="heading subtitle">Track, save, and share what you’re playing</div>
 			<div class="signin">
 				<p>Press Start to begin</p>
@@ -37,6 +45,13 @@ let { data }: { data: PageData } = $props()
 	align-items: center;
 	padding: 64px 0;
 	color: var(--color-grey-050);
+}
+
+.hero-brand {
+	display: flex;
+	flex-direction: column;
+	gap: 32px;
+	align-items: center;
 
 	> h1 {
 		font-size: 2.5rem;
@@ -47,6 +62,15 @@ let { data }: { data: PageData } = $props()
 			font-weight: 800;
 		}
 	}
+}
+
+.hero-logo {
+	position: relative;
+	inline-size: 96px;
+	block-size: 96px;
+	mask-image: url('./logo.svg');
+	mask-repeat: no-repeat;
+	mask-size: contain;
 }
 
 .subtitle {
