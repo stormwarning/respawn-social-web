@@ -1,5 +1,16 @@
 {
 	"lsp": {
+		"stylelint-lsp": {
+			"settings": {
+				"stylelint": {
+					// Defaults to ["css", "postcss"] only, so Svelte `<style>` blocks
+					// are skipped unless listed here.
+					"validate": ["css", "svelte"],
+					"snippet": ["css", "svelte"],
+					"packageManager": "pnpm"
+				}
+			}
+		},
 		"oxlint": {
 			"initialization_options": {
 				"settings": {
