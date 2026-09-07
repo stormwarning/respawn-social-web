@@ -61,12 +61,12 @@ function withReleaseDate(
 }
 
 /** The `CoverList` item shape, which keys on `igdbId` and renders `title`. */
-function toCoverItem(similar: Title['similar'][number]) {
+function toCoverItem(ref: Title['similar'][number] | Title['collection'][number]) {
 	return {
-		igdbId: similar.id,
-		slug: similar.slug,
-		title: similar.displayName,
-		coverUrl: similar.coverUrl ?? undefined,
+		igdbId: ref.id,
+		slug: ref.slug,
+		title: ref.displayName,
+		coverUrl: ref.coverUrl ?? undefined,
 	}
 }
 
@@ -81,7 +81,12 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 		const game = await getTitleBySlug(params.slug, fetch)
 
 		const site = game.websites.find((w) => w.type === OFFICIAL_SITE)?.url
+		// Four each: the rest of both lists lives on the /similar/ and /related/
+		// sub-pages, which re-read this same title rather than being paginated.
 		const similar = game.similar.slice(0, 4).map(toCoverItem)
+		// `game.related` is something else — descendants shown as "Released
+		// separately". This is the series: siblings from the IGDB collection.
+		const series = game.collection.slice(0, 4).map(toCoverItem)
 
 		let played = false
 		let playing = false
@@ -127,6 +132,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 		return {
 			game,
 			similar,
+			series,
 			site,
 			played,
 			playing,

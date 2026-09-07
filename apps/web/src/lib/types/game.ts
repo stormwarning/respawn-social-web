@@ -122,6 +122,12 @@ export interface Title {
 	/** Descendants that kept their own page. */
 	related: TitleRef[]
 	/**
+	 * The rest of the series: other titles sharing an IGDB collection. Siblings
+	 * rather than descendants — a sequel is not a version of its predecessor.
+	 * Most popular first.
+	 */
+	collection: TitleRef[]
+	/**
 	 * Set when the request used a folded child's id. A user's saved record may
 	 * point at a DLC that has since folded into its parent; this is how we know
 	 * to canonicalise the URL rather than 404.

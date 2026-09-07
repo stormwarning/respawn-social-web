@@ -138,9 +138,20 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 		{#each data.game.externalGames as item}<li>{item.url}</li>{/each}
 	</ul> -->
 
+	{#if data.series.length > 0}
+		<section class="cover-section">
+			<SectionHeading>
+				<a href="/game/{game.slug}/related/">Related games</a>
+			</SectionHeading>
+			<CoverList items={data.series} cols={4} />
+		</section>
+	{/if}
+
 	{#if data.similar.length > 0}
-		<section class="similar">
-			<SectionHeading>Similar games</SectionHeading>
+		<section class="cover-section">
+			<SectionHeading>
+				<a href="/game/{game.slug}/similar/">Similar games</a>
+			</SectionHeading>
 			<CoverList items={data.similar} cols={4} />
 		</section>
 	{/if}
@@ -366,7 +377,7 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 	list-style: none;
 }
 
-.similar {
+.cover-section {
 	display: grid;
 	gap: 16px;
 }
