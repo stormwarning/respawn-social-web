@@ -66,20 +66,20 @@ $effect(() => {
 <style>
 .nav-progress {
 	position: fixed;
-	top: 0;
-	left: 0;
+	inset-block-start: 0;
+	inset-inline-start: 0;
 	z-index: 20;
-	width: 100%;
-	height: 3px;
+	inline-size: 100%;
+	block-size: 3px;
 	overflow: hidden;
 	pointer-events: none;
 
 	&::after {
 		display: block;
-		width: 40%;
-		height: 100%;
-		background-color: var(--color-accent);
+		inline-size: 40%;
+		block-size: 100%;
 		content: '';
+		background-color: var(--color-accent);
 		animation: nav-progress 1s ease-in-out infinite;
 	}
 }
@@ -96,9 +96,9 @@ $effect(() => {
 
 @media (prefers-reduced-motion: reduce) {
 	.nav-progress::after {
-		width: 100%;
-		animation: none;
+		inline-size: 100%;
 		opacity: 0.6;
+		animation: none;
 	}
 }
 
@@ -108,15 +108,15 @@ main {
 
 	position: relative;
 	flex: 1 1 100%;
-	width: 100%;
-	max-width: 60rem;
-	margin: 0 auto;
+	inline-size: 100%;
+	max-inline-size: 60rem;
 	padding-block: var(--block-spacing);
-	padding-inline-end: calc(env(safe-area-inset-right) + var(--inline-spacing));
-	padding-inline-start: calc(env(safe-area-inset-left) + var(--inline-spacing));
+	padding-inline: calc(env(safe-area-inset-left) + var(--inline-spacing))
+		calc(env(safe-area-inset-right) + var(--inline-spacing));
+	margin: 0 auto;
 	container-type: inline-size;
 
-	@media (min-width: 632px) {
+	@media (width >= 632px) {
 		--block-spacing: 48px;
 	}
 }
@@ -124,16 +124,16 @@ main {
 footer {
 	--h-padding: 16px;
 	--rad-num: 8px;
-	--radius: clamp(0px, (100vw - 100%) * 1e5, var(--rad-num));
+	--radius: clamp(0px, (100vi - 100%) * 1e5, var(--rad-num));
 
 	display: grid;
-	justify-items: center;
 	gap: 16px;
-	width: 100%;
-	max-width: 60rem;
+	justify-items: center;
+	inline-size: 100%;
+	max-inline-size: 60rem;
 	padding-block: 32px calc(env(safe-area-inset-bottom) + 32px);
-	padding-inline-end: calc(env(safe-area-inset-right) + var(--h-padding));
-	padding-inline-start: calc(env(safe-area-inset-left) + var(--h-padding));
+	padding-inline: calc(env(safe-area-inset-left) + var(--h-padding))
+		calc(env(safe-area-inset-right) + var(--h-padding));
 	margin: 0 auto;
 	background-color: var(--color-grey-700);
 	border-radius: var(--radius) var(--radius) 0 0;
@@ -144,7 +144,7 @@ footer {
 		corner-shape: squircle;
 	}
 
-	@media (min-width: 600px) {
+	@media (width >= 600px) {
 		--h-padding: 32px;
 
 		justify-items: start;
@@ -159,8 +159,8 @@ footer {
 			font-size: 0.875rem;
 			font-weight: 600;
 			color: var(--color-grey-300);
-			text-decoration: none;
 			letter-spacing: 0.01em;
+			text-decoration: none;
 			text-box: trim-both cap alphabetic;
 
 			&:hover {
@@ -173,8 +173,8 @@ footer {
 		font-size: 0.75rem;
 		font-feature-settings: 'ss01';
 		color: var(--color-grey-400);
-		letter-spacing: 0.01em;
 		text-align: center;
+		letter-spacing: 0.01em;
 		text-box: trim-both cap alphabetic;
 
 		a {

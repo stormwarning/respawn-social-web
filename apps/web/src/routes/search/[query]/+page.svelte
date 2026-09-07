@@ -71,8 +71,8 @@ h1 {
 .results {
 	display: grid;
 	gap: 24px;
-	margin: 0;
 	padding: 0;
+	margin: 0;
 	list-style: none;
 }
 

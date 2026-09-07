@@ -53,11 +53,11 @@ let {
 	font-size: 1.0625rem;
 	line-height: 1.4;
 	color: var(--color-text);
+	resize: none;
 	background: var(--color-grey-600);
 	border: none;
 	border-radius: 4px;
 	field-sizing: content;
-	resize: none;
 
 	@supports (corner-shape: squircle) {
 		border-radius: 8px;
@@ -65,7 +65,7 @@ let {
 	}
 
 	@supports not (field-sizing: content) {
-		resize: vertical;
+		resize: block;
 	}
 }
 

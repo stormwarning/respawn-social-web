@@ -45,14 +45,16 @@
 	--shadow-edge: rgb(0 0 0 / 25%);
 
 	display: flex;
-	justify-content: center;
 	align-items: center;
+	justify-content: center;
 	padding: 12px;
 	font-family: inherit;
 	font-size: 1.0625rem;
 	font-weight: 600;
 	color: var(--color-grey-800);
 	text-decoration: none;
+	touch-action: manipulation;
+	user-select: none;
 	background-color: var(--color-grey-100);
 	border: none;
 	border-radius: 8px;
@@ -60,8 +62,6 @@
 		inset 0 2px 0 0 var(--highlight-edge),
 		inset 0 -2px 0 0 var(--shadow-edge);
 	transition: all 100ms ease-out;
-	user-select: none;
-	touch-action: manipulation;
 	-webkit-tap-highlight-color: transparent;
 
 	@supports (corner-shape: squircle) {
@@ -111,13 +111,13 @@
 	font-size: 0.875rem;
 	font-feature-settings: 'ss01';
 	color: var(--color-blue-100);
-	text-decoration: none;
 	letter-spacing: 0.01em;
+	text-decoration: none;
+	touch-action: manipulation;
+	user-select: none;
 	border: 0.0834em solid var(--color-grey-400);
 	border-radius: 4px;
 	transition: all 100ms ease-out;
-	user-select: none;
-	touch-action: manipulation;
 	-webkit-tap-highlight-color: transparent;
 
 	@supports (corner-shape: squircle) {
@@ -125,6 +125,9 @@
 		corner-shape: var(--corner-shape);
 	}
 
+	/* Collides with `.button:active > *` above, but `.button` and
+	   `.outline-button` are never applied to the same element. */
+	/* stylelint-disable-next-line no-descending-specificity */
 	> * {
 		text-box: trim-both cap alphabetic;
 	}

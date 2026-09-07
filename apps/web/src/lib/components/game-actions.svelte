@@ -323,10 +323,9 @@ async function submitRating() {
 <style>
 .actions {
 	display: flex;
-	flex-direction: column;
-	flex-wrap: wrap;
-	align-items: center;
+	flex-flow: column wrap;
 	gap: 8px;
+	align-items: center;
 	padding: 8px;
 	background-color: var(--color-blue-100);
 	border-radius: 8px;
@@ -344,14 +343,14 @@ async function submitRating() {
 
 .actions-rating {
 	display: flex;
-	align-items: center;
 	gap: 8px;
+	align-items: center;
 }
 
 .action-button {
 	display: flex;
-	justify-content: center;
 	align-items: center;
+	justify-content: center;
 	inline-size: 100%;
 	padding: 8px;
 	font-size: 0.875rem;
@@ -359,13 +358,13 @@ async function submitRating() {
 	color: var(--color-grey-700);
 	letter-spacing: 0.01em;
 	text-decoration: none;
+	touch-action: manipulation;
+	user-select: none;
 	background-color: transparent;
 	border: none;
 	border-radius: 4px;
-	user-select: none;
-	touch-action: manipulation;
-	-webkit-tap-highlight-color: transparent;
 	transition: all 100ms ease-out;
+	-webkit-tap-highlight-color: transparent;
 
 	@supports (corner-shape: squircle) {
 		border-radius: 8px;
@@ -401,13 +400,13 @@ async function submitRating() {
 	&.has-icon {
 		flex-direction: column;
 		gap: 2px;
-		padding: 4px;
-		min-width: 72px;
+		min-inline-size: 72px;
 		aspect-ratio: 1;
+		padding: 4px;
 
 		:global(> svg) {
-			width: 40px;
-			height: 40px;
+			inline-size: 40px;
+			block-size: 40px;
 			mix-blend-mode: hard-light;
 		}
 
@@ -440,13 +439,13 @@ async function submitRating() {
 	display: flex;
 	padding: 4px;
 	color: var(--color-grey-600);
+	touch-action: manipulation;
+	user-select: none;
 	background-color: transparent;
 	border: none;
 	border-radius: 4px;
-	user-select: none;
-	touch-action: manipulation;
-	-webkit-tap-highlight-color: transparent;
 	transition: all 100ms ease-out;
+	-webkit-tap-highlight-color: transparent;
 
 	@supports (corner-shape: squircle) {
 		border-radius: 8px;
@@ -455,10 +454,10 @@ async function submitRating() {
 
 	:global(> svg) {
 		display: flex;
-		width: 32px;
-		height: 32px;
-		opacity: 0.5;
+		inline-size: 32px;
+		block-size: 32px;
 		mix-blend-mode: hard-light;
+		opacity: 0.5;
 	}
 
 	&:focus-visible {
@@ -474,8 +473,8 @@ async function submitRating() {
 		color: var(--color-pink-600);
 
 		:global(> svg) {
-			opacity: 1;
 			mix-blend-mode: normal;
+			opacity: 1;
 		}
 	}
 }

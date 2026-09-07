@@ -33,8 +33,8 @@ let { data }: { data: PageData } = $props()
 .hero {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
 	gap: 64px;
+	align-items: center;
 	padding: 64px 0;
 	color: var(--color-grey-050);
 
@@ -57,8 +57,8 @@ let { data }: { data: PageData } = $props()
 .signin {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
 	gap: 8px;
+	align-items: center;
 
 	> p {
 		color: var(--color-grey-400);
@@ -67,7 +67,7 @@ let { data }: { data: PageData } = $props()
 }
 
 .sub {
-	color: var(--color-muted);
 	font-size: var(--text-sm);
+	color: var(--color-muted);
 }
 </style>

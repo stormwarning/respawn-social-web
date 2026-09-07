@@ -12,7 +12,12 @@ let { items, cols = 6 }: Props = $props()
 const EAGER_COUNT = 6
 </script>
 
-<ul class="cover-list" style="--force-cols: {cols};">
+<ul
+	class="cover-list"
+	style="
+
+--force-cols: {cols};"
+>
 	{#each items as item, index (item.igdbId)}
 		<li>
 			<InteractiveCover
@@ -42,7 +47,7 @@ const EAGER_COUNT = 6
 
 	> li {
 		display: flex;
-		width: 100%;
+		inline-size: 100%;
 		aspect-ratio: 3/4;
 	}
 }

@@ -42,24 +42,23 @@ let { data, onsearch } = $props()
 <style>
 .header {
 	position: sticky;
-	top: 0;
+	inset-block-start: 0;
 	z-index: 10;
 	display: flex;
 	justify-content: space-between;
-	width: 100%;
-	max-width: 60rem;
-	padding-inline-start: calc(env(safe-area-inset-left) + 16px);
-	padding-inline-end: calc(env(safe-area-inset-right) + 16px);
+	inline-size: 100%;
+	max-inline-size: 60rem;
+	padding-inline: calc(env(safe-area-inset-left) + 16px) calc(env(safe-area-inset-right) + 16px);
 	margin: 0 auto;
 
 	&::before {
 		position: absolute;
 		inset: 0;
+		content: '';
 		background-color: var(--color-grey-800);
 		opacity: 0;
-		content: '';
-		scale: 1 0;
 		transform-origin: top;
+		scale: 1 0;
 		transition:
 			scale 100ms ease-out,
 			opacity 100ms ease-out;
@@ -86,7 +85,7 @@ let { data, onsearch } = $props()
 
 	display: flex;
 	padding: var(--logo-padding);
-	padding-top: calc(env(safe-area-inset-top) + var(--logo-padding));
+	padding-block-start: calc(env(safe-area-inset-top) + var(--logo-padding));
 	background-color: var(--color-blue-100);
 	border-radius: 0;
 	mask-image: linear-gradient(#fff 0 0), url('./logo.svg');
@@ -102,25 +101,25 @@ let { data, onsearch } = $props()
 
 .logo {
 	display: flex;
-	width: 42px;
-	height: 42px;
+	inline-size: 42px;
+	block-size: 42px;
 }
 
 .header-actions {
 	display: flex;
-	align-items: center;
 	gap: 8px;
-	padding-top: calc(env(safe-area-inset-top) + 0px);
+	align-items: center;
+	padding-block-start: calc(env(safe-area-inset-top) + 0px);
 }
 
 .who {
 	display: flex;
-	align-items: center;
 	gap: 4px;
-	min-width: 36px;
+	align-items: center;
+	min-inline-size: 36px;
 
 	:global(> div) {
-		max-width: 36px;
+		max-inline-size: 36px;
 	}
 }
 </style>

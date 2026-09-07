@@ -38,11 +38,11 @@ let { image, loading = 'lazy', title }: Props = $props()
 .cover {
 	position: relative;
 	display: grid;
+	max-inline-size: 100%;
 	aspect-ratio: 3/4;
-	max-width: 100%;
+	overflow: hidden;
 	background: var(--color-grey-600);
 	border-radius: 4px;
-	overflow: hidden;
 
 	@supports (corner-shape: squircle) {
 		border-radius: 8px;
@@ -52,9 +52,9 @@ let { image, loading = 'lazy', title }: Props = $props()
 	&::after {
 		position: absolute;
 		inset: 0;
+		content: '';
 		border-radius: 4px;
 		box-shadow: inset 0 0 0 1px rgb(255 255 255 / 25%);
-		content: '';
 
 		@supports (corner-shape: squircle) {
 			border-radius: 8px;
@@ -64,23 +64,23 @@ let { image, loading = 'lazy', title }: Props = $props()
 
 	img {
 		grid-area: 1 / 1;
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
+		inline-size: 100%;
+		block-size: 100%;
 		text-decoration: none;
+		object-fit: contain;
 		scale: 1;
 
 		&:not(:last-of-type) {
 			object-fit: cover;
-			scale: 1.2;
 			filter: blur(8px);
+			scale: 1.2;
 		}
 	}
 }
 
 .title {
-	grid-area: 1 / 1;
 	display: grid;
+	grid-area: 1 / 1;
 	place-items: center;
 	padding: 4px;
 	font-size: 0.875rem;

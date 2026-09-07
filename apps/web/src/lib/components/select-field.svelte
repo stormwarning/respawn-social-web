@@ -58,28 +58,28 @@ let {
 }
 
 .select-wrapper::after {
-	content: '';
 	position: absolute;
-	inset-inline-end: 12px;
 	inset-block-start: 50%;
-	width: 10px;
-	height: 6px;
-	translate: 0 -50%;
+	inset-inline-end: 12px;
+	inline-size: 10px;
+	block-size: 6px;
+	pointer-events: none;
+	content: '';
 	background: currentcolor;
 	clip-path: polygon(0 0, 100% 0, 50% 100%);
-	pointer-events: none;
+	translate: 0 -50%;
 }
 
 .input {
-	appearance: none;
 	padding: 8px 32px 8px 12px;
 	font-family: inherit;
 	font-size: 1.0625rem;
 	color: var(--color-text);
+	appearance: none;
+	cursor: pointer;
 	background: var(--color-grey-600);
 	border: none;
 	border-radius: 4px;
-	cursor: pointer;
 
 	@supports (corner-shape: squircle) {
 		border-radius: 8px;

@@ -112,18 +112,18 @@ const hiddenBySpoilers = $derived(Boolean(data.log.review?.containsSpoilers) && 
 
 <style>
 .sub {
-	color: var(--color-muted);
 	font-size: var(--text-sm);
+	color: var(--color-muted);
 }
 
 .facts {
-	list-style: none;
-	padding: 0;
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--space-2) var(--space-3);
-	color: var(--color-muted);
+	padding: 0;
 	font-size: var(--text-sm);
+	color: var(--color-muted);
+	list-style: none;
 }
 
 .review-text {
@@ -131,32 +131,32 @@ const hiddenBySpoilers = $derived(Boolean(data.log.review?.containsSpoilers) && 
 }
 
 textarea {
-	width: 100%;
+	inline-size: 100%;
 	padding: var(--space-2) var(--space-3);
+	font: inherit;
+	color: var(--color-text);
+	background: var(--color-surface);
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius);
-	background: var(--color-surface);
-	color: var(--color-text);
-	font: inherit;
 }
 
 button {
 	padding: var(--space-1) var(--space-3);
+	font-weight: 600;
+	color: #07101f;
+	cursor: pointer;
+	background: var(--color-accent);
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius);
-	background: var(--color-accent);
-	color: #07101f;
-	font-weight: 600;
-	cursor: pointer;
 }
 
 .error {
-	color: #ff8a8a;
 	font-size: var(--text-sm);
+	color: #ff8a8a;
 }
 
 .success {
-	color: var(--color-accent);
 	font-size: var(--text-sm);
+	color: var(--color-accent);
 }
 </style>

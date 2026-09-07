@@ -61,22 +61,22 @@ function relativeAge(iso: string): string {
 	color: var(--color-grey-400);
 	letter-spacing: 0.02em;
 
-	&.show-avatar {
-		grid-template-columns: 1.25rem 1fr auto;
-	}
-
 	:global(> div) {
 		text-box: trim-both cap alphabetic;
+	}
+
+	&.show-avatar {
+		grid-template-columns: 1.25rem 1fr auto;
 	}
 }
 
 .activity-avatar {
 	display: flex;
 	align-items: center;
-	height: 1cap;
+	block-size: 1cap;
 
 	:global(> div) {
-		height: 1.25rem;
+		block-size: 1.25rem;
 	}
 }
 
@@ -111,7 +111,7 @@ function relativeAge(iso: string): string {
 .activity-timestamp {
 	display: flex;
 	align-items: center;
-	height: 1cap;
+	block-size: 1cap;
 	font-size: 0.75rem;
 	color: var(--color-grey-400);
 	letter-spacing: 0.02em;

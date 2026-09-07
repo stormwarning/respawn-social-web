@@ -1,16 +1,21 @@
 @font-face {
 	font-family: MDUI;
+	font-style: normal;
 	font-weight: 400;
 	src:
-		local('MDUI Regular'),
+		local('MD UI Regular'),
 		url('/fonts/mdui-regular.woff2') format('woff2');
+	font-display: swap;
 }
+
 @font-face {
 	font-family: MDUI;
+	font-style: normal;
 	font-weight: 600;
 	src:
-		local('MDUI Semibold'),
+		local('MD UI Semibold'),
 		url('/fonts/mdui-semibold.woff2') format('woff2');
+	font-display: swap;
 }
 
 *,
@@ -22,12 +27,12 @@
 
 html,
 body {
-	margin: 0;
 	padding: 0;
+	margin: 0;
 }
 
 html {
-	min-height: 100%;
+	min-block-size: 100%;
 	font-size: 100%;
 }
 
@@ -38,12 +43,12 @@ html:has(dialog[open]) {
 body {
 	display: flex;
 	flex-direction: column;
-	min-height: 100vh;
-	background: var(--color-grey-900);
-	color: var(--color-grey-200);
+	min-block-size: 100vb;
 	font-family: var(--font-ui);
 	font-size: var(--text-base);
 	line-height: 1.4;
+	color: var(--color-grey-200);
+	background: var(--color-grey-900);
 	-webkit-font-smoothing: antialiased;
 }
 
@@ -58,9 +63,9 @@ p {
 a {
 	color: inherit;
 	text-underline-offset: 0.25em;
-	border-radius: 0.5em;
 	outline: 0;
 	outline-offset: 2px;
+	border-radius: 0.5em;
 	transition: 100ms ease-out;
 	transition-property: text-decoration, outline;
 
@@ -77,6 +82,6 @@ a {
 
 hr {
 	border: 0;
-	border-top: 1px solid var(--color-grey-500);
+	border-block-start: 1px solid var(--color-grey-500);
 	opacity: 0.4;
 }

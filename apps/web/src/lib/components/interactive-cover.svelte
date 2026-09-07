@@ -18,7 +18,7 @@ let { href, imageUrl, title, loading = 'lazy' }: Props = $props()
 <style>
 .cover-link {
 	display: block;
-	width: 100%;
+	inline-size: 100%;
 	text-decoration: none;
 	border-radius: 4px;
 

@@ -190,17 +190,18 @@ function sort(event: CustomEvent<{ items: FaveItem[] }>) {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
 	gap: 12px;
-	max-width: 30rem;
+	max-inline-size: 30rem;
+
 	/* Room for the clear buttons, which hang below their tile. */
-	padding-bottom: 20px;
+	padding-block-end: 20px;
 }
 
 /* The draggable tiles line up with the row's own columns, so the add slot that
    follows them sits in the next column rather than after a nested track. */
 .zone {
 	display: grid;
-	grid-column: span var(--n);
 	grid-template-columns: subgrid;
+	grid-column: span var(--n);
 	gap: 12px;
 	padding: 0;
 	margin: 0;
@@ -245,8 +246,8 @@ function sort(event: CustomEvent<{ items: FaveItem[] }>) {
 }
 
 .tile {
-	width: 100%;
-	height: 100%;
+	inline-size: 100%;
+	block-size: 100%;
 	background: var(--color-grey-800);
 	border: 1px solid var(--color-grey-600);
 	border-radius: 4px;
@@ -273,26 +274,26 @@ function sort(event: CustomEvent<{ items: FaveItem[] }>) {
 	color: var(--color-text);
 	cursor: pointer;
 
-	&:hover:not(:disabled) {
-		background: var(--color-grey-700);
-	}
-
 	&:disabled {
-		opacity: 0.6;
 		cursor: default;
+		opacity: 0.6;
 	}
 
 	&:focus-visible {
 		outline: 2px solid var(--color-accent);
 		outline-offset: 2px;
 	}
+
+	&:hover:not(:disabled) {
+		background: var(--color-grey-700);
+	}
 }
 
 .plus {
 	display: grid;
 	place-items: center;
-	width: 24px;
-	height: 24px;
+	inline-size: 24px;
+	block-size: 24px;
 	padding: 4px;
 	background: var(--color-grey-600);
 	border-radius: 50%;
@@ -304,12 +305,12 @@ function sort(event: CustomEvent<{ items: FaveItem[] }>) {
 
 .clear {
 	position: absolute;
-	top: calc(100% - 8px);
-	left: 50%;
+	inset-block-start: calc(100% - 8px);
+	inset-inline-start: 50%;
 	display: grid;
 	place-items: center;
-	width: 24px;
-	height: 24px;
+	inline-size: 24px;
+	block-size: 24px;
 	padding: 4px;
 	color: var(--color-text);
 	background: var(--color-grey-600);
@@ -321,13 +322,9 @@ function sort(event: CustomEvent<{ items: FaveItem[] }>) {
 		inset 0 -1px 0 0 rgb(0 0 0 / 25%);
 	translate: -50% 0;
 
-	&:hover:not(:disabled) {
-		background: var(--color-grey-500);
-	}
-
 	&:disabled {
-		opacity: 0.6;
 		cursor: default;
+		opacity: 0.6;
 	}
 
 	&:focus-visible {
@@ -337,6 +334,10 @@ function sort(event: CustomEvent<{ items: FaveItem[] }>) {
 
 	&:active {
 		scale: 0.95;
+	}
+
+	&:hover:not(:disabled) {
+		background: var(--color-grey-500);
 	}
 }
 </style>

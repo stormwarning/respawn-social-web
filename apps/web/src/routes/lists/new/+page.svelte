@@ -30,7 +30,7 @@ let { form }: { form: ActionData } = $props()
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-2);
-	max-width: 30rem;
+	max-inline-size: 30rem;
 }
 
 label {
@@ -41,26 +41,26 @@ label {
 input:not([type='checkbox']),
 textarea {
 	padding: var(--space-2) var(--space-3);
+	font: inherit;
+	color: var(--color-text);
+	background: var(--color-surface);
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius);
-	background: var(--color-surface);
-	color: var(--color-text);
-	font: inherit;
 }
 
 button {
+	align-self: flex-start;
 	padding: var(--space-2) var(--space-3);
+	font-weight: 600;
+	color: #07101f;
+	cursor: pointer;
+	background: var(--color-accent);
 	border: none;
 	border-radius: var(--radius);
-	background: var(--color-accent);
-	color: #07101f;
-	font-weight: 600;
-	cursor: pointer;
-	align-self: flex-start;
 }
 
 .error {
-	color: #ff8a8a;
 	font-size: var(--text-sm);
+	color: #ff8a8a;
 }
 </style>

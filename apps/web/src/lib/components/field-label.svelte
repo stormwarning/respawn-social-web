@@ -56,9 +56,9 @@ let {
 
 .row {
 	display: flex;
-	justify-content: space-between;
-	align-items: baseline;
 	gap: var(--space-2);
+	align-items: baseline;
+	justify-content: space-between;
 }
 
 .label.disabled {

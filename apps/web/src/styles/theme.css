@@ -4,31 +4,39 @@
  */
 
 :root {
-	--color-grey-050: oklch(98.5% 0 0);
-	--color-grey-100: oklch(96.7% 0.001 286.375);
-	--color-grey-200: oklch(92% 0.004 286.32);
-	--color-grey-300: oklch(87.1% 0.006 286.286);
-	--color-grey-400: oklch(70.5% 0.015 286.067);
-	--color-grey-500: oklch(55.2% 0.016 285.938);
-	--color-grey-600: oklch(44.2% 0.017 285.786);
-	--color-grey-700: oklch(37% 0.013 285.805);
-	--color-grey-800: oklch(27.4% 0.006 286.033);
-	--color-grey-900: oklch(21% 0.006 285.885);
-	--color-grey-950: oklch(14.1% 0.005 285.823);
+	/** Grey */
+	--color-grey-050: oklch(98.5% 0 0deg);
+	--color-grey-100: oklch(96.7% 0.001 286.375deg);
+	--color-grey-200: oklch(92% 0.004 286.32deg);
+	--color-grey-300: oklch(87.1% 0.006 286.286deg);
+	--color-grey-400: oklch(70.5% 0.015 286.067deg);
+	--color-grey-500: oklch(55.2% 0.016 285.938deg);
+	--color-grey-600: oklch(44.2% 0.017 285.786deg);
+	--color-grey-700: oklch(37% 0.013 285.805deg);
+	--color-grey-800: oklch(27.4% 0.006 286.033deg);
+	--color-grey-900: oklch(21% 0.006 285.885deg);
+	--color-grey-950: oklch(14.1% 0.005 285.823deg);
 
-	--color-blue-050: oklch(97.7% 0.013 236.62);
-	--color-blue-100: oklch(95.1% 0.026 236.824);
-	--color-blue-200: oklch(90.1% 0.058 230.902);
-	--color-blue-500: oklch(68.5% 0.169 237.323);
-	--color-blue-600: oklch(58.8% 0.158 241.966);
+	/** Blue */
+	--color-blue-050: oklch(97.7% 0.013 236.62deg);
+	--color-blue-100: oklch(95.1% 0.026 236.824deg);
+	--color-blue-200: oklch(90.1% 0.058 230.902deg);
+	--color-blue-500: oklch(68.5% 0.169 237.323deg);
+	--color-blue-600: oklch(58.8% 0.158 241.966deg);
 
-	--color-purple-500: oklch(60.6% 0.25 292.717);
-	--color-purple-600: oklch(54.1% 0.281 293.009);
+	/** Purple */
+	--color-purple-500: oklch(60.6% 0.25 292.717deg);
+	--color-purple-600: oklch(54.1% 0.281 293.009deg);
 
-	--color-pink-600: oklch(59.2% 0.249 0.584);
+	/** Pink/red */
+	--color-pink-600: oklch(59.2% 0.249 0.584deg);
 
-	--color-green-500: oklch(69.6% 0.17 162.48);
+	/** Green */
+	--color-green-500: oklch(69.6% 0.17 162.48deg);
 
-	--font-ui: MDUI, system-ui, sans-serif;
+	/** Typography */
+	--font-ui: mdui, system-ui, sans-serif;
+
+	/** UI */
 	--corner-shape: squircle;
 }

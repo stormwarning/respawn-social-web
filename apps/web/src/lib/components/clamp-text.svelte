@@ -38,10 +38,18 @@ function toggle() {
 	position: relative;
 }
 
+/* Declared before `.text` so the `& ~ .truncated` override below it wins on
+   source order as well as specificity. */
+.truncated {
+	position: absolute;
+	inset-block-start: 0;
+	transition: opacity 75ms linear;
+}
+
 .text {
-	height: var(--clamp-height, auto);
-	overflow-x: visible;
-	overflow-y: clip;
+	block-size: var(--clamp-height, auto);
+	overflow-inline: visible;
+	overflow-block: clip;
 	opacity: 0;
 	interpolate-size: allow-keywords;
 	transition:
@@ -49,30 +57,24 @@ function toggle() {
 		height 200ms ease-out allow-discrete;
 
 	&.is-expanded {
-		height: auto;
+		block-size: auto;
 		opacity: 1;
 
 		& ~ .truncated {
-			opacity: 0;
 			pointer-events: none;
+			opacity: 0;
 			transition-delay: 100ms;
 		}
 	}
 }
 
-.truncated {
-	position: absolute;
-	top: 0;
-	transition: opacity 75ms linear;
-}
-
 .toggle {
 	padding: 0;
+	font: inherit;
+	color: var(--color-blue-200);
 	appearance: none;
 	background: none;
 	border: none;
-	font: inherit;
-	color: var(--color-blue-200);
 
 	&:hover {
 		color: var(--color-blue-050);

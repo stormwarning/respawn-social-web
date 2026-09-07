@@ -129,10 +129,10 @@ summary {
 	z-index: 5;
 	display: grid;
 	gap: 4px;
-	min-width: 18rem;
-	max-width: calc(100vw - 32px);
-	margin-top: 8px;
+	min-inline-size: 18rem;
+	max-inline-size: calc(100vi - 32px);
 	padding: 8px;
+	margin-block-start: 8px;
 	background-color: var(--color-grey-700);
 	border-radius: 8px;
 	box-shadow: 0 8px 24px rgb(0 0 0 / 40%);
@@ -148,8 +148,8 @@ summary {
 	padding: 6px 8px;
 	font-size: 0.875rem;
 	color: var(--color-grey-200);
-	text-decoration: none;
 	letter-spacing: 0.01em;
+	text-decoration: none;
 	border-radius: 4px;
 
 	&:hover,
@@ -158,15 +158,15 @@ summary {
 	}
 
 	&[aria-current='page'] {
-		color: #fff;
 		font-weight: 600;
+		color: #fff;
 	}
 }
 
 .decades,
 .years {
-	margin: 0;
 	padding: 0;
+	margin: 0;
 	list-style: none;
 }
 

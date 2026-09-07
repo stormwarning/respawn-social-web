@@ -149,8 +149,8 @@ function onclick(event: MouseEvent) {
 
 <style>
 dialog {
-	width: min(32rem, 100vw - 2rem);
-	max-width: none;
+	inline-size: min(32rem, 100vi - 2rem);
+	max-inline-size: none;
 	padding: 0;
 	color: var(--color-text);
 	background: var(--color-grey-800);
@@ -209,9 +209,9 @@ dialog[open]::backdrop {
 
 .dialog-header {
 	display: flex;
+	gap: var(--space-2);
 	align-items: center;
 	justify-content: space-between;
-	gap: var(--space-2);
 
 	h2 {
 		font-size: var(--text-base);
@@ -239,21 +239,21 @@ dialog[open]::backdrop {
 
 .input-wrapper {
 	display: flex;
-	width: 100%;
+	inline-size: 100%;
 }
 
 .sr-only {
 	position: absolute;
-	width: 1px;
-	height: 1px;
+	inline-size: 1px;
+	block-size: 1px;
 	overflow: hidden;
-	clip-path: inset(50%);
 	white-space: nowrap;
+	clip-path: inset(50%);
 }
 
 .input {
 	flex: 1;
-	min-width: 0;
+	min-inline-size: 0;
 	padding: 8px 12px;
 	font: inherit;
 	color: var(--color-text);
@@ -276,10 +276,10 @@ dialog[open]::backdrop {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-1);
-	max-height: 50vh;
+	max-block-size: 50vb;
 	padding: 0;
 	margin: 0;
-	overflow-y: auto;
+	overflow-block: auto;
 	list-style: none;
 }
 
@@ -297,13 +297,13 @@ dialog[open]::backdrop {
 .result {
 	display: grid;
 	grid-template-columns: 42px 1fr auto;
-	align-items: center;
 	gap: var(--space-2);
-	width: 100%;
+	align-items: center;
+	inline-size: 100%;
 	padding: var(--space-1) var(--space-2);
 	font: inherit;
 	color: inherit;
-	text-align: left;
+	text-align: start;
 	background: transparent;
 	border: none;
 	border-radius: 6px;
@@ -311,10 +311,6 @@ dialog[open]::backdrop {
 	@supports (corner-shape: squircle) {
 		border-radius: 12px;
 		corner-shape: var(--corner-shape);
-	}
-
-	&:hover:not(:disabled) {
-		background: var(--color-grey-700);
 	}
 
 	&:disabled {
@@ -325,14 +321,18 @@ dialog[open]::backdrop {
 		outline: 2px solid var(--color-accent);
 		outline-offset: -2px;
 	}
+
+	&:hover:not(:disabled) {
+		background: var(--color-grey-700);
+	}
 }
 
 .result-text {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: baseline;
 	gap: 8px;
-	min-width: 0;
+	align-items: baseline;
+	min-inline-size: 0;
 }
 
 .name {

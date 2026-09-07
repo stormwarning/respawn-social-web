@@ -40,7 +40,7 @@ let { form }: { form: ActionData } = $props()
 .wrapper {
 	display: grid;
 	gap: 32px;
-	max-width: 22rem;
+	max-inline-size: 22rem;
 	padding: 64px 0;
 }
 

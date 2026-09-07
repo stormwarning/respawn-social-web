@@ -54,25 +54,25 @@ const href = (n: number) => (n === 1 ? `${basePath}/` : `${basePath}/page/${n}/`
 <style>
 .pagination {
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
 	gap: 8px;
+	align-items: center;
+	justify-content: space-between;
 
 	> div {
 		flex: 1 1 100%;
 
 		&:last-of-type {
-			text-align: right;
+			text-align: end;
 		}
 	}
 }
 
 .pages {
 	display: flex;
-	align-items: center;
 	gap: 8px;
-	margin: 0;
+	align-items: center;
 	padding: 0;
+	margin: 0;
 	list-style: none;
 }
 

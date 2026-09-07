@@ -101,7 +101,9 @@ function onkeydown(event: KeyboardEvent) {
 	{#each STARS as star (star)}
 		<span
 			class="star"
-			style="--fill: {fill(star)}"
+			style="
+
+--fill: {fill(star)}"
 			data-is-hovered={star === hoveredStar ? '' : undefined}
 		>
 			<span class="star-empty"><IconStarSolid /></span>
@@ -115,9 +117,9 @@ function onkeydown(event: KeyboardEvent) {
 	display: flex;
 	padding: 4px;
 	color: var(--color-grey-600);
-	border-radius: 4px;
-	user-select: none;
 	touch-action: manipulation;
+	user-select: none;
+	border-radius: 4px;
 	-webkit-tap-highlight-color: transparent;
 
 	@supports (corner-shape: squircle) {
@@ -140,8 +142,8 @@ function onkeydown(event: KeyboardEvent) {
 	display: flex;
 
 	:global(> span > svg) {
-		width: 32px;
-		height: 32px;
+		inline-size: 32px;
+		block-size: 32px;
 	}
 
 	&[data-is-hovered] {
@@ -159,8 +161,8 @@ function onkeydown(event: KeyboardEvent) {
 
 .star-empty {
 	display: flex;
-	opacity: 0.5;
 	mix-blend-mode: hard-light;
+	opacity: 0.5;
 }
 
 .star-fill {

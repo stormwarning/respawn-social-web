@@ -34,7 +34,7 @@ let { data }: { data: PageData } = $props()
 
 <style>
 .sub {
-	color: var(--color-muted);
 	font-size: var(--text-sm);
+	color: var(--color-muted);
 }
 </style>

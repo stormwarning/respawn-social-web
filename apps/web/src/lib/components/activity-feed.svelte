@@ -72,15 +72,15 @@ function activityActor(actor: FeedActor) {
 
 <style>
 .sub {
-	color: var(--color-muted);
 	font-size: var(--text-sm);
+	color: var(--color-muted);
 }
 
 .feed {
-	list-style: none;
-	padding: 0;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
+	padding: 0;
+	list-style: none;
 }
 </style>

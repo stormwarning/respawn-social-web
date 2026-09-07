@@ -137,40 +137,42 @@ function onclick(event: MouseEvent) {
 
 <style>
 dialog {
-	width: 100vw;
-	max-width: 100vw;
-	height: min-content;
-	margin-inline: 0;
-	/*margin-top: calc(env(safe-area-inset-top) + 5rem);*/
+	inline-size: 100vi;
+	max-inline-size: 100vi;
+	block-size: min-content;
+
+	/* margin-top: calc(env(safe-area-inset-top) + 5rem); */
 	padding: 0;
+	margin-inline: 0;
 	overflow: hidden;
 	color: var(--color-text);
 	background: var(--color-grey-800);
 	border: 0;
-	/*border-radius: 12px;
-	corner-shape: var(--corner-shape);*/
-	interpolate-size: allow-keywords;
 	transition:
 		height 200ms ease-out,
 		opacity 200ms ease-out,
 		display 200ms allow-discrete,
 		overlay 200ms allow-discrete;
+
+	/* border-radius: 12px;
+	corner-shape: var(--corner-shape); */
+	interpolate-size: allow-keywords;
 }
 
 dialog:not([open]) {
-	height: 0;
+	block-size: 0;
 	opacity: 0;
 }
 
 @starting-style {
 	dialog[open] {
-		height: 0;
+		block-size: 0;
 		opacity: 0;
 	}
 }
 
 dialog::backdrop {
-	top: 80px;
+	inset-block-start: 80px;
 	background: rgb(0 0 0 / 40%);
 	opacity: 0;
 	transition:
@@ -193,14 +195,15 @@ dialog[open]::backdrop {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-3);
-	max-width: 1024px;
+	max-inline-size: 1024px;
 	padding: 24px 48px 64px;
 	margin: 0 auto;
 }
 
 .form {
 	display: flex;
-	/*gap: var(--space-2);*/
+
+	/* gap: var(--space-2); */
 	transition:
 		opacity 200ms ease-out 160ms,
 		translate 200ms ease-out 160ms;
@@ -215,26 +218,26 @@ dialog[open]::backdrop {
 
 .input-wrapper {
 	display: flex;
-	width: 100%;
+	inline-size: 100%;
 }
 
 .sr-only {
 	position: absolute;
-	width: 1px;
-	height: 1px;
+	inline-size: 1px;
+	block-size: 1px;
 	overflow: hidden;
-	clip-path: inset(50%);
 	white-space: nowrap;
+	clip-path: inset(50%);
 }
 
 .input {
 	flex: 1;
-	min-width: 0;
+	min-inline-size: 0;
 	padding: 0 32px;
-	margin-left: -32px;
+	margin-inline-start: -32px;
 	font-size: 1.375rem;
-	color: var(--color-text);
 	line-height: 1;
+	color: var(--color-text);
 	background: transparent;
 	border: none;
 	border-radius: 4px;
@@ -246,7 +249,7 @@ dialog[open]::backdrop {
 }
 
 .input:focus-visible {
-	outline: 0px solid var(--color-accent);
+	outline: 0 solid var(--color-accent);
 	outline-offset: 2px;
 }
 
@@ -267,7 +270,8 @@ dialog[open]::backdrop {
 
 	&:focus-visible {
 		outline: 2px solid var(--color-accent);
-		/*outline-offset: 2px;*/
+
+		/* outline-offset: 2px; */
 	}
 }
 
@@ -275,8 +279,8 @@ dialog[open]::backdrop {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-1);
-	margin: 0;
 	padding: 0;
+	margin: 0;
 	list-style: none;
 }
 
@@ -294,8 +298,8 @@ dialog[open]::backdrop {
 .result {
 	display: grid;
 	grid-template-columns: 42px 1fr;
-	align-items: center;
 	gap: var(--space-2);
+	align-items: center;
 	padding: var(--space-1) var(--space-2);
 	text-decoration: none;
 	border-radius: 6px;
@@ -313,8 +317,8 @@ dialog[open]::backdrop {
 .result-text {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: baseline;
 	gap: 8px;
+	align-items: baseline;
 }
 
 .name {
@@ -324,7 +328,7 @@ dialog[open]::backdrop {
 }
 
 .year {
-	color: var(--color-muted);
 	font-size: var(--text-sm);
+	color: var(--color-muted);
 }
 </style>

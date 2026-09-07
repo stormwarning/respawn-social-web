@@ -65,8 +65,8 @@ let current = (href: string) => (page.url.pathname.startsWith(href) ? 'page' : u
 	a {
 		display: grid;
 		grid-template-columns: 1.25rem 1fr;
-		align-items: center;
 		gap: 8px;
+		align-items: center;
 		text-decoration: none;
 	}
 
@@ -81,9 +81,9 @@ let current = (href: string) => (page.url.pathname.startsWith(href) ? 'page' : u
 .links {
 	display: flex;
 	flex: 1 1 100%;
+	gap: 16px;
 	align-items: center;
 	justify-content: center;
-	gap: 16px;
 	padding: 0;
 	list-style: none;
 
@@ -96,9 +96,9 @@ let current = (href: string) => (page.url.pathname.startsWith(href) ? 'page' : u
 		padding: 4px 0;
 		font-size: 0.875rem;
 		color: var(--color-grey-300);
-		text-box: trim-both cap alphabetic;
-		text-decoration: none;
 		letter-spacing: 0.01em;
+		text-decoration: none;
+		text-box: trim-both cap alphabetic;
 
 		&[aria-current='page'] {
 			color: #fff;

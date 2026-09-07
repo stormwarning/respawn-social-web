@@ -160,8 +160,8 @@ const playStateLabels: Record<string, string> = {
 
 .profile-header {
 	display: grid;
-	justify-items: center;
 	gap: 16px;
+	justify-items: center;
 
 	@container (min-width: 600px) {
 		grid-template-columns: 112px 1fr;
@@ -170,36 +170,36 @@ const playStateLabels: Record<string, string> = {
 }
 
 .avatar {
-	width: 64px;
+	inline-size: 64px;
 
 	@container (min-width: 600px) {
-		width: 100%;
+		inline-size: 100%;
 	}
 }
 
 .content {
 	display: grid;
-	justify-items: center;
 	gap: 16px;
-
-	h2 {
-		text-box: trim-both cap alphabetic;
-	}
+	justify-items: center;
 
 	@container (min-width: 600px) {
 		justify-items: start;
 		padding-block: 16px;
 	}
+
+	h2 {
+		text-box: trim-both cap alphabetic;
+	}
 }
 
 .profile-actions {
 	display: flex;
-	align-items: center;
 	gap: 8px;
+	align-items: center;
 }
 
 .bio {
-	max-width: 60ch;
+	max-inline-size: 60ch;
 	margin: 0 auto;
 
 	p {
@@ -233,7 +233,7 @@ const playStateLabels: Record<string, string> = {
 }
 
 .sub {
-	color: var(--color-muted);
 	font-size: var(--text-sm);
+	color: var(--color-muted);
 }
 </style>

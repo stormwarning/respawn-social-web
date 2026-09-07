@@ -124,7 +124,7 @@ h1 {
 	gap: 32px;
 
 	@container (min-width: 600px) {
-		/*max-width: 50%;*/
+		/* max-width: 50%; */
 		grid-template-columns: 1fr 1fr;
 	}
 }
@@ -142,12 +142,12 @@ h1 {
 }
 
 .error {
-	color: #ff8a8a;
 	font-size: var(--text-sm);
+	color: #ff8a8a;
 }
 
 .success {
-	color: var(--color-accent);
 	font-size: var(--text-sm);
+	color: var(--color-accent);
 }
 </style>

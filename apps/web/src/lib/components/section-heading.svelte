@@ -24,12 +24,12 @@ let { children, secondary }: Props = $props()
 <style>
 .section-heading {
 	display: flex;
-	align-items: center;
 	gap: 16px;
+	align-items: center;
 	font-size: 0.875rem;
 	font-weight: 400;
-	color: var(--color-grey-400);
 	line-height: 1.2;
+	color: var(--color-grey-400);
 	text-transform: uppercase;
 
 	> div {
@@ -47,14 +47,14 @@ let { children, secondary }: Props = $props()
 
 .lines {
 	display: grid;
-	align-content: center;
-	gap: round(calc(1cap / 3), 1px);
 	flex: 1 1 auto;
+	gap: round(calc(1cap / 3), 1px);
+	align-content: center;
 }
 
 .hairline {
-	width: 100%;
-	height: 1px;
+	inline-size: 100%;
+	block-size: 1px;
 	background-color: var(--color-grey-500);
 	opacity: 0.4;
 }

@@ -24,15 +24,15 @@ let { covers }: { covers: StackCover[] } = $props()
 }
 
 .stack {
-	--cover-width: 25cqw;
-	--cover-overlap: calc((6 * var(--cover-width) - 100cqw) / 5);
+	--cover-width: 25cqi;
+	--cover-overlap: calc((6 * var(--cover-width) - 100cqi) / 5);
 
 	display: flex;
-	width: min-content;
+	inline-size: min-content;
 	padding: 0;
 	margin: 0;
-	list-style: none;
 	overflow: hidden;
+	list-style: none;
 	border-radius: 4px;
 
 	@supports (corner-shape: squircle) {
@@ -42,7 +42,7 @@ let { covers }: { covers: StackCover[] } = $props()
 
 	li {
 		z-index: var(--index, 1);
-		width: var(--cover-width);
+		inline-size: var(--cover-width);
 		margin-inline-start: calc(var(--cover-overlap, 0) * -1);
 		border-radius: 4px;
 		box-shadow: 2px 0 8px 0 rgb(0 0 0 / 50%);

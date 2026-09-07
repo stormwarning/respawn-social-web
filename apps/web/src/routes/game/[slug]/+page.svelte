@@ -164,11 +164,11 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 <style>
 .page {
 	display: grid;
-	gap: 32px;
 	grid-template-columns: 100%;
+	gap: 32px;
 
-	@media (min-width: 632px) {
-		padding-right: calc(clamp(120px, 27cqi, 230px) + 16px);
+	@media (width >= 632px) {
+		padding-inline-end: calc(clamp(120px, 27cqi, 230px) + 16px);
 
 		.game-cover {
 			display: none;
@@ -178,44 +178,24 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 
 .game-header {
 	display: grid;
-	grid-template-columns: 1fr min(33vw, 230px);
+	grid-template-columns: 1fr min(33vi, 230px);
 	gap: 16px;
 
-	@media (min-width: 632px) {
+	@media (width >= 632px) {
 		grid-template-columns: 1fr;
 	}
 }
 
-.title {
-	display: grid;
-	align-content: start;
-	gap: 24px;
-
-	/* The parent line belongs with the heading, not a third of the way down. */
-	> h1 + .parent-of {
-		margin-top: -16px;
-	}
-
-	h1 {
-		font-size: 1.375rem;
-		font-weight: 600;
-		line-height: 1.2;
-		text-box: trim-both cap alphabetic;
-
-		@media (min-width: 632px) {
-			font-size: 2rem;
-		}
-	}
-}
-
+/* Declared before `.title` so the `> h1 + .parent-of` override nested there
+   follows it on source order as well as specificity. */
 .parent-of {
 	font-size: 0.8125rem;
+	line-height: 1.2;
 	color: var(--color-grey-400);
 	letter-spacing: 0.01em;
-	line-height: 1.2;
 	text-box: trim-both cap alphabetic;
 
-	@media (min-width: 632px) {
+	@media (width >= 632px) {
 		font-size: 0.875rem;
 	}
 
@@ -224,14 +204,36 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 	}
 }
 
+.title {
+	display: grid;
+	gap: 24px;
+	align-content: start;
+
+	/* The parent line belongs with the heading, not a third of the way down. */
+	> h1 + .parent-of {
+		margin-block-start: -16px;
+	}
+
+	h1 {
+		font-size: 1.375rem;
+		font-weight: 600;
+		line-height: 1.2;
+		text-box: trim-both cap alphabetic;
+
+		@media (width >= 632px) {
+			font-size: 2rem;
+		}
+	}
+}
+
 .title-meta {
 	display: flex;
 	gap: 4px;
 	font-size: 0.75rem;
-	letter-spacing: 0.02em;
 	line-height: 1.2;
+	letter-spacing: 0.02em;
 
-	@media (min-width: 632px) {
+	@media (width >= 632px) {
 		font-size: 1rem;
 		letter-spacing: 0;
 	}
@@ -247,8 +249,8 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 
 .game-intro {
 	display: grid;
-	gap: 32px;
 	grid-template-columns: 100%;
+	gap: 32px;
 
 	@container (min-width: 600px) {
 		grid-template-columns: 240px 1fr;
@@ -290,19 +292,22 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 		font-size: 0.875rem;
 		font-weight: 400;
 		color: var(--color-grey-300);
+		text-transform: uppercase;
 		letter-spacing: 0.02em;
 		text-box: trim-both cap alphabetic;
-		text-transform: uppercase;
 	}
 }
 
 .details-more {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: baseline;
 	gap: 8px;
-	padding-top: 16px;
+	align-items: baseline;
+	padding-block-start: 16px;
 
+	/* Collides with `.title-meta > span:not([role='separator'])` above, but
+	   `.title-meta` and `.details-more` are never applied to the same element. */
+	/* stylelint-disable-next-line no-descending-specificity */
 	> span {
 		font-size: 0.875rem;
 		letter-spacing: 0.01em;
@@ -330,8 +335,8 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 .folded-heading {
 	font-size: 0.75rem;
 	color: var(--color-grey-400);
-	letter-spacing: 0.02em;
 	text-transform: uppercase;
+	letter-spacing: 0.02em;
 	text-box: trim-both cap alphabetic;
 }
 
@@ -350,8 +355,8 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 	> li {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: baseline;
 		gap: 8px;
+		align-items: baseline;
 		font-size: 0.875rem;
 		line-height: 1.3;
 	}
@@ -360,8 +365,8 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 .related-kind {
 	font-size: 0.6875rem;
 	color: var(--color-grey-400);
-	letter-spacing: 0.02em;
 	text-transform: uppercase;
+	letter-spacing: 0.02em;
 }
 
 .related-year {
@@ -384,12 +389,12 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 
 .sidebar {
 	position: absolute;
-	top: var(--block-spacing);
-	right: var(--inline-spacing);
-	width: 100%;
-	max-width: calc(clamp(120px, 27cqi, 230px) - 16px);
+	inset-block-start: var(--block-spacing);
+	inset-inline-end: var(--inline-spacing);
+	inline-size: 100%;
+	max-inline-size: calc(clamp(120px, 27cqi, 230px) - 16px);
 
-	@media (max-width: 631px) {
+	@media (width <= 631px) {
 		display: none;
 	}
 }

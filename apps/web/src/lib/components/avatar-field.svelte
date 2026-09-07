@@ -175,8 +175,8 @@ $effect(() => () => {
 <style>
 .dropzone {
 	display: flex;
-	align-items: center;
 	gap: 16px;
+	align-items: center;
 	padding: 12px;
 	border: 1px dashed var(--color-grey-400);
 	border-radius: 4px;
@@ -188,9 +188,9 @@ $effect(() => () => {
 }
 
 .dropzone.dragging {
+	background: var(--color-grey-600);
 	border-color: var(--color-accent);
 	border-style: solid;
-	background: var(--color-grey-600);
 }
 
 .dropzone.disabled {
@@ -199,7 +199,7 @@ $effect(() => () => {
 
 .avatar {
 	flex: none;
-	width: 64px;
+	inline-size: 64px;
 }
 
 .actions {
@@ -210,10 +210,10 @@ $effect(() => () => {
 
 .file-input {
 	position: absolute;
-	width: 1px;
-	height: 1px;
+	inline-size: 1px;
+	block-size: 1px;
 	overflow: hidden;
-	clip-path: inset(50%);
 	white-space: nowrap;
+	clip-path: inset(50%);
 }
 </style>

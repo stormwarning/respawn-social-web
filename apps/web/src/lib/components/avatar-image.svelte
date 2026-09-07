@@ -27,21 +27,21 @@ let { image, loading = 'lazy' }: Props = $props()
 .avatar {
 	position: relative;
 	aspect-ratio: 1;
+	overflow: hidden;
 	background: var(--color-grey-400);
 	border-radius: 999px;
-	overflow: hidden;
 
 	&::after {
 		position: absolute;
 		inset: 0;
+		content: '';
 		border-radius: 999px;
 		box-shadow: inset 0 0 0 1px rgb(255 255 255 / 25%);
-		content: '';
 	}
 
 	img {
-		width: 100%;
-		max-width: 100%;
+		inline-size: 100%;
+		max-inline-size: 100%;
 		object-fit: cover;
 	}
 }
