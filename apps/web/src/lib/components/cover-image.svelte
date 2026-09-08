@@ -83,6 +83,7 @@ let { image, loading = 'lazy', title }: Props = $props()
 	grid-area: 1 / 1;
 	place-items: center;
 	padding: 4px;
+	overflow: hidden;
 	font-size: 0.875rem;
 	text-align: center;
 }
