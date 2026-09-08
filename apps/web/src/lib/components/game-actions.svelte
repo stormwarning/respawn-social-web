@@ -1,13 +1,13 @@
 <script lang="ts">
 import { tick } from 'svelte'
 import { enhance } from '$app/forms'
-import IconBooksSolid from './icons/icon-books-solid.svelte'
-import IconBooks from './icons/icon-books.svelte'
+import type { PlayedState } from '$lib/atproto/game'
+import IconBookmarksDuotone from './icons/icon-bookmarks-duotone.svelte'
+import IconBookmarksSolid from './icons/icon-bookmarks-solid.svelte'
+import IconChevronUpDown from './icons/icon-chevron-up-down.svelte'
+import IconControllerDuotone from './icons/icon-controller-duotone.svelte'
 import IconControllerSolid from './icons/icon-controller-solid.svelte'
-import IconController from './icons/icon-controller.svelte'
 import IconHeartSolid from './icons/icon-heart-solid.svelte'
-import IconPlayCircleSolid from './icons/icon-play-circle-solid.svelte'
-import IconPlayCircle from './icons/icon-play-circle.svelte'
 import StarRating from './star-rating.svelte'
 
 let {
@@ -29,13 +29,25 @@ let {
 	title: string
 	coverUrl?: string
 	releaseDate?: string
-	played: boolean
+	/** `null` means not played. */
+	played: PlayedState | null
 	playing: boolean
 	liked: boolean
 	/** 0–10 in half-star steps; 0 means unrated. */
 	rating: number
 	inBacklog: boolean
 } = $props()
+
+type PlayStateOption = 'playing' | PlayedState
+
+const PLAY_STATE_OPTIONS: Array<{ value: PlayStateOption; label: string; hint: string }> = [
+	{ value: 'playing', label: 'Playing', hint: 'Currently playing' },
+	{ value: 'played', label: 'Played', hint: 'Nothing specific' },
+	{ value: 'completed', label: 'Completed', hint: 'Achieved your objective' },
+	{ value: 'retired', label: 'Retired', hint: 'Finished a game without an ending' },
+	{ value: 'shelved', label: 'Shelved', hint: 'Unfinished, may return to' },
+	{ value: 'abandoned', label: 'Abandoned', hint: 'Unfinished, staying that way' },
+]
 
 // svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
 let played = $state(playedProp)
@@ -49,6 +61,18 @@ let rating = $state(ratingProp)
 let inBacklog = $state(inBacklogProp)
 let saving = $state(false)
 let ratingForm = $state<HTMLFormElement>()
+let playStateMenu = $state<HTMLDivElement>()
+let playStateTrigger = $state<HTMLButtonElement>()
+let playStateMenuOpen = $state(false)
+
+/** The one state the play button shows; `null` is the untouched "Played" button. */
+let playState = $derived<PlayStateOption | null>(playing ? 'playing' : played)
+let playStateLabel = $derived(
+	PLAY_STATE_OPTIONS.find((option) => option.value === playState)?.label ?? 'Played',
+)
+
+const uid = $props.id()
+const playStateMenuId = `${uid}-play-state`
 
 // Resync when navigating between games (the component instance is reused).
 $effect(() => {
@@ -64,6 +88,61 @@ async function submitRating() {
 	await tick()
 	ratingForm?.requestSubmit()
 }
+
+function closePlayStateMenu() {
+	if (playStateMenu?.matches(':popover-open')) playStateMenu.hidePopover()
+}
+
+function menuItems() {
+	return Array.from(playStateMenu?.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]') ?? [])
+}
+
+/**
+ * The menu lives in the top layer, so it is anchored to its trigger with CSS
+ * anchor positioning where supported and measured by hand elsewhere.
+ */
+function onPlayStateMenuToggle(event: ToggleEvent) {
+	playStateMenuOpen = event.newState === 'open'
+	if (!playStateMenuOpen || !playStateMenu) return
+
+	if (!CSS.supports('position-anchor', '--play-state') && playStateTrigger) {
+		const rect = playStateTrigger.getBoundingClientRect()
+		playStateMenu.style.insetBlockStart = `${rect.bottom + 4}px`
+		playStateMenu.style.insetInlineStart = `${rect.left}px`
+	}
+
+	const items = menuItems()
+	;(items.find((item) => item.getAttribute('aria-checked') === 'true') ?? items[0])?.focus()
+}
+
+function onPlayStateMenuKeydown(event: KeyboardEvent) {
+	const items = menuItems()
+	const index = items.indexOf(document.activeElement as HTMLButtonElement)
+	let next: number | undefined
+
+	switch (event.key) {
+		case 'ArrowDown':
+			next = (index + 1) % items.length
+			break
+		case 'ArrowUp':
+			next = (index - 1 + items.length) % items.length
+			break
+		case 'Home':
+			next = 0
+			break
+		case 'End':
+			next = items.length - 1
+			break
+		case 'Tab':
+			closePlayStateMenu()
+			return
+		default:
+			return
+	}
+
+	event.preventDefault()
+	items[next]?.focus()
+}
 </script>
 
 <section class="actions">
@@ -75,11 +154,13 @@ async function submitRating() {
 		<div class="actions-primary">
 			<form
 				method="POST"
-				action="?/playing"
+				action="?/playState"
 				use:enhance={() => {
 					saving = true
+					closePlayStateMenu()
 					return ({ result, update }) => {
 						if (result.type === 'success' && result.data) {
+							played = (result.data.played as PlayedState | null) ?? null
 							playing = Boolean(result.data.playing)
 						}
 						saving = false
@@ -92,55 +173,72 @@ async function submitRating() {
 				<input type="hidden" name="title" value={title} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
 				<input type="hidden" name="releaseDate" value={releaseDate} />
-				<button
-					class="action-button has-icon is-playing"
-					type="submit"
-					disabled={saving}
-					aria-pressed={playing ? 'true' : 'false'}
-				>
-					{#if playing}
-						<IconPlayCircleSolid />
-						<span>Playing</span>
-					{:else}
-						<IconPlayCircle />
-						<span>Play</span>
-					{/if}
-				</button>
-			</form>
-
-			<form
-				method="POST"
-				action="?/played"
-				use:enhance={() => {
-					saving = true
-					return ({ result, update }) => {
-						if (result.type === 'success' && result.data) {
-							played = Boolean(result.data.played)
-						}
-						saving = false
-						update({ reset: false })
-					}
-				}}
-			>
-				<input type="hidden" name="igdbId" value={igdbId} />
-				<input type="hidden" name="slug" value={slug} />
-				<input type="hidden" name="title" value={title} />
-				<input type="hidden" name="coverUrl" value={coverUrl} />
-				<input type="hidden" name="releaseDate" value={releaseDate} />
-				<button
-					class="action-button has-icon has-played"
-					type="submit"
-					disabled={saving}
-					aria-pressed={played ? 'true' : 'false'}
-				>
-					{#if played}
+				{#if playState === null}
+					<button
+						class="action-button has-played"
+						type="submit"
+						name="state"
+						value="played"
+						disabled={saving}
+						aria-pressed="false"
+					>
+						<IconControllerDuotone />
+						<span>Played</span>
+					</button>
+				{:else}
+					<button
+						bind:this={playStateTrigger}
+						class="action-button has-played play-state-trigger"
+						type="button"
+						disabled={saving}
+						popovertarget={playStateMenuId}
+						aria-pressed="true"
+						aria-haspopup="menu"
+						aria-expanded={playStateMenuOpen}
+						aria-controls={playStateMenuId}
+					>
 						<IconControllerSolid />
-						<span>Played</span>
-					{:else}
-						<IconController />
-						<span>Played</span>
-					{/if}
-				</button>
+						<span>{playStateLabel}</span>
+						<span class="chevron" aria-hidden="true"><IconChevronUpDown /></span>
+					</button>
+					<div
+						bind:this={playStateMenu}
+						id={playStateMenuId}
+						class="menu"
+						popover="auto"
+						role="menu"
+						tabindex="-1"
+						aria-label="Play state"
+						ontoggle={onPlayStateMenuToggle}
+						onkeydown={onPlayStateMenuKeydown}
+					>
+						{#each PLAY_STATE_OPTIONS as option (option.value)}
+							<button
+								class="menu-item"
+								type="submit"
+								name="state"
+								value={option.value}
+								role="menuitemradio"
+								aria-checked={playState === option.value}
+								tabindex="-1"
+							>
+								<span class="menu-item-label">{option.label}</span>
+								<span class="menu-item-hint">{option.hint}</span>
+							</button>
+						{/each}
+						<hr class="menu-divider" />
+						<button
+							class="menu-item"
+							type="submit"
+							name="state"
+							value="unplayed"
+							role="menuitem"
+							tabindex="-1"
+						>
+							<span class="menu-item-label">Mark as unplayed</span>
+						</button>
+					</div>
+				{/if}
 			</form>
 
 			<form
@@ -164,17 +262,17 @@ async function submitRating() {
 				<input type="hidden" name="releaseDate" value={releaseDate} />
 				<input type="hidden" name="inBacklog" value={inBacklog} />
 				<button
-					class="action-button has-icon is-backlog"
+					class="action-button is-backlog"
 					type="submit"
 					disabled={saving}
+					title={inBacklog ? 'Remove from backlog' : 'Add to backlog'}
+					aria-label={inBacklog ? 'Remove from backlog' : 'Add to backlog'}
 					aria-pressed={inBacklog ? 'true' : 'false'}
 				>
 					{#if inBacklog}
-						<IconBooksSolid />
-						<span>Backlog</span>
+						<IconBookmarksSolid />
 					{:else}
-						<IconBooks />
-						<span>Backlog</span>
+						<IconBookmarksDuotone />
 					{/if}
 				</button>
 			</form>
@@ -339,6 +437,7 @@ async function submitRating() {
 .actions-primary {
 	display: flex;
 	gap: 4px;
+	align-items: center;
 }
 
 .actions-rating {
@@ -349,6 +448,7 @@ async function submitRating() {
 
 .action-button {
 	display: flex;
+	gap: 6px;
 	align-items: center;
 	justify-content: center;
 	inline-size: 100%;
@@ -377,6 +477,14 @@ async function submitRating() {
 		transition: all 100ms ease-out;
 	}
 
+	:global(> svg) {
+		flex: none;
+		inline-size: 32px;
+		block-size: 32px;
+		mix-blend-mode: hard-light;
+		fill: currentcolor;
+	}
+
 	&:hover {
 		background-color: var(--color-blue-200);
 	}
@@ -397,42 +505,103 @@ async function submitRating() {
 		}
 	}
 
-	&.has-icon {
-		flex-direction: column;
-		gap: 2px;
-		min-inline-size: 72px;
-		aspect-ratio: 1;
-		padding: 4px;
-
-		:global(> svg) {
-			inline-size: 40px;
-			block-size: 40px;
-			mix-blend-mode: hard-light;
-		}
-
-		> span {
-			text-box: trim-both cap alphabetic;
-		}
+	&.has-played {
+		padding-inline-end: 12px;
 	}
 
 	&[aria-pressed='true'] {
-		:global(svg) {
+		:global(> svg) {
+			color: var(--color-blue-600);
 			mix-blend-mode: normal;
 		}
-
-		&.is-playing {
-			:global(svg) {
-				fill: var(--color-green-500);
-			}
-		}
-
-		&.has-played,
-		&.is-backlog {
-			:global(svg) {
-				fill: var(--color-blue-600);
-			}
-		}
 	}
+}
+
+.play-state-trigger {
+	anchor-name: --play-state;
+}
+
+.chevron {
+	display: flex;
+	color: var(--color-grey-500);
+
+	:global(> svg) {
+		inline-size: 14px;
+		block-size: 14px;
+	}
+}
+
+.menu {
+	inset: auto;
+	min-inline-size: 240px;
+	padding: 4px;
+	margin: 0;
+	color: var(--color-grey-800);
+	background-color: var(--color-grey-050);
+	border: none;
+	border-radius: 8px;
+	box-shadow:
+		0 0 0 1px rgb(0 0 0 / 8%),
+		0 8px 24px rgb(0 0 0 / 25%);
+
+	@supports (corner-shape: squircle) {
+		border-radius: 12px;
+		corner-shape: var(--corner-shape);
+	}
+
+	@supports (position-anchor: --play-state) {
+		margin-block-start: 4px;
+		position-area: block-end span-inline-end;
+		position-anchor: --play-state;
+		position-try-fallbacks: flip-block, flip-inline;
+	}
+}
+
+.menu-item {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	align-items: flex-start;
+	inline-size: 100%;
+	padding: 8px 10px;
+	font: inherit;
+	color: inherit;
+	text-align: start;
+	background-color: transparent;
+	border: none;
+	border-radius: 4px;
+
+	@supports (corner-shape: squircle) {
+		border-radius: 8px;
+		corner-shape: var(--corner-shape);
+	}
+
+	&:hover,
+	&:focus-visible {
+		outline: none;
+		background-color: var(--color-blue-100);
+	}
+}
+
+.menu-item-label {
+	font-size: 0.875rem;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+
+	.menu-item[aria-checked='true'] & {
+		color: var(--color-blue-600);
+	}
+}
+
+.menu-item-hint {
+	font-size: 0.75rem;
+	color: var(--color-grey-500);
+}
+
+.menu-divider {
+	margin: 4px 0;
+	border: none;
+	border-block-start: 1px solid var(--color-grey-200);
 }
 
 .like-button {

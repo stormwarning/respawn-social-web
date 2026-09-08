@@ -88,7 +88,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 		// separately". This is the series: siblings from the IGDB collection.
 		const series = game.collection.slice(0, 4).map(toCoverItem)
 
-		let played = false
+		let played: PlayedState | null = null
 		let playing = false
 		let liked = false
 		let inBacklog = false
@@ -104,7 +104,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 					listLogs(locals.agent, locals.user.did, { igdbIds: game.members }),
 					isInBacklog(locals.agent, locals.user.did, game.id),
 				])
-				played = rec?.played != null
+				played = rec?.played ?? null
 				playing = rec?.playing === true
 				liked = rec?.liked === true
 				rating = rec?.rating ?? 0
@@ -156,58 +156,20 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 }
 
 export const actions: Actions = {
-	played: async ({ request, fetch, locals }) => {
+	playState: async ({ request, fetch, locals }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user } = locals
 
-		const parsed = parseGameForm(await request.formData())
+		const form = await request.formData()
+		const parsed = parseGameForm(form)
 		if ('error' in parsed) return fail(400, parsed)
 		const { igdbId, game, coverUrl, releaseDate } = parsed
 		const ref = game ?? undefined
 
-		try {
-			// Fold in any record left under an id that has since folded into this
-			// title, so acting on it does not create a second one. Lazy: one user,
-			// one action, no bulk job over other people's repos.
-			const existing = await loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch)
-
-			// Already played → drop the played field but keep the record (cover survives).
-			if (existing?.played != null) {
-				const { played: _drop, ...rest } = existing
-				await putGameRecord(
-					agent,
-					user.did,
-					igdbId,
-					withReleaseDate({ ...rest, game: rest.game ?? ref }, releaseDate),
-				)
-				return { played: false }
-			}
-
-			// Mark played. Build the cover once, on first creation.
-			const record: RespawnGameRecord = existing
-				? { ...existing, game: existing.game ?? ref, played: 'played' }
-				: { game: ref, played: 'played', createdAt: new Date().toISOString() }
-
-			if (!record.cover && coverUrl) {
-				record.cover = await buildCover(agent, coverUrl, fetch)
-			}
-
-			await putGameRecord(agent, user.did, igdbId, withReleaseDate(record, releaseDate))
-			return { played: true }
-		} catch (err) {
-			console.error('[game/[slug]] played failed', err)
-			return fail(500, { error: 'Could not update. Try again.' })
+		const state = String(form.get('state') ?? '')
+		if (state !== 'playing' && state !== 'unplayed' && !PLAY_STATES.has(state)) {
+			return fail(400, { error: 'Invalid play state.' })
 		}
-	},
-
-	playing: async ({ request, fetch, locals }) => {
-		if (!locals.user || !locals.agent) redirect(303, '/login')
-		const { agent, user } = locals
-
-		const parsed = parseGameForm(await request.formData())
-		if ('error' in parsed) return fail(400, parsed)
-		const { igdbId, game, coverUrl, releaseDate } = parsed
-		const ref = game ?? undefined
 
 		try {
 			// Fold in any record left under an id that has since folded into this
@@ -215,30 +177,35 @@ export const actions: Actions = {
 			// one action, no bulk job over other people's repos.
 			const existing = await loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch)
 
-			// Already playing → drop the playing field but keep the record (cover survives).
-			if (existing?.playing) {
-				const { playing: _drop, ...rest } = existing
-				await putGameRecord(
-					agent,
-					user.did,
-					igdbId,
-					withReleaseDate({ ...rest, game: rest.game ?? ref }, releaseDate),
-				)
-				return { playing: false }
+			// `playing` and `played` are exclusive: you are either mid-game or done
+			// with it. Both drop for "unplayed"; the record itself stays so the
+			// cover, rating and like survive.
+			const {
+				played: _played,
+				playing: _playing,
+				...rest
+			}: Partial<RespawnGameRecord> = existing ?? {}
+			const base: RespawnGameRecord = {
+				...rest,
+				game: rest.game ?? ref,
+				createdAt: rest.createdAt ?? new Date().toISOString(),
 			}
 
-			const record: RespawnGameRecord = existing
-				? { ...existing, game: existing.game ?? ref, playing: true }
-				: { game: ref, playing: true, createdAt: new Date().toISOString() }
+			const record: RespawnGameRecord =
+				state === 'unplayed'
+					? base
+					: state === 'playing'
+						? { ...base, playing: true }
+						: { ...base, played: state as PlayedState }
 
-			if (!record.cover && coverUrl) {
+			if (state !== 'unplayed' && !record.cover && coverUrl) {
 				record.cover = await buildCover(agent, coverUrl, fetch)
 			}
 
 			await putGameRecord(agent, user.did, igdbId, withReleaseDate(record, releaseDate))
-			return { playing: true }
+			return { played: record.played ?? null, playing: record.playing === true }
 		} catch (err) {
-			console.error('[game/[slug]] playing failed', err)
+			console.error('[game/[slug]] playState failed', err)
 			return fail(500, { error: 'Could not update. Try again.' })
 		}
 	},
