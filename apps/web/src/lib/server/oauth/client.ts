@@ -2,6 +2,7 @@ import { NodeOAuthClient, type OAuthClientMetadataInput } from '@atproto/oauth-c
 import { JoseKey } from '@atproto/jwk-jose'
 import { env } from '$env/dynamic/private'
 import { sessionStore, stateStore } from './blob-store'
+import { requestLock } from './lock'
 
 const SCOPE = 'atproto transition:generic'
 
@@ -78,6 +79,10 @@ export async function getOAuthClient(): Promise<NodeOAuthClient> {
 		keyset,
 		stateStore,
 		sessionStore,
+		// Cross-instance mutex around session restore/refresh. Without it, parallel
+		// Netlify invocations race on the single-use refresh token and the PDS
+		// revokes the session. See ./lock.ts.
+		requestLock,
 	})
 
 	return cached

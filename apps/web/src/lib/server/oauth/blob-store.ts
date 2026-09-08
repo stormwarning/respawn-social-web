@@ -25,9 +25,14 @@ import type {
  * boots — this is NOT durable and must never be relied on in production.
  */
 /** The slice of the Netlify Blobs Store API we use (text values only). */
-interface TextKV {
+export interface TextKV {
 	get(key: string, opts: { type: 'text' }): Promise<string | null>
-	set(key: string, value: string): Promise<unknown>
+	/**
+	 * With `onlyIfNew`, the write is a server-side compare-and-set: it succeeds
+	 * (`modified: true`) only when the key does not exist yet. This is what the
+	 * refresh lock in ./lock.ts is built on.
+	 */
+	set(key: string, value: string, opts?: { onlyIfNew?: boolean }): Promise<{ modified: boolean }>
 	delete(key: string): Promise<unknown>
 }
 
@@ -35,7 +40,7 @@ const memory = new Map<string, string>()
 let warned = false
 let cachedStore: TextKV | null = null
 
-function resolveStore(): TextKV {
+export function resolveStore(): TextKV {
 	if (cachedStore) return cachedStore
 	try {
 		cachedStore = getStore({
@@ -54,14 +59,31 @@ function resolveStore(): TextKV {
 			async get(key: string) {
 				return memory.get(key) ?? null
 			},
-			async set(key: string, value: string) {
+			async set(key: string, value: string, opts?: { onlyIfNew?: boolean }) {
+				if (opts?.onlyIfNew && memory.has(key)) return { modified: false }
 				memory.set(key, value)
+				return { modified: true }
 			},
 			async delete(key: string) {
 				memory.delete(key)
 			},
 		}
 		return cachedStore
+	}
+}
+
+/**
+ * Retry a store write once. @atproto/oauth-client treats a failed session
+ * write after a token refresh as fatal: it REVOKES the freshly minted tokens
+ * and deletes the session (see SessionGetter's onStoreError), which logs the
+ * user out. One transient Blobs error should not cost the user their session.
+ */
+async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+	try {
+		return await fn()
+	} catch (err) {
+		console.warn('[oauth] blob write failed, retrying once', err)
+		return fn()
 	}
 }
 
@@ -72,10 +94,10 @@ function prefixed<T>(prefix: string) {
 			return raw ? (JSON.parse(raw) as T) : undefined
 		},
 		async set(key: string, value: T): Promise<void> {
-			await resolveStore().set(`${prefix}:${key}`, JSON.stringify(value))
+			await withRetry(() => resolveStore().set(`${prefix}:${key}`, JSON.stringify(value)))
 		},
 		async del(key: string): Promise<void> {
-			await resolveStore().delete(`${prefix}:${key}`)
+			await withRetry(() => resolveStore().delete(`${prefix}:${key}`))
 		},
 	}
 }
