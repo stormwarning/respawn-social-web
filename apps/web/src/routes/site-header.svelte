@@ -11,6 +11,7 @@ let { data, onsearch } = $props()
 		</div>
 	</a>
 	<div class="header-actions">
+		<a href="/games/">Games</a>
 		<button class="button is-icon-only" type="button" onclick={onsearch} aria-label="Search">
 			<svg
 				width="20"
