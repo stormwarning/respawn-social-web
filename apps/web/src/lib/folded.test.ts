@@ -12,6 +12,8 @@ const member = (partial: Partial<FoldedMember> = {}): FoldedMember => ({
 	coverImageId: null,
 	coverUrl: null,
 	releaseYear: null,
+	localizedName: null,
+	localizedLang: null,
 	...partial,
 })
 
@@ -119,6 +121,27 @@ describe('groupFolded', () => {
 			'A Game',
 		)
 		expect(groups.map((g) => g.heading)).toEqual(['Expansions', 'DLC', 'Remasters', 'Editions'])
+	})
+
+	it('lists the original release first', () => {
+		// Super Mario Bros. 2 crowned over the game it was ported from.
+		const groups = groupFolded(
+			[
+				member({ id: 222098, foldType: 'remaster', shortName: 'Super Mario All-Stars' }),
+				member({
+					id: 41233,
+					foldType: 'original',
+					shortName: 'Yume Koujou: Doki-doki Panic',
+					localizedName: '夢工場ドキドキパニック',
+					localizedLang: 'ja-JP',
+				}),
+			],
+			'Super Mario Bros. 2',
+		)
+		expect(groups).toEqual([
+			{ heading: 'Original release', names: ['Yume Koujou: Doki-doki Panic'] },
+			{ heading: 'Remasters', names: ['Super Mario All-Stars'] },
+		])
 	})
 
 	it('shows editions and override members under one heading', () => {

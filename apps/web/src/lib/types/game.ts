@@ -9,7 +9,7 @@
  *
  * `v` is the shape version. Assert on it rather than feature-sniffing fields.
  */
-export const TITLE_SHAPE_VERSION = 1
+export const TITLE_SHAPE_VERSION = 2
 
 export interface TitlePlatform {
 	id: number
@@ -63,8 +63,16 @@ export interface TitleRef {
 /** A game absorbed into a title and given no page of its own. */
 export interface FoldedMember {
 	id: number
-	foldType: 'root' | 'port' | 'dlc' | 'expansion' | 'remaster' | 'version' | 'override'
-	/** "DLC", "Expansion", "Remaster", "Edition", "Port". */
+	foldType:
+		| 'root'
+		| 'original'
+		| 'port'
+		| 'dlc'
+		| 'expansion'
+		| 'remaster'
+		| 'version'
+		| 'override'
+	/** "DLC", "Expansion", "Remaster", "Edition", "Port", "Original". */
 	label: string
 	/** The full name, e.g. "The Witcher 3: Wild Hunt – Blood and Wine". */
 	displayName: string
@@ -79,6 +87,14 @@ export interface FoldedMember {
 	coverImageId: string | null
 	coverUrl: string | null
 	releaseYear: number | null
+	/**
+	 * The member's native-script title ("夢工場ドキドキパニック"), when IGDB has
+	 * one. Shown as the page subtitle when this member is the `original` — the
+	 * game the title was ported from, folded underneath it.
+	 */
+	localizedName: string | null
+	/** BCP-47 tag for `localizedName` ("ja-JP"), for a `lang` attribute. */
+	localizedLang: string | null
 }
 
 export interface Title {

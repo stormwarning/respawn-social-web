@@ -13,6 +13,13 @@ let { game } = $derived(data)
 let developers = $derived(game.developers.join(', '))
 
 let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
+
+// The game this one was ported from, folded underneath it — Super Mario
+// Bros. 2 carries Doki-doki Panic. Its native-script title makes the subtitle
+// when IGDB has one; the romanized name otherwise.
+let original = $derived(game.folded.find((m) => m.foldType === 'original'))
+let subtitle = $derived(original ? (original.localizedName ?? original.displayName) : null)
+let subtitleLang = $derived(original?.localizedName ? (original.localizedLang ?? undefined) : undefined)
 </script>
 
 <svelte:head>
@@ -23,6 +30,9 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 	<header class="game-header">
 		<div class="title">
 			<h1>{game.displayName}</h1>
+			{#if subtitle}
+				<p class="subtitle" lang={subtitleLang}>{subtitle}</p>
+			{/if}
 			{#if game.parent}
 				<p class="parent-of">
 					{game.relationToParent ?? 'Version'} of
@@ -188,6 +198,7 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 
 /* Declared before `.title` so the `> h1 + .parent-of` override nested there
    follows it on source order as well as specificity. */
+.subtitle,
 .parent-of {
 	font-size: 0.8125rem;
 	line-height: 1.2;
@@ -209,8 +220,11 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 	gap: 24px;
 	align-content: start;
 
-	/* The parent line belongs with the heading, not a third of the way down. */
-	> h1 + .parent-of {
+	/* The subtitle and parent line belong with the heading, not a third of the
+	   way down. */
+	> h1 + .subtitle,
+	> h1 + .parent-of,
+	> .subtitle + .parent-of {
 		margin-block-start: -16px;
 	}
 

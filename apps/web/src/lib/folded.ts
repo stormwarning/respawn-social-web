@@ -15,9 +15,17 @@ import type { FoldedMember } from '$lib/types/game'
  */
 
 /** What each fold type is called in a list, in the order they are shown. */
-export const FOLD_ORDER = ['expansion', 'dlc', 'remaster', 'version', 'override'] as const
+export const FOLD_ORDER = [
+	'original',
+	'expansion',
+	'dlc',
+	'remaster',
+	'version',
+	'override',
+] as const
 
 export const FOLD_HEADING: Record<string, string> = {
+	original: 'Original release',
 	expansion: 'Expansions',
 	dlc: 'DLC',
 	remaster: 'Remasters',
