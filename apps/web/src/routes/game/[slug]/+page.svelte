@@ -19,7 +19,9 @@ let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 // when IGDB has one; the romanized name otherwise.
 let original = $derived(game.folded.find((m) => m.foldType === 'original'))
 let subtitle = $derived(original ? (original.localizedName ?? original.displayName) : null)
-let subtitleLang = $derived(original?.localizedName ? (original.localizedLang ?? undefined) : undefined)
+let subtitleLang = $derived(
+	original?.localizedName ? (original.localizedLang ?? undefined) : undefined,
+)
 </script>
 
 <svelte:head>
@@ -28,11 +30,13 @@ let subtitleLang = $derived(original?.localizedName ? (original.localizedLang ??
 
 <article class="page">
 	<header class="game-header">
-		<div class="title">
-			<h1>{game.displayName}</h1>
-			{#if subtitle}
-				<p class="subtitle" lang={subtitleLang}>{subtitle}</p>
-			{/if}
+		<div class="title-block">
+			<div class="title">
+				<h1>{game.displayName}</h1>
+				{#if subtitle}
+					<p class="subtitle" lang={subtitleLang}>{subtitle}</p>
+				{/if}
+			</div>
 			{#if game.parent}
 				<p class="parent-of">
 					{game.relationToParent ?? 'Version'} of
@@ -196,37 +200,16 @@ let subtitleLang = $derived(original?.localizedName ? (original.localizedLang ??
 	}
 }
 
-/* Declared before `.title` so the `> h1 + .parent-of` override nested there
-   follows it on source order as well as specificity. */
-.subtitle,
-.parent-of {
-	font-size: 0.8125rem;
-	line-height: 1.2;
-	color: var(--color-grey-400);
-	letter-spacing: 0.01em;
-	text-box: trim-both cap alphabetic;
-
-	@media (width >= 632px) {
-		font-size: 0.875rem;
-	}
-
-	> a {
-		color: var(--color-grey-200);
-	}
+.title-block {
+	display: grid;
+	gap: 24px;
+	align-content: start;
 }
 
 .title {
 	display: grid;
-	gap: 24px;
+	gap: 12px;
 	align-content: start;
-
-	/* The subtitle and parent line belong with the heading, not a third of the
-	   way down. */
-	> h1 + .subtitle,
-	> h1 + .parent-of,
-	> .subtitle + .parent-of {
-		margin-block-start: -16px;
-	}
 
 	h1 {
 		font-size: 1.375rem;
@@ -236,6 +219,37 @@ let subtitleLang = $derived(original?.localizedName ? (original.localizedLang ??
 
 		@media (width >= 632px) {
 			font-size: 2rem;
+		}
+	}
+}
+
+.subtitle {
+	font-size: 1rem;
+	line-height: 1.2;
+	color: var(--color-grey-400);
+	text-box: trim-both cap alphabetic;
+
+	@media (width >= 632px) {
+		font-size: 1.125rem;
+	}
+}
+
+.parent-of {
+	font-size: 0.875rem;
+	line-height: 1.2;
+	color: var(--color-grey-400);
+	text-box: trim-both cap alphabetic;
+
+	@media (width >= 632px) {
+		font-size: 1rem;
+	}
+
+	> a {
+		color: var(--color-grey-100);
+		text-decoration: none;
+
+		&:hover {
+			color: var(--color-grey-300);
 		}
 	}
 }
