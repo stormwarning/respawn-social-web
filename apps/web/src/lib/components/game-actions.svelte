@@ -38,10 +38,7 @@ let {
 	inBacklog: boolean
 } = $props()
 
-type PlayStateOption = 'playing' | PlayedState
-
-const PLAY_STATE_OPTIONS: Array<{ value: PlayStateOption; label: string; hint: string }> = [
-	{ value: 'playing', label: 'Playing', hint: 'Currently playing' },
+const PLAYED_OPTIONS: Array<{ value: PlayedState; label: string; hint: string }> = [
 	{ value: 'played', label: 'Played', hint: 'Nothing specific' },
 	{ value: 'completed', label: 'Completed', hint: 'Achieved your objective' },
 	{ value: 'retired', label: 'Retired', hint: 'Finished a game without an ending' },
@@ -65,10 +62,13 @@ let playStateMenu = $state<HTMLDivElement>()
 let playStateTrigger = $state<HTMLButtonElement>()
 let playStateMenuOpen = $state(false)
 
-/** The one state the play button shows; `null` is the untouched "Played" button. */
-let playState = $derived<PlayStateOption | null>(playing ? 'playing' : played)
+/** False is the untouched "Played" button; true swaps it for the menu trigger. */
+let hasPlayState = $derived(playing || played !== null)
+/** `playing` is independent of the played states, but the trigger has room for one label. */
 let playStateLabel = $derived(
-	PLAY_STATE_OPTIONS.find((option) => option.value === playState)?.label ?? 'Played',
+	playing
+		? 'Playing'
+		: (PLAYED_OPTIONS.find((option) => option.value === played)?.label ?? 'Played'),
 )
 
 const uid = $props.id()
@@ -173,7 +173,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				<input type="hidden" name="title" value={title} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
 				<input type="hidden" name="releaseDate" value={releaseDate} />
-				{#if playState === null}
+				{#if !hasPlayState}
 					<button
 						class="action-button has-played"
 						type="submit"
@@ -212,31 +212,46 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 						ontoggle={onPlayStateMenuToggle}
 						onkeydown={onPlayStateMenuKeydown}
 					>
-						{#each PLAY_STATE_OPTIONS as option (option.value)}
+						<button
+							class="menu-item"
+							type="submit"
+							name="state"
+							value={playing ? 'stop-playing' : 'playing'}
+							role="menuitemcheckbox"
+							aria-checked={playing}
+							tabindex="-1"
+						>
+							<span class="menu-item-label">Playing</span>
+							<span class="menu-item-hint">Currently playing</span>
+						</button>
+						<hr class="menu-divider" />
+						{#each PLAYED_OPTIONS as option (option.value)}
 							<button
 								class="menu-item"
 								type="submit"
 								name="state"
 								value={option.value}
 								role="menuitemradio"
-								aria-checked={playState === option.value}
+								aria-checked={played === option.value}
 								tabindex="-1"
 							>
 								<span class="menu-item-label">{option.label}</span>
 								<span class="menu-item-hint">{option.hint}</span>
 							</button>
 						{/each}
-						<hr class="menu-divider" />
-						<button
-							class="menu-item"
-							type="submit"
-							name="state"
-							value="unplayed"
-							role="menuitem"
-							tabindex="-1"
-						>
-							<span class="menu-item-label">Mark as unplayed</span>
-						</button>
+						{#if played !== null}
+							<hr class="menu-divider" />
+							<button
+								class="menu-item"
+								type="submit"
+								name="state"
+								value="unplayed"
+								role="menuitem"
+								tabindex="-1"
+							>
+								<span class="menu-item-label">Mark as unplayed</span>
+							</button>
+						{/if}
 					</div>
 				{/if}
 			</form>

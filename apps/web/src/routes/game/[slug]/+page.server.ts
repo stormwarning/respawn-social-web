@@ -167,7 +167,8 @@ export const actions: Actions = {
 		const ref = game ?? undefined
 
 		const state = String(form.get('state') ?? '')
-		if (state !== 'playing' && state !== 'unplayed' && !PLAY_STATES.has(state)) {
+		const isToggle = state === 'playing' || state === 'stop-playing'
+		if (!isToggle && state !== 'unplayed' && !PLAY_STATES.has(state)) {
 			return fail(400, { error: 'Invalid play state.' })
 		}
 
@@ -177,12 +178,12 @@ export const actions: Actions = {
 			// one action, no bulk job over other people's repos.
 			const existing = await loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch)
 
-			// `playing` and `played` are exclusive: you are either mid-game or done
-			// with it. Both drop for "unplayed"; the record itself stays so the
-			// cover, rating and like survive.
+			// `playing` and `played` are independent: replaying something you have
+			// already finished sets both. "unplayed" drops only `played`; the
+			// record itself stays so the cover, rating and like survive.
 			const {
-				played: _played,
-				playing: _playing,
+				played: prevPlayed,
+				playing: prevPlaying,
 				...rest
 			}: Partial<RespawnGameRecord> = existing ?? {}
 			const base: RespawnGameRecord = {
@@ -191,14 +192,20 @@ export const actions: Actions = {
 				createdAt: rest.createdAt ?? new Date().toISOString(),
 			}
 
-			const record: RespawnGameRecord =
-				state === 'unplayed'
-					? base
-					: state === 'playing'
-						? { ...base, playing: true }
-						: { ...base, played: state as PlayedState }
+			const playing = isToggle ? state === 'playing' : prevPlaying === true
+			const played = isToggle
+				? prevPlayed
+				: state === 'unplayed'
+					? undefined
+					: (state as PlayedState)
 
-			if (state !== 'unplayed' && !record.cover && coverUrl) {
+			const record: RespawnGameRecord = {
+				...base,
+				...(playing ? { playing: true } : {}),
+				...(played ? { played } : {}),
+			}
+
+			if ((playing || played) && !record.cover && coverUrl) {
 				record.cover = await buildCover(agent, coverUrl, fetch)
 			}
 
