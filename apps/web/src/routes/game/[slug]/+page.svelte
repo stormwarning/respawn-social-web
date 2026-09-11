@@ -22,6 +22,26 @@ let subtitle = $derived(original ? (original.localizedName ?? original.displayNa
 let subtitleLang = $derived(
 	original?.localizedName ? (original.localizedLang ?? undefined) : undefined,
 )
+
+// Additional releases read as one list per kind — every remake together, every
+// expansion together, each group oldest first. IGDB's own order is popularity,
+// which scatters them.
+let relatedGroups = $derived.by(() => {
+	const groups = new Map<string, typeof game.related>()
+	for (const item of game.related) {
+		const key = item.relation ?? 'Other'
+		const items = groups.get(key)
+		if (items) items.push(item)
+		else groups.set(key, [item])
+	}
+	return [...groups].map(([relation, items]) => ({
+		relation,
+		items: [...items].sort(
+			(a, b) =>
+				(a.releaseYear ?? Number.POSITIVE_INFINITY) - (b.releaseYear ?? Number.POSITIVE_INFINITY),
+		),
+	}))
+})
 </script>
 
 <svelte:head>
@@ -80,57 +100,69 @@ let subtitleLang = $derived(
 	</section>
 
 	<section class="details">
-		<div class="details-block">
-			<h4>Publishers</h4>
-			<ul class="list">
-				{#each game.publishers as publisher}
-					<li><Chip>{publisher}</Chip></li>
-				{/each}
-			</ul>
-		</div>
-		<div class="details-block">
-			<h4>Platforms</h4>
-			<ul class="list">
-				{#each game.platforms as platform}
-					<li><Chip>{platform.displayName}</Chip></li>
-				{/each}
-			</ul>
-		</div>
-		<div class="details-block">
-			<h4>Genres</h4>
-			<ul class="list">
-				{#each game.genres as genre}
-					<li><Chip>{genre.displayName}</Chip></li>
-				{/each}
-			</ul>
-		</div>
+		{#if game.publishers}
+			<div class="details-block">
+				<h4>Publishers</h4>
+				<ul class="list">
+					{#each game.publishers as publisher}
+						<li><Chip>{publisher}</Chip></li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
+
+		{#if game.platforms}
+			<div class="details-block">
+				<h4>Platforms</h4>
+				<ul class="list">
+					{#each game.platforms as platform}
+						<li><Chip>{platform.displayName}</Chip></li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
+
+		{#if game.genres}
+			<div class="details-block">
+				<h4>Genres</h4>
+				<ul class="list">
+					{#each game.genres as genre}
+						<li><Chip>{genre.displayName}</Chip></li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
+
 		{#if foldedGroups.length > 0}
+			{#each foldedGroups as group}
+				<div class="details-block">
+					<h4>{group.heading}</h4>
+					<p class="folded-names">{group.names.join(', ')}</p>
+				</div>
+			{/each}
+		{/if}
+
+		{#if relatedGroups.length > 0}
 			<div class="details-block">
-				<h4>Includes</h4>
+				<h4>Additional releases</h4>
 				<ul class="folded">
-					{#each foldedGroups as group}
+					{#each relatedGroups as group}
 						<li>
-							<span class="folded-heading">{group.heading}</span>
-							<span class="folded-names">{group.names.join(', ')}</span>
+							<span class="folded-heading">{group.relation}</span>
+							<ul class="related">
+								{#each group.items as item}
+									<li>
+										<a href="/game/{item.slug}/">{item.displayName}</a>
+										{#if item.releaseYear}<span class="related-year">{item.releaseYear}</span>{/if}
+									</li>
+								{/each}
+							</ul>
 						</li>
 					{/each}
 				</ul>
 			</div>
 		{/if}
-		{#if game.related.length > 0}
-			<div class="details-block">
-				<h4>Released separately</h4>
-				<ul class="related">
-					{#each game.related as item}
-						<li>
-							<a href="/game/{item.slug}/">{item.displayName}</a>
-							{#if item.relation}<span class="related-kind">{item.relation}</span>{/if}
-							{#if item.releaseYear}<span class="related-year">{item.releaseYear}</span>{/if}
-						</li>
-					{/each}
-				</ul>
-			</div>
-		{/if}
+
 		{#if game.igdbUrl || data.site}
 			<div class="details-more">
 				<span>More at</span>
@@ -388,13 +420,6 @@ let subtitleLang = $derived(
 		font-size: 0.875rem;
 		line-height: 1.3;
 	}
-}
-
-.related-kind {
-	font-size: 0.6875rem;
-	color: var(--color-grey-400);
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 }
 
 .related-year {

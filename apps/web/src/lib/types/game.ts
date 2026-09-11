@@ -63,15 +63,7 @@ export interface TitleRef {
 /** A game absorbed into a title and given no page of its own. */
 export interface FoldedMember {
 	id: number
-	foldType:
-		| 'root'
-		| 'original'
-		| 'port'
-		| 'dlc'
-		| 'expansion'
-		| 'remaster'
-		| 'version'
-		| 'override'
+	foldType: 'root' | 'original' | 'port' | 'dlc' | 'expansion' | 'remaster' | 'version' | 'override'
 	/** "DLC", "Expansion", "Remaster", "Edition", "Port", "Original". */
 	label: string
 	/** The full name, e.g. "The Witcher 3: Wild Hunt – Blood and Wine". */
