@@ -467,7 +467,8 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 	align-items: center;
 	justify-content: center;
 	inline-size: 100%;
-	padding: 8px;
+	padding: 4px;
+	font-family: var(--font-ui);
 	font-size: 0.875rem;
 	font-weight: 600;
 	color: var(--color-grey-700);
@@ -533,6 +534,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 }
 
 .play-state-trigger {
+	padding-inline: 8px;
 	anchor-name: --play-state;
 }
 
@@ -554,7 +556,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 	color: var(--color-grey-800);
 	background-color: var(--color-grey-050);
 	border: none;
-	border-radius: 8px;
+	border-radius: 6px;
 	box-shadow:
 		0 0 0 1px rgb(0 0 0 / 8%),
 		0 8px 24px rgb(0 0 0 / 25%);
@@ -575,10 +577,10 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 .menu-item {
 	display: flex;
 	flex-direction: column;
-	gap: 3px;
+	gap: 8px;
 	align-items: flex-start;
 	inline-size: 100%;
-	padding: 8px 10px;
+	padding: 12px 8px;
 	font: inherit;
 	color: inherit;
 	text-align: start;
@@ -602,6 +604,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 	font-size: 0.875rem;
 	font-weight: 600;
 	letter-spacing: 0.01em;
+	text-box: trim-both cap alphabetic;
 
 	.menu-item[aria-checked='true'] & {
 		color: var(--color-blue-600);
@@ -610,13 +613,16 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 
 .menu-item-hint {
 	font-size: 0.75rem;
+	line-height: 1.2;
 	color: var(--color-grey-500);
+	letter-spacing: 0.01em;
+	text-box: trim-both cap alphabetic;
 }
 
 .menu-divider {
 	margin: 4px 0;
 	border: none;
-	border-block-start: 1px solid var(--color-grey-200);
+	border-block-start: 1px solid var(--color-grey-400);
 }
 
 .like-button {
@@ -644,13 +650,21 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 		opacity: 0.5;
 	}
 
+	&:hover {
+		> :global(svg) {
+			scale: 1.2;
+		}
+	}
+
 	&:focus-visible {
 		outline: 2px solid var(--color-blue-500);
 		outline-offset: 2px;
 	}
 
 	&:active {
-		scale: 0.95;
+		> :global(svg) {
+			scale: 0.95;
+		}
 	}
 
 	&[aria-pressed='true'] {
