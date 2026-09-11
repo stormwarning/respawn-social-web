@@ -64,9 +64,9 @@ let relatedGroups = $derived.by(() => {
 				</p>
 			{/if}
 			<div class="title-meta">
-				<span>{game.releaseYear}</span>
+				{#if game.releaseYear}<span>{game.releaseYear}</span>{/if}
 				{#if game.releaseYear && developers}<span role="separator">▪</span>{/if}
-				<span>{developers}</span>
+				{#if developers}<span>{developers}</span>{/if}
 			</div>
 		</div>
 
@@ -100,7 +100,7 @@ let relatedGroups = $derived.by(() => {
 	</section>
 
 	<section class="details">
-		{#if game.publishers}
+		{#if game.publishers.length > 0}
 			<div class="details-block">
 				<h4>Publishers</h4>
 				<ul class="list">
@@ -111,7 +111,7 @@ let relatedGroups = $derived.by(() => {
 			</div>
 		{/if}
 
-		{#if game.platforms}
+		{#if game.platforms.length > 0}
 			<div class="details-block">
 				<h4>Platforms</h4>
 				<ul class="list">
@@ -122,7 +122,7 @@ let relatedGroups = $derived.by(() => {
 			</div>
 		{/if}
 
-		{#if game.genres}
+		{#if game.genres.length > 0}
 			<div class="details-block">
 				<h4>Genres</h4>
 				<ul class="list">
@@ -144,15 +144,15 @@ let relatedGroups = $derived.by(() => {
 
 		{#if relatedGroups.length > 0}
 			<div class="details-block">
-				<h4>Additional releases</h4>
-				<ul class="folded">
+				<h4>Re-releases</h4>
+				<ul class="release-group-list">
 					{#each relatedGroups as group}
 						<li>
-							<span class="folded-heading">{group.relation}</span>
+							<span class="release-type">{group.relation}</span>
 							<ul class="related">
 								{#each group.items as item}
 									<li>
-										<a href="/game/{item.slug}/">{item.displayName}</a>
+										<a class="related-game" href="/game/{item.slug}/">{item.displayName}</a>
 										{#if item.releaseYear}<span class="related-year">{item.releaseYear}</span>{/if}
 									</li>
 								{/each}
@@ -375,28 +375,27 @@ let relatedGroups = $derived.by(() => {
 	}
 }
 
-.folded {
+.release-group-list {
 	display: grid;
-	gap: 8px;
+	grid-template-columns: auto 1fr;
+	gap: 12px;
 	padding: 0;
 	list-style: none;
 
 	> li {
 		display: grid;
-		gap: 2px;
-
-		@container (min-width: 520px) {
-			grid-template-columns: 108px 1fr;
-			gap: 12px;
-		}
+		grid-template-columns: subgrid;
+		grid-column: 1 / 3;
+		gap: 16px;
+		align-items: baseline;
 	}
 }
 
-.folded-heading {
+.release-type {
 	font-size: 0.75rem;
 	color: var(--color-grey-400);
 	text-transform: uppercase;
-	letter-spacing: 0.02em;
+	letter-spacing: 0.01em;
 	text-box: trim-both cap alphabetic;
 }
 
@@ -404,6 +403,7 @@ let relatedGroups = $derived.by(() => {
 	font-size: 0.875rem;
 	line-height: 1.4;
 	text-wrap: pretty;
+	text-box: trim-both cap alphabetic;
 }
 
 .related {
@@ -413,18 +413,27 @@ let relatedGroups = $derived.by(() => {
 	list-style: none;
 
 	> li {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		align-items: baseline;
-		font-size: 0.875rem;
-		line-height: 1.3;
+		text-box: trim-both cap alphabetic;
+	}
+}
+
+.related-game {
+	font-size: 0.875rem;
+	line-height: 1.2;
+	color: var(--color-grey-050);
+	letter-spacing: 0.01em;
+	text-decoration: none;
+
+	&:hover {
+		color: var(--color-grey-200);
 	}
 }
 
 .related-year {
-	font-size: 0.75rem;
-	color: var(--color-grey-500);
+	font-size: 0.6875rem;
+	color: var(--color-grey-400);
+	letter-spacing: 0.01em;
+	text-box: trim-both cap alphabetic;
 }
 
 .list {
