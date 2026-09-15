@@ -74,11 +74,12 @@ function toCoverItem(ref: Title['similar'][number] | Title['collection'][number]
 const OFFICIAL_SITE = 1
 
 export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }) => {
+	const { timings } = locals
 	try {
 		// Everything this page used to assemble by hand — developer and publisher
 		// names, the release year, cover URLs, similar-game shaping — now arrives
 		// already derived. See §10 of docs/PLAN-igdb-mirror.md in the API repo.
-		const game = await getTitleBySlug(params.slug, fetch)
+		const game = await timings.track('game.title', () => getTitleBySlug(params.slug, fetch))
 
 		const site = game.websites.find((w) => w.type === OFFICIAL_SITE)?.url
 		// Four each: the rest of both lists lives on the /similar/ and /related/
@@ -95,15 +96,18 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 		let rating = 0
 		let ownLogs: Array<{ n: number; createdAt: string; rating: number | null }> = []
 		if (locals.user && locals.agent) {
+			const { agent, user } = locals
 			try {
-				const [rec, logs, backlogged] = await Promise.all([
-					loadGameRecord(locals.agent, locals.user.did, game.id),
-					// Every id this title is made of, not just its current one. A user
-					// who logged the DLC before it folded in still has one continuous
-					// history here rather than two split by IGDB's reorganisation.
-					listLogs(locals.agent, locals.user.did, { igdbIds: game.members }),
-					isInBacklog(locals.agent, locals.user.did, game.id),
-				])
+				const [rec, logs, backlogged] = await timings.track('game.records', () =>
+					Promise.all([
+						loadGameRecord(agent, user.did, game.id),
+						// Every id this title is made of, not just its current one. A user
+						// who logged the DLC before it folded in still has one continuous
+						// history here rather than two split by IGDB's reorganisation.
+						listLogs(agent, user.did, { igdbIds: game.members }),
+						isInBacklog(agent, user.did, game.id),
+					]),
+				)
 				played = rec?.played ?? null
 				playing = rec?.playing === true
 				liked = rec?.liked === true
@@ -158,7 +162,7 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 export const actions: Actions = {
 	playState: async ({ request, fetch, locals }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
-		const { agent, user } = locals
+		const { agent, user, timings } = locals
 
 		const form = await request.formData()
 		const parsed = parseGameForm(form)
@@ -176,7 +180,9 @@ export const actions: Actions = {
 			// Fold in any record left under an id that has since folded into this
 			// title, so acting on it does not create a second one. Lazy: one user,
 			// one action, no bulk job over other people's repos.
-			const existing = await loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch)
+			const existing = await timings.track('action.existing', () =>
+				loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch),
+			)
 
 			// `playing` and `played` are independent: replaying something you have
 			// already finished sets both. "unplayed" drops only `played`; the
@@ -206,10 +212,12 @@ export const actions: Actions = {
 			}
 
 			if ((playing || played) && !record.cover && coverUrl) {
-				record.cover = await buildCover(agent, coverUrl, fetch)
+				record.cover = await timings.track('action.cover', () => buildCover(agent, coverUrl, fetch))
 			}
 
-			await putGameRecord(agent, user.did, igdbId, withReleaseDate(record, releaseDate))
+			await timings.track('action.put', () =>
+				putGameRecord(agent, user.did, igdbId, withReleaseDate(record, releaseDate)),
+			)
 			return { played: record.played ?? null, playing: record.playing === true }
 		} catch (err) {
 			console.error('[game/[slug]] playState failed', err)
@@ -219,7 +227,7 @@ export const actions: Actions = {
 
 	like: async ({ request, fetch, locals }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
-		const { agent, user } = locals
+		const { agent, user, timings } = locals
 
 		const parsed = parseGameForm(await request.formData())
 		if ('error' in parsed) return fail(400, parsed)
@@ -230,12 +238,16 @@ export const actions: Actions = {
 			// Fold in any record left under an id that has since folded into this
 			// title, so acting on it does not create a second one. Lazy: one user,
 			// one action, no bulk job over other people's repos.
-			const existing = await loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch)
+			const existing = await timings.track('action.existing', () =>
+				loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch),
+			)
 
 			// Already liked → drop the liked field but keep the record (cover survives).
 			if (existing?.liked) {
 				const { liked: _drop, ...rest } = existing
-				await putGameRecord(agent, user.did, igdbId, { ...rest, game: rest.game ?? ref })
+				await timings.track('action.put', () =>
+					putGameRecord(agent, user.did, igdbId, { ...rest, game: rest.game ?? ref }),
+				)
 				return { liked: false }
 			}
 
@@ -244,10 +256,10 @@ export const actions: Actions = {
 				: { game: ref, liked: true, createdAt: new Date().toISOString() }
 
 			if (!record.cover && coverUrl) {
-				record.cover = await buildCover(agent, coverUrl, fetch)
+				record.cover = await timings.track('action.cover', () => buildCover(agent, coverUrl, fetch))
 			}
 
-			await putGameRecord(agent, user.did, igdbId, record)
+			await timings.track('action.put', () => putGameRecord(agent, user.did, igdbId, record))
 			return { liked: true }
 		} catch (err) {
 			console.error('[game/[slug]] like failed', err)
@@ -257,7 +269,7 @@ export const actions: Actions = {
 
 	rate: async ({ request, fetch, locals }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
-		const { agent, user } = locals
+		const { agent, user, timings } = locals
 
 		const form = await request.formData()
 		const parsed = parseGameForm(form)
@@ -274,13 +286,17 @@ export const actions: Actions = {
 			// Fold in any record left under an id that has since folded into this
 			// title, so acting on it does not create a second one. Lazy: one user,
 			// one action, no bulk job over other people's repos.
-			const existing = await loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch)
+			const existing = await timings.track('action.existing', () =>
+				loadConsolidatedGameRecord(agent, user.did, igdbId, undefined, fetch),
+			)
 
 			// The lexicon's minimum is 1, so clearing means dropping the field, not writing 0.
 			if (rating === 0) {
 				if (existing) {
 					const { rating: _drop, ...rest } = existing
-					await putGameRecord(agent, user.did, igdbId, { ...rest, game: rest.game ?? ref })
+					await timings.track('action.put', () =>
+						putGameRecord(agent, user.did, igdbId, { ...rest, game: rest.game ?? ref }),
+					)
 				}
 				return { rating: 0 }
 			}
@@ -290,10 +306,10 @@ export const actions: Actions = {
 				: { game: ref, rating, createdAt: new Date().toISOString() }
 
 			if (!record.cover && coverUrl) {
-				record.cover = await buildCover(agent, coverUrl, fetch)
+				record.cover = await timings.track('action.cover', () => buildCover(agent, coverUrl, fetch))
 			}
 
-			await putGameRecord(agent, user.did, igdbId, record)
+			await timings.track('action.put', () => putGameRecord(agent, user.did, igdbId, record))
 			return { rating }
 		} catch (err) {
 			console.error('[game/[slug]] rate failed', err)
@@ -303,7 +319,7 @@ export const actions: Actions = {
 
 	backlog: async ({ request, fetch, locals }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
-		const { agent, user } = locals
+		const { agent, user, timings } = locals
 
 		const form = await request.formData()
 		const parsed = parseGameForm(form)
@@ -313,21 +329,22 @@ export const actions: Actions = {
 		const inBacklog = form.get('inBacklog') === 'true'
 
 		try {
-			await migrateLegacyBacklog(agent, user.did)
+			await timings.track('action.migrate', () => migrateLegacyBacklog(agent, user.did))
 
 			if (inBacklog) {
-				await removeFromBacklog(agent, user.did, igdbId)
+				await timings.track('action.put', () => removeFromBacklog(agent, user.did, igdbId))
 				return { inBacklog: false }
 			}
 
 			// Unlike the game record, a backlog item can't exist without the ref.
 			if (!game) return fail(400, { error: 'Invalid game details.' })
 
-			await addToBacklog(agent, user.did, {
-				game,
-				cover: coverUrl ? await buildCover(agent, coverUrl, fetch) : undefined,
-				releaseDate,
-			})
+			const cover = coverUrl
+				? await timings.track('action.cover', () => buildCover(agent, coverUrl, fetch))
+				: undefined
+			await timings.track('action.put', () =>
+				addToBacklog(agent, user.did, { game, cover, releaseDate }),
+			)
 			return { inBacklog: true }
 		} catch (err) {
 			console.error('[game/[slug]] backlog failed', err)
