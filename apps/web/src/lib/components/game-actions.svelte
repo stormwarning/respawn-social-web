@@ -1,6 +1,7 @@
 <script lang="ts">
 import { tick } from 'svelte'
-import { enhance } from '$app/forms'
+import { applyAction, enhance } from '$app/forms'
+import type { ActionResult } from '@sveltejs/kit'
 import type { PlayedState } from '$lib/atproto/game'
 import IconBookmarksDuotone from './icons/icon-bookmarks-duotone.svelte'
 import IconBookmarksSolid from './icons/icon-bookmarks-solid.svelte'
@@ -56,7 +57,14 @@ let liked = $state(likedProp)
 let rating = $state(ratingProp)
 // svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
 let inBacklog = $state(inBacklogProp)
-let saving = $state(false)
+/** StarRating writes `rating` before the form submits, so rollback reads this. */
+// svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
+let lastCommittedRating = ratingProp
+let savingPlayState = $state(false)
+let savingBacklog = $state(false)
+let savingRating = $state(false)
+let savingLike = $state(false)
+let error = $state<string | null>(null)
 let ratingForm = $state<HTMLFormElement>()
 let playStateMenu = $state<HTMLDivElement>()
 let playStateTrigger = $state<HTMLButtonElement>()
@@ -80,8 +88,22 @@ $effect(() => {
 	playing = playingProp
 	liked = likedProp
 	rating = ratingProp
+	lastCommittedRating = ratingProp
 	inBacklog = inBacklogProp
 })
+
+/**
+ * Anything but a success left the server state alone, so the caller rolls its
+ * optimistic change back. A redirect means the session is gone: follow it.
+ */
+function handleFailure(result: ActionResult) {
+	if (result.type === 'redirect') {
+		applyAction(result)
+		return
+	}
+	const message = result.type === 'failure' ? (result.data?.error as string | undefined) : undefined
+	error = message ?? 'Could not update. Try again.'
+}
 
 // Wait for the hidden input to pick up the new value before submitting.
 async function submitRating() {
@@ -155,16 +177,31 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 			<form
 				method="POST"
 				action="?/playState"
-				use:enhance={() => {
-					saving = true
+				use:enhance={({ formData, submitter }) => {
+					error = null
 					closePlayStateMenu()
-					return ({ result, update }) => {
+					const state =
+						submitter instanceof HTMLButtonElement
+							? submitter.value
+							: String(formData.get('state') ?? '')
+					const prevPlayed = played
+					const prevPlaying = playing
+					// `playing` and `played` are independent; mirror the action's rules.
+					if (state === 'playing') playing = true
+					else if (state === 'stop-playing') playing = false
+					else if (state === 'unplayed') played = null
+					else played = state as PlayedState
+					savingPlayState = true
+					return ({ result }) => {
+						savingPlayState = false
 						if (result.type === 'success' && result.data) {
 							played = (result.data.played as PlayedState | null) ?? null
 							playing = Boolean(result.data.playing)
+							return
 						}
-						saving = false
-						update({ reset: false })
+						played = prevPlayed
+						playing = prevPlaying
+						handleFailure(result)
 					}
 				}}
 			>
@@ -179,7 +216,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 						type="submit"
 						name="state"
 						value="played"
-						disabled={saving}
+						disabled={savingPlayState}
 						aria-pressed="false"
 					>
 						<IconControllerDuotone />
@@ -190,7 +227,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 						bind:this={playStateTrigger}
 						class="action-button has-played play-state-trigger"
 						type="button"
-						disabled={saving}
+						disabled={savingPlayState}
 						popovertarget={playStateMenuId}
 						aria-pressed="true"
 						aria-haspopup="menu"
@@ -260,13 +297,18 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				method="POST"
 				action="?/backlog"
 				use:enhance={() => {
-					saving = true
-					return ({ result, update }) => {
+					error = null
+					const prev = inBacklog
+					inBacklog = !prev
+					savingBacklog = true
+					return ({ result }) => {
+						savingBacklog = false
 						if (result.type === 'success' && result.data) {
 							inBacklog = Boolean(result.data.inBacklog)
+							return
 						}
-						saving = false
-						update({ reset: false })
+						inBacklog = prev
+						handleFailure(result)
 					}
 				}}
 			>
@@ -279,7 +321,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				<button
 					class="action-button is-backlog"
 					type="submit"
-					disabled={saving}
+					disabled={savingBacklog}
 					title={inBacklog ? 'Remove from backlog' : 'Add to backlog'}
 					aria-label={inBacklog ? 'Remove from backlog' : 'Add to backlog'}
 					aria-pressed={inBacklog ? 'true' : 'false'}
@@ -298,13 +340,18 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				method="POST"
 				action="?/rate"
 				use:enhance={() => {
-					saving = true
-					return ({ result, update }) => {
+					error = null
+					const prev = lastCommittedRating
+					savingRating = true
+					return ({ result }) => {
+						savingRating = false
 						if (result.type === 'success' && result.data) {
 							rating = Number(result.data.rating)
+							lastCommittedRating = rating
+							return
 						}
-						saving = false
-						update({ reset: false })
+						rating = prev
+						handleFailure(result)
 					}
 				}}
 			>
@@ -315,7 +362,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				<input type="hidden" name="rating" value={rating} />
 				<StarRating
 					bind:value={rating}
-					disabled={saving}
+					disabled={savingRating}
 					label="Your rating"
 					onchange={submitRating}
 				/>
@@ -325,13 +372,18 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				method="POST"
 				action="?/like"
 				use:enhance={() => {
-					saving = true
-					return ({ result, update }) => {
+					error = null
+					const prev = liked
+					liked = !prev
+					savingLike = true
+					return ({ result }) => {
+						savingLike = false
 						if (result.type === 'success' && result.data) {
 							liked = Boolean(result.data.liked)
+							return
 						}
-						saving = false
-						update({ reset: false })
+						liked = prev
+						handleFailure(result)
 					}
 				}}
 			>
@@ -342,7 +394,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				<button
 					class="like-button"
 					type="submit"
-					disabled={saving}
+					disabled={savingLike}
 					aria-label="Like"
 					aria-pressed={liked ? 'true' : 'false'}
 				>
@@ -350,6 +402,9 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				</button>
 			</form>
 		</div>
+		{#if error}
+			<p class="error" role="status">{error}</p>
+		{/if}
 	{/if}
 </section>
 
@@ -675,6 +730,12 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 			opacity: 1;
 		}
 	}
+}
+
+.error {
+	font-family: var(--font-ui);
+	font-size: 0.75rem;
+	color: var(--color-pink-600);
 }
 
 /* Re-enable alongside the log controls above.
