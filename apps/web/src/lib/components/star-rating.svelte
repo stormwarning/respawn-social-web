@@ -16,7 +16,7 @@ let {
 
 const STARS = [1, 2, 3, 4, 5]
 
-let el: HTMLDivElement
+let el = $state<HTMLDivElement>()
 let hovered = $state(0)
 
 let display = $derived(hovered || value)
@@ -30,6 +30,7 @@ const fill = (i: number) => Math.min(2, Math.max(0, display - (i - 1) * 2)) / 2
 
 /** Nearest half-star to a pointer position, as a 1–10 value. */
 function valueAt(event: PointerEvent | MouseEvent) {
+	if (!el) return 1
 	const rect = el.getBoundingClientRect()
 	const ratio = (event.clientX - rect.left) / rect.width
 	return clamp(Math.ceil(ratio * 10)) || 1
