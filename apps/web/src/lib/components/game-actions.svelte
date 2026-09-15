@@ -19,11 +19,6 @@ let {
 	title,
 	coverUrl = '',
 	releaseDate = '',
-	played: playedProp,
-	playing: playingProp,
-	liked: likedProp,
-	rating: ratingProp,
-	inBacklog: inBacklogProp,
 }: {
 	isLoggedIn: boolean
 	igdbId: number
@@ -31,13 +26,6 @@ let {
 	title: string
 	coverUrl?: string
 	releaseDate?: string
-	/** `null` means not played. */
-	played: PlayedState | null
-	playing: boolean
-	liked: boolean
-	/** 0–10 in half-star steps; 0 means unrated. */
-	rating: number
-	inBacklog: boolean
 } = $props()
 
 const PLAYED_OPTIONS: Array<{ value: PlayedState; label: string; hint: string }> = [
@@ -48,19 +36,18 @@ const PLAYED_OPTIONS: Array<{ value: PlayedState; label: string; hint: string }>
 	{ value: 'abandoned', label: 'Abandoned', hint: 'Unfinished, staying that way' },
 ]
 
-// svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
-let played = $state(playedProp)
-// svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
-let playing = $state(playingProp)
-// svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
-let liked = $state(likedProp)
-// svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
-let rating = $state(ratingProp)
-// svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
-let inBacklog = $state(inBacklogProp)
-/** StarRating writes `rating` before the form submits, so rollback reads this. */
-// svelte-ignore state_referenced_locally -- intentional seed; resynced by the $effect below
-let lastCommittedRating = ratingProp
+// The viewer's own state lives in the store, not in the page payload, so it is
+// read straight from there and every optimistic flip below writes back to it.
+let gameState = $derived(viewerState.game(igdbId))
+let inBacklog = $derived(viewerState.inBacklog(igdbId))
+/**
+ * Until the store has answered, an untouched game and an unknown one look the
+ * same. Acting on that would post a guess — a backlog click would send the
+ * wrong `inBacklog` — so the controls stay inert until it has.
+ */
+let ready = $derived(viewerState.status === 'ready')
+/** StarRating writes the store before the form submits, so rollback reads this. */
+let prevRating = 0
 let savingPlayState = $state(false)
 let savingBacklog = $state(false)
 let savingRating = $state(false)
@@ -72,26 +59,20 @@ let playStateTrigger = $state<HTMLButtonElement>()
 let playStateMenuOpen = $state(false)
 
 /** False is the untouched "Played" button; true swaps it for the menu trigger. */
-let hasPlayState = $derived(playing || played !== null)
+let hasPlayState = $derived(gameState.playing || gameState.played !== null)
 /** `playing` is independent of the played states, but the trigger has room for one label. */
 let playStateLabel = $derived(
-	playing
+	gameState.playing
 		? 'Playing'
-		: (PLAYED_OPTIONS.find((option) => option.value === played)?.label ?? 'Played'),
+		: (PLAYED_OPTIONS.find((option) => option.value === gameState.played)?.label ?? 'Played'),
+)
+/** A store that never loaded is worth saying out loud; an action error wins. */
+let errorMessage = $derived(
+	error ?? (viewerState.status === 'error' ? "Couldn't load your game state." : null),
 )
 
 const uid = $props.id()
 const playStateMenuId = `${uid}-play-state`
-
-// Resync when navigating between games (the component instance is reused).
-$effect(() => {
-	played = playedProp
-	playing = playingProp
-	liked = likedProp
-	rating = ratingProp
-	lastCommittedRating = ratingProp
-	inBacklog = inBacklogProp
-})
 
 /**
  * Anything but a success left the server state alone, so the caller rolls its
@@ -174,35 +155,34 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 			<span>Sign in to track this game</span>
 		</a>
 	{:else}
-		<div class="actions-primary">
+		<div class="actions-primary" aria-busy={ready ? undefined : 'true'}>
 			<form
 				method="POST"
 				action="?/playState"
 				use:enhance={({ formData, submitter }) => {
 					error = null
 					closePlayStateMenu()
-					const state =
+					const next =
 						submitter instanceof HTMLButtonElement
 							? submitter.value
 							: String(formData.get('state') ?? '')
-					const prevPlayed = played
-					const prevPlaying = playing
+					const prev = { played: gameState.played, playing: gameState.playing }
 					// `playing` and `played` are independent; mirror the action's rules.
-					if (state === 'playing') playing = true
-					else if (state === 'stop-playing') playing = false
-					else if (state === 'unplayed') played = null
-					else played = state as PlayedState
+					if (next === 'playing') viewerState.setGame(igdbId, { playing: true })
+					else if (next === 'stop-playing') viewerState.setGame(igdbId, { playing: false })
+					else if (next === 'unplayed') viewerState.setGame(igdbId, { played: null })
+					else viewerState.setGame(igdbId, { played: next as PlayedState })
 					savingPlayState = true
 					return ({ result }) => {
 						savingPlayState = false
 						if (result.type === 'success' && result.data) {
-							played = (result.data.played as PlayedState | null) ?? null
-							playing = Boolean(result.data.playing)
-							viewerState.setGame(igdbId, { played, playing })
+							viewerState.setGame(igdbId, {
+								played: (result.data.played as PlayedState | null) ?? null,
+								playing: Boolean(result.data.playing),
+							})
 							return
 						}
-						played = prevPlayed
-						playing = prevPlaying
+						viewerState.setGame(igdbId, prev)
 						handleFailure(result)
 					}
 				}}
@@ -218,7 +198,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 						type="submit"
 						name="state"
 						value="played"
-						disabled={savingPlayState}
+						disabled={!ready || savingPlayState}
 						aria-pressed="false"
 					>
 						<IconControllerDuotone />
@@ -229,7 +209,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 						bind:this={playStateTrigger}
 						class="action-button has-played play-state-trigger"
 						type="button"
-						disabled={savingPlayState}
+						disabled={!ready || savingPlayState}
 						popovertarget={playStateMenuId}
 						aria-pressed="true"
 						aria-haspopup="menu"
@@ -255,9 +235,9 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 							class="menu-item"
 							type="submit"
 							name="state"
-							value={playing ? 'stop-playing' : 'playing'}
+							value={gameState.playing ? 'stop-playing' : 'playing'}
 							role="menuitemcheckbox"
-							aria-checked={playing}
+							aria-checked={gameState.playing}
 							tabindex="-1"
 						>
 							<span class="menu-item-label">Playing</span>
@@ -271,14 +251,14 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 								name="state"
 								value={option.value}
 								role="menuitemradio"
-								aria-checked={played === option.value}
+								aria-checked={gameState.played === option.value}
 								tabindex="-1"
 							>
 								<span class="menu-item-label">{option.label}</span>
 								<span class="menu-item-hint">{option.hint}</span>
 							</button>
 						{/each}
-						{#if played !== null}
+						{#if gameState.played !== null}
 							<hr class="menu-divider" />
 							<button
 								class="menu-item"
@@ -301,16 +281,15 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				use:enhance={() => {
 					error = null
 					const prev = inBacklog
-					inBacklog = !prev
+					viewerState.setBacklog(igdbId, !prev)
 					savingBacklog = true
 					return ({ result }) => {
 						savingBacklog = false
 						if (result.type === 'success' && result.data) {
-							inBacklog = Boolean(result.data.inBacklog)
-							viewerState.setBacklog(igdbId, inBacklog)
+							viewerState.setBacklog(igdbId, Boolean(result.data.inBacklog))
 							return
 						}
-						inBacklog = prev
+						viewerState.setBacklog(igdbId, prev)
 						handleFailure(result)
 					}
 				}}
@@ -324,7 +303,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				<button
 					class="action-button is-backlog"
 					type="submit"
-					disabled={savingBacklog}
+					disabled={!ready || savingBacklog}
 					title={inBacklog ? 'Remove from backlog' : 'Add to backlog'}
 					aria-label={inBacklog ? 'Remove from backlog' : 'Add to backlog'}
 					aria-pressed={inBacklog ? 'true' : 'false'}
@@ -337,24 +316,21 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				</button>
 			</form>
 		</div>
-		<div class="actions-rating">
+		<div class="actions-rating" aria-busy={ready ? undefined : 'true'}>
 			<form
 				bind:this={ratingForm}
 				method="POST"
 				action="?/rate"
 				use:enhance={() => {
 					error = null
-					const prev = lastCommittedRating
 					savingRating = true
 					return ({ result }) => {
 						savingRating = false
 						if (result.type === 'success' && result.data) {
-							rating = Number(result.data.rating)
-							lastCommittedRating = rating
-							viewerState.setGame(igdbId, { rating })
+							viewerState.setGame(igdbId, { rating: Number(result.data.rating) })
 							return
 						}
-						rating = prev
+						viewerState.setGame(igdbId, { rating: prevRating })
 						handleFailure(result)
 					}
 				}}
@@ -363,12 +339,16 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				<input type="hidden" name="slug" value={slug} />
 				<input type="hidden" name="title" value={title} />
 				<input type="hidden" name="coverUrl" value={coverUrl} />
-				<input type="hidden" name="rating" value={rating} />
+				<input type="hidden" name="rating" value={gameState.rating} />
 				<StarRating
-					bind:value={rating}
-					disabled={savingRating}
+					value={gameState.rating}
+					disabled={!ready || savingRating}
 					label="Your rating"
-					onchange={submitRating}
+					onchange={(next) => {
+						prevRating = gameState.rating
+						viewerState.setGame(igdbId, { rating: next })
+						void submitRating()
+					}}
 				/>
 			</form>
 
@@ -377,17 +357,16 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				action="?/like"
 				use:enhance={() => {
 					error = null
-					const prev = liked
-					liked = !prev
+					const prev = gameState.liked
+					viewerState.setGame(igdbId, { liked: !prev })
 					savingLike = true
 					return ({ result }) => {
 						savingLike = false
 						if (result.type === 'success' && result.data) {
-							liked = Boolean(result.data.liked)
-							viewerState.setGame(igdbId, { liked })
+							viewerState.setGame(igdbId, { liked: Boolean(result.data.liked) })
 							return
 						}
-						liked = prev
+						viewerState.setGame(igdbId, { liked: prev })
 						handleFailure(result)
 					}
 				}}
@@ -399,16 +378,16 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				<button
 					class="like-button"
 					type="submit"
-					disabled={savingLike}
+					disabled={!ready || savingLike}
 					aria-label="Like"
-					aria-pressed={liked ? 'true' : 'false'}
+					aria-pressed={gameState.liked ? 'true' : 'false'}
 				>
 					<IconHeartSolid />
 				</button>
 			</form>
 		</div>
-		{#if error}
-			<p class="error" role="status">{error}</p>
+		{#if errorMessage}
+			<p class="error" role="status">{errorMessage}</p>
 		{/if}
 	{/if}
 </section>
@@ -581,6 +560,10 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 		}
 	}
 
+	&:disabled {
+		opacity: 0.5;
+	}
+
 	&.has-played {
 		padding-inline-end: 12px;
 	}
@@ -725,6 +708,10 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 		> :global(svg) {
 			scale: 0.95;
 		}
+	}
+
+	&:disabled {
+		opacity: 0.5;
 	}
 
 	&[aria-pressed='true'] {

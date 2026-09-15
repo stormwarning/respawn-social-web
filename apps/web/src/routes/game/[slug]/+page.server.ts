@@ -9,13 +9,8 @@ import {
 	type PlayedState,
 	type RespawnGameRecord,
 } from '$lib/atproto/game'
-import { createLog, listLogs, type GateAllowRule, type RespawnLogRecord } from '$lib/atproto/log'
-import {
-	addToBacklog,
-	isInBacklog,
-	migrateLegacyBacklog,
-	removeFromBacklog,
-} from '$lib/atproto/backlog'
+import { createLog, type GateAllowRule, type RespawnLogRecord } from '$lib/atproto/log'
+import { addToBacklog, migrateLegacyBacklog, removeFromBacklog } from '$lib/atproto/backlog'
 import { buildCover } from '$lib/server/cover'
 import { forgetViewerState } from '$lib/server/viewer-state'
 import { loadConsolidatedGameRecord } from '$lib/atproto/title-identity'
@@ -90,61 +85,19 @@ export const load: PageServerLoad = async ({ params, fetch, locals, setHeaders }
 		// separately". This is the series: siblings from the IGDB collection.
 		const series = game.collection.slice(0, 4).map(toCoverItem)
 
-		let played: PlayedState | null = null
-		let playing = false
-		let liked = false
-		let inBacklog = false
-		let rating = 0
-		let ownLogs: Array<{ n: number; createdAt: string; rating: number | null }> = []
-		if (locals.user && locals.agent) {
-			const { agent, user } = locals
-			try {
-				const [rec, logs, backlogged] = await timings.track('game.records', () =>
-					Promise.all([
-						loadGameRecord(agent, user.did, game.id),
-						// Every id this title is made of, not just its current one. A user
-						// who logged the DLC before it folded in still has one continuous
-						// history here rather than two split by IGDB's reorganisation.
-						listLogs(agent, user.did, { igdbIds: game.members }),
-						isInBacklog(agent, user.did, game.id),
-					]),
-				)
-				played = rec?.played ?? null
-				playing = rec?.playing === true
-				liked = rec?.liked === true
-				rating = rec?.rating ?? 0
-				inBacklog = backlogged
-				// listLogs is newest first; number chronologically.
-				ownLogs = logs
-					.map((log, i) => ({
-						n: logs.length - i,
-						createdAt: log.value.createdAt,
-						rating: log.value.rating ?? null,
-					}))
-					.slice(0, 10)
-			} catch (err) {
-				console.error('[game/[slug]] played lookup failed', err)
-			}
-		}
-
-		// A signed-in viewer's own played / liked / rating / backlog state is part
-		// of this payload and every action on this page changes it, so only the
-		// logged-out view — which is pure game data — is safe to hold. Set only
-		// once the load has succeeded: the catch below turns a transient backend
-		// failure into a 404, which must not be cached.
-		cachePageData(setHeaders, { viewerCanMutate: Boolean(locals.user) })
+		// Pure game data: the viewer's own played / liked / rating / backlog state
+		// now lives in the client store, hydrated from /api/viewer/state, so
+		// nothing here changes when they act on the game and a signed-in viewer
+		// can hold this copy too. Set only once the load has succeeded: the catch
+		// below turns a transient backend failure into a 404, which must not be
+		// cached.
+		cachePageData(setHeaders, { viewerCanMutate: false })
 
 		return {
 			game,
 			similar,
 			series,
 			site,
-			played,
-			playing,
-			liked,
-			rating,
-			inBacklog,
-			ownLogs,
 			isLoggedIn: !!locals.user,
 			viewerHandle: locals.user?.handle ?? locals.user?.did ?? null,
 		}
