@@ -17,6 +17,7 @@ import {
 	removeFromBacklog,
 } from '$lib/atproto/backlog'
 import { buildCover } from '$lib/server/cover'
+import { forgetViewerState } from '$lib/server/viewer-state'
 import { loadConsolidatedGameRecord } from '$lib/atproto/title-identity'
 import type { Title } from '$lib/types/game'
 
@@ -218,6 +219,7 @@ export const actions: Actions = {
 			await timings.track('action.put', () =>
 				putGameRecord(agent, user.did, igdbId, withReleaseDate(record, releaseDate)),
 			)
+			forgetViewerState(user.did)
 			return { played: record.played ?? null, playing: record.playing === true }
 		} catch (err) {
 			console.error('[game/[slug]] playState failed', err)
@@ -248,6 +250,7 @@ export const actions: Actions = {
 				await timings.track('action.put', () =>
 					putGameRecord(agent, user.did, igdbId, { ...rest, game: rest.game ?? ref }),
 				)
+				forgetViewerState(user.did)
 				return { liked: false }
 			}
 
@@ -260,6 +263,7 @@ export const actions: Actions = {
 			}
 
 			await timings.track('action.put', () => putGameRecord(agent, user.did, igdbId, record))
+			forgetViewerState(user.did)
 			return { liked: true }
 		} catch (err) {
 			console.error('[game/[slug]] like failed', err)
@@ -297,6 +301,7 @@ export const actions: Actions = {
 					await timings.track('action.put', () =>
 						putGameRecord(agent, user.did, igdbId, { ...rest, game: rest.game ?? ref }),
 					)
+					forgetViewerState(user.did)
 				}
 				return { rating: 0 }
 			}
@@ -310,6 +315,7 @@ export const actions: Actions = {
 			}
 
 			await timings.track('action.put', () => putGameRecord(agent, user.did, igdbId, record))
+			forgetViewerState(user.did)
 			return { rating }
 		} catch (err) {
 			console.error('[game/[slug]] rate failed', err)
@@ -333,6 +339,7 @@ export const actions: Actions = {
 
 			if (inBacklog) {
 				await timings.track('action.put', () => removeFromBacklog(agent, user.did, igdbId))
+				forgetViewerState(user.did)
 				return { inBacklog: false }
 			}
 
@@ -345,6 +352,7 @@ export const actions: Actions = {
 			await timings.track('action.put', () =>
 				addToBacklog(agent, user.did, { game, cover, releaseDate }),
 			)
+			forgetViewerState(user.did)
 			return { inBacklog: true }
 		} catch (err) {
 			console.error('[game/[slug]] backlog failed', err)
@@ -429,6 +437,7 @@ export const actions: Actions = {
 				gate,
 				game: { igdbId: game.id, record: gameRecord, exists: existing !== null },
 			})
+			forgetViewerState(user.did)
 			return { logged: true }
 		} catch (err) {
 			console.error('[game/[slug]] log failed', err)

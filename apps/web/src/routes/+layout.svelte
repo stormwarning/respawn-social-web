@@ -5,6 +5,7 @@ import { navigating } from '$app/state'
 import type { LayoutData } from './$types'
 import SiteHeader from './site-header.svelte'
 import SearchDialog from '$lib/components/search-dialog.svelte'
+import { viewerState } from '$lib/viewer-state.svelte'
 
 let { data, children }: { data: LayoutData; children: import('svelte').Snippet } = $props()
 
@@ -23,6 +24,13 @@ $effect(() => {
 	}
 	const timer = setTimeout(() => (showProgress = true), PROGRESS_DELAY_MS)
 	return () => clearTimeout(timer)
+})
+
+// Hydrate the viewer's own game state once, after first paint, and drop it the
+// moment the session goes — it is per-user and the store outlives a sign-out.
+$effect(() => {
+	if (data.user) void viewerState.load()
+	else viewerState.reset()
 })
 </script>
 

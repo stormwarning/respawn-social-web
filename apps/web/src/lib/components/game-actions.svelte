@@ -3,6 +3,7 @@ import { tick } from 'svelte'
 import { applyAction, enhance } from '$app/forms'
 import type { ActionResult } from '@sveltejs/kit'
 import type { PlayedState } from '$lib/atproto/game'
+import { viewerState } from '$lib/viewer-state.svelte'
 import IconBookmarksDuotone from './icons/icon-bookmarks-duotone.svelte'
 import IconBookmarksSolid from './icons/icon-bookmarks-solid.svelte'
 import IconChevronUpDown from './icons/icon-chevron-up-down.svelte'
@@ -197,6 +198,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 						if (result.type === 'success' && result.data) {
 							played = (result.data.played as PlayedState | null) ?? null
 							playing = Boolean(result.data.playing)
+							viewerState.setGame(igdbId, { played, playing })
 							return
 						}
 						played = prevPlayed
@@ -305,6 +307,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 						savingBacklog = false
 						if (result.type === 'success' && result.data) {
 							inBacklog = Boolean(result.data.inBacklog)
+							viewerState.setBacklog(igdbId, inBacklog)
 							return
 						}
 						inBacklog = prev
@@ -348,6 +351,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 						if (result.type === 'success' && result.data) {
 							rating = Number(result.data.rating)
 							lastCommittedRating = rating
+							viewerState.setGame(igdbId, { rating })
 							return
 						}
 						rating = prev
@@ -380,6 +384,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 						savingLike = false
 						if (result.type === 'success' && result.data) {
 							liked = Boolean(result.data.liked)
+							viewerState.setGame(igdbId, { liked })
 							return
 						}
 						liked = prev

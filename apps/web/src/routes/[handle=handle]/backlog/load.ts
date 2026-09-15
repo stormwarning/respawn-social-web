@@ -5,6 +5,7 @@ import { avatarUrlForBlob, blobUrl, type RespawnProfileRecord } from '$lib/atpro
 import { getRecordOrNull } from '$lib/atproto/records'
 import { loadBacklog, migrateLegacyBacklog } from '$lib/atproto/backlog'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
+import { forgetViewerState } from '$lib/server/viewer-state'
 
 export const PAGE_SIZE = 24
 
@@ -27,7 +28,10 @@ export async function loadBacklogPage(
 	const repo = publicAgent(actor.pds)
 	const isSelf = locals.user?.did === actor.did
 
-	if (isSelf && locals.agent) await migrateLegacyBacklog(locals.agent, actor.did)
+	if (isSelf && locals.agent) {
+		await migrateLegacyBacklog(locals.agent, actor.did)
+		forgetViewerState(actor.did)
+	}
 
 	const [profile, games] = await Promise.all([
 		getRecordOrNull<RespawnProfileRecord>(repo, actor.did, Collections.profile, 'self'),
