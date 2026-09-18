@@ -45,7 +45,7 @@ function buildMetadata(): { metadata: OAuthClientMetadataInput; isLoopback: bool
 	return {
 		isLoopback: false,
 		metadata: {
-			client_id: `${publicUrl}/oauth/client-metadata.json`,
+			client_id: `${publicUrl}/oauth-client-metadata.json`,
 			client_name: 'Respawn Social',
 			client_uri: publicUrl,
 			redirect_uris: [`${publicUrl}/oauth/callback`],
