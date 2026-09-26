@@ -24,6 +24,7 @@
 		"@atproto/jwk-jose": "0.2.1",
 		"@atproto/oauth-client-node": "0.4.2",
 		"@netlify/blobs": "10.7.9",
+		"@respawn-social/icons": "workspace:*",
 		"@respawn-social/lexicons": "workspace:*",
 		"jose": "6.2.3",
 		"svelte-dnd-action": "0.9.78"
