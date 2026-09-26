@@ -11,6 +11,7 @@ export const iconNames = [
 	'link',
 	'list-bullets',
 	'list-numbers',
+	'magnifying-glass',
 	'plus',
 	'quotes',
 	'star-solid',
