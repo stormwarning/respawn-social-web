@@ -10,6 +10,7 @@ export interface GameSearchResult {
 </script>
 
 <script lang="ts">
+import { Icon } from '@respawn-social/icons'
 import CoverImage from './cover-image.svelte'
 
 interface Props {
@@ -95,12 +96,7 @@ function onclick(event: MouseEvent) {
 		<div class="dialog-header">
 			<h2>{title}</h2>
 			<button class="close" type="button" onclick={() => dialog.close()} aria-label="Close">
-				<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-					<path
-						d="M18.3 5.71 12 12.01l-6.3-6.3-1.41 1.41 6.3 6.3-6.3 6.29 1.41 1.42 6.3-6.3 6.3 6.3 1.41-1.42-6.3-6.29 6.3-6.3z"
-						fill="currentcolor"
-					/>
-				</svg>
+				<Icon name="x" width="24" height="24" />
 			</button>
 		</div>
 

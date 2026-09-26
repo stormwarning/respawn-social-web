@@ -2,14 +2,9 @@
 import { tick } from 'svelte'
 import { applyAction, enhance } from '$app/forms'
 import type { ActionResult } from '@sveltejs/kit'
+import { Icon } from '@respawn-social/icons'
 import type { PlayedState } from '$lib/atproto/game'
 import { viewerState } from '$lib/viewer-state.svelte'
-import IconBookmarksDuotone from './icons/icon-bookmarks-duotone.svelte'
-import IconBookmarksSolid from './icons/icon-bookmarks-solid.svelte'
-import IconChevronUpDown from './icons/icon-chevron-up-down.svelte'
-import IconControllerDuotone from './icons/icon-controller-duotone.svelte'
-import IconControllerSolid from './icons/icon-controller-solid.svelte'
-import IconHeartSolid from './icons/icon-heart-solid.svelte'
 import StarRating from './star-rating.svelte'
 
 let {
@@ -201,7 +196,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 						disabled={!ready || savingPlayState}
 						aria-pressed="false"
 					>
-						<IconControllerDuotone />
+						<Icon name="controller-duotone" />
 						<span>Played</span>
 					</button>
 				{:else}
@@ -216,9 +211,9 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 						aria-expanded={playStateMenuOpen}
 						aria-controls={playStateMenuId}
 					>
-						<IconControllerSolid />
+						<Icon name="controller-solid" />
 						<span>{playStateLabel}</span>
-						<span class="chevron" aria-hidden="true"><IconChevronUpDown /></span>
+						<span class="chevron" aria-hidden="true"><Icon name="chevron-up-down" /></span>
 					</button>
 					<div
 						bind:this={playStateMenu}
@@ -309,9 +304,9 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 					aria-pressed={inBacklog ? 'true' : 'false'}
 				>
 					{#if inBacklog}
-						<IconBookmarksSolid />
+						<Icon name="bookmarks-solid" />
 					{:else}
-						<IconBookmarksDuotone />
+						<Icon name="bookmarks-duotone" />
 					{/if}
 				</button>
 			</form>
@@ -382,7 +377,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 					aria-label="Like"
 					aria-pressed={gameState.liked ? 'true' : 'false'}
 				>
-					<IconHeartSolid />
+					<Icon name="heart-solid" />
 				</button>
 			</form>
 		</div>

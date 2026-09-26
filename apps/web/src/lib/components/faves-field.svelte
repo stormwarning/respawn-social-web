@@ -23,12 +23,11 @@ interface FavePayloadItem {
 import type { Snippet } from 'svelte'
 import { flip } from 'svelte/animate'
 import { dndzone, SHADOW_ITEM_MARKER_PROPERTY_NAME } from 'svelte-dnd-action'
+import { Icon } from '@respawn-social/icons'
 
 import CoverImage from './cover-image.svelte'
 import GamePickerDialog, { type GameSearchResult } from './game-picker-dialog.svelte'
 import InputField, { type Tone } from './input-field.svelte'
-import IconX from './icons/icon-x.svelte'
-import IconPlus from './icons/icon-plus.svelte'
 
 interface Props {
 	/** The favourites currently saved on the profile. */
@@ -156,7 +155,7 @@ function sort(event: CustomEvent<{ items: FaveItem[] }>) {
 									aria-label="Remove {fave.title}"
 									onclick={() => remove(fave.igdbId)}
 								>
-									<IconX />
+									<Icon name="x" />
 								</button>
 							{/if}
 						</li>
@@ -173,7 +172,7 @@ function sort(event: CustomEvent<{ items: FaveItem[] }>) {
 					onclick={() => picker?.open()}
 				>
 					<span class="plus" aria-hidden="true">
-						<IconPlus />
+						<Icon name="plus" />
 					</span>
 				</button>
 			{/if}
@@ -286,6 +285,14 @@ function sort(event: CustomEvent<{ items: FaveItem[] }>) {
 
 	&:hover:not(:disabled) {
 		background: var(--color-grey-700);
+	}
+}
+
+.plus,
+.clear {
+	:global(> svg) {
+		inline-size: 100%;
+		block-size: 100%;
 	}
 }
 

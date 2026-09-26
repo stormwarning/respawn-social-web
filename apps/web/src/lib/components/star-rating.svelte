@@ -1,5 +1,5 @@
 <script lang="ts">
-import IconStarSolid from './icons/icon-star-solid.svelte'
+import { Icon } from '@respawn-social/icons'
 
 let {
 	value = $bindable(0),
@@ -107,8 +107,8 @@ function onkeydown(event: KeyboardEvent) {
 --fill: {fill(star)}"
 			data-is-hovered={star === hoveredStar ? '' : undefined}
 		>
-			<span class="star-empty"><IconStarSolid /></span>
-			<span class="star-fill"><IconStarSolid /></span>
+			<span class="star-empty"><Icon name="star-solid" /></span>
+			<span class="star-fill"><Icon name="star-solid" /></span>
 		</span>
 	{/each}
 </div>

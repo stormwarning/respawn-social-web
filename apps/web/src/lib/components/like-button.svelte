@@ -1,6 +1,6 @@
 <script lang="ts">
 import { onDestroy } from 'svelte'
-import IconHeartSolid from './icons/icon-heart-solid.svelte'
+import { Icon } from '@respawn-social/icons'
 
 let {
 	liked = $bindable(false),
@@ -198,8 +198,8 @@ onDestroy(clearTimers)
 			/>
 		</svg>
 		<span class="heart">
-			<span class="heart-base"><IconHeartSolid /></span>
-			<span class="heart-solid"><IconHeartSolid /></span>
+			<span class="heart-base"><Icon name="heart-solid" /></span>
+			<span class="heart-solid"><Icon name="heart-solid" /></span>
 		</span>
 		{#if phase === 'beat2'}
 			<span class="burst" aria-hidden="true">
