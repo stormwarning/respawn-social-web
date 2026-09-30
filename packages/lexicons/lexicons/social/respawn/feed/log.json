@@ -4,7 +4,7 @@
 	"defs": {
 		"main": {
 			"type": "record",
-			"description": "Record of a play session for a game, optionally including a review. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey.",
+			"description": "Record of a play session for a game, optionally including a review. Fields describe what happened during this session, not the resulting play state. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey.",
 			"key": "tid",
 			"record": {
 				"type": "object",
@@ -44,11 +44,13 @@
 						"format": "datetime"
 					},
 					"startedPlaying": {
-						"type": "boolean"
+						"type": "boolean",
+						"description": "This session began a playthrough."
 					},
 					"finishedPlaying": {
 						"type": "ref",
-						"ref": "social.respawn.defs#playState"
+						"ref": "social.respawn.defs#playState",
+						"description": "This session ended the playthrough, with this outcome. Absent means still playing (or no progress change)."
 					},
 					"rating": {
 						"type": "integer",

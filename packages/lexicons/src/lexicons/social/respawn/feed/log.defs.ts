@@ -11,7 +11,7 @@ const $nsid = 'social.respawn.feed.log'
 
 export { $nsid }
 
-/** Record of a play session for a game, optionally including a review. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey. */
+/** Record of a play session for a game, optionally including a review. Fields describe what happened during this session, not the resulting play state. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey. */
 type Main = {
   $type: 'social.respawn.feed.log'
   game: RespawnDefs.GameRef
@@ -28,7 +28,15 @@ type Main = {
   platform?: string
   cover?: RespawnDefs.Cover
   datePlayed?: l.DatetimeString
+
+  /**
+   * This session began a playthrough.
+   */
   startedPlaying?: boolean
+
+  /**
+   * This session ended the playthrough, with this outcome. Absent means still playing (or no progress change).
+   */
   finishedPlaying?: RespawnDefs.PlayState
 
   /**
@@ -42,7 +50,7 @@ type Main = {
 
 export type { Main }
 
-/** Record of a play session for a game, optionally including a review. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey. */
+/** Record of a play session for a game, optionally including a review. Fields describe what happened during this session, not the resulting play state. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey. */
 const main = /*#__PURE__*/ l.record<'tid', Main>(
   'tid',
   $nsid,
