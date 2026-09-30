@@ -14,6 +14,14 @@ export interface CoverRef {
 
 export type PlayedState = 'played' | 'completed' | 'abandoned' | 'retired' | 'shelved'
 
+export const PLAYED_OPTIONS: Array<{ value: PlayedState; label: string; hint: string }> = [
+	{ value: 'played', label: 'Played', hint: 'Nothing specific' },
+	{ value: 'completed', label: 'Completed', hint: 'Achieved your objective' },
+	{ value: 'retired', label: 'Retired', hint: 'Finished a game without an ending' },
+	{ value: 'shelved', label: 'Shelved', hint: 'Unfinished, may return to' },
+	{ value: 'abandoned', label: 'Abandoned', hint: 'Unfinished, staying that way' },
+]
+
 /** Denormalized game reference (see social.respawn.defs#gameRef). */
 export interface GameRef {
 	igdbId: number

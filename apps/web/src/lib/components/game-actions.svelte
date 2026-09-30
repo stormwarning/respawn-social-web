@@ -3,7 +3,7 @@ import { tick } from 'svelte'
 import { applyAction, enhance } from '$app/forms'
 import type { ActionResult } from '@sveltejs/kit'
 import { Icon } from '@respawn-social/icons'
-import type { PlayedState } from '$lib/atproto/game'
+import { PLAYED_OPTIONS, type PlayedState } from '$lib/atproto/game'
 import { viewerState } from '$lib/viewer-state.svelte'
 import StarRating from './star-rating.svelte'
 
@@ -22,14 +22,6 @@ let {
 	coverUrl?: string
 	releaseDate?: string
 } = $props()
-
-const PLAYED_OPTIONS: Array<{ value: PlayedState; label: string; hint: string }> = [
-	{ value: 'played', label: 'Played', hint: 'Nothing specific' },
-	{ value: 'completed', label: 'Completed', hint: 'Achieved your objective' },
-	{ value: 'retired', label: 'Retired', hint: 'Finished a game without an ending' },
-	{ value: 'shelved', label: 'Shelved', hint: 'Unfinished, may return to' },
-	{ value: 'abandoned', label: 'Abandoned', hint: 'Unfinished, staying that way' },
-]
 
 // The viewer's own state lives in the store, not in the page payload, so it is
 // read straight from there and every optimistic flip below writes back to it.

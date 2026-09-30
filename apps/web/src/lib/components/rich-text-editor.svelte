@@ -294,8 +294,8 @@ function onLinkKeydown(event: KeyboardEvent) {
 			onkeydown={onToolbarKeydown}
 		>
 			{#each tools as tool, i (tool.name)}
-				{#if tool.name === 'bulletList'}
-					<span class="separator" aria-hidden="true"></span>
+				{#if tool.name === 'bulletList' || tool.name === 'blockquote'}
+					<span class="separator" role="separator" aria-orientation="vertical"></span>
 				{/if}
 				<button
 					type="button"
@@ -432,11 +432,11 @@ function onLinkKeydown(event: KeyboardEvent) {
 	cursor: pointer;
 	background: none;
 	border: none;
-	border-radius: 4px;
+	border-radius: 2px;
 	transition: background-color 100ms ease-out;
 
 	@supports (corner-shape: squircle) {
-		border-radius: 8px;
+		border-radius: 4px;
 		corner-shape: var(--corner-shape);
 	}
 

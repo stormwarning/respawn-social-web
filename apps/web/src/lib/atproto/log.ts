@@ -3,6 +3,7 @@ import { Collections } from '@respawn-social/lexicons'
 import type { CoverRef, GameRef, PlayedState, RespawnGameRecord } from '$lib/atproto/game'
 import { listAllRecords, type RecordEnvelope } from '$lib/atproto/records'
 import { generateTid } from '$lib/atproto/tid'
+import type { Facet } from '$lib/richtext/types'
 
 export const RESPAWN_LOG_COLLECTION = Collections.log
 export const RESPAWN_GATE_COLLECTION = Collections.gate
@@ -16,6 +17,9 @@ export interface LogReview {
 	textWithSpoilers?: string
 	/** Whole-review spoiler flag. */
 	containsSpoilers?: boolean
+	facets?: Facet[]
+	/** An external document (e.g. standard.site) holding the full review. */
+	external?: { uri: string; cid?: string }
 }
 
 /**
