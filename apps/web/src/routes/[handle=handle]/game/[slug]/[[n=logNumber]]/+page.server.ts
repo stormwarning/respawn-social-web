@@ -4,7 +4,7 @@ import type { Actions, PageServerLoad } from './$types'
 import { createComment } from '$lib/atproto/comment'
 import { createLike, deleteLike, findLike } from '$lib/atproto/like'
 import { getRecordOrNull, toPlainRecord } from '$lib/atproto/records'
-import { listLogs, type RespawnGateRecord } from '$lib/atproto/log'
+import { listLogs, type RespawnReplygateRecord } from '$lib/atproto/log'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
 import { cachePageData } from '$lib/server/page-cache'
 
@@ -32,17 +32,19 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 	const { actor, repo, log, total } = loaded
 	if (!log) error(404, 'Log not found')
 
-	// Gate record shares the log's rkey. Enforcement is advisory until HappyView
-	// can apply it on read.
-	const gate = await getRecordOrNull<RespawnGateRecord>(repo, actor.did, Collections.gate, log.rkey)
-	const allow = gate?.value.allow
-	const commentsClosed =
-		allow != null && (allow.length === 0 || allow.some((r) => r.$type?.endsWith('#nobodyRule')))
-	const likesDisabled = Boolean(gate?.value.disableLikes)
+	// Replygate record shares the log's rkey. Enforcement is advisory until
+	// HappyView can apply it on read.
+	const replygate = await getRecordOrNull<RespawnReplygateRecord>(
+		repo,
+		actor.did,
+		Collections.replygate,
+		log.rkey,
+	)
+	const commentsClosed = replygate?.value.allow?.length === 0
 
 	const isSelf = locals.user?.did === actor.did
 	let viewerLike: { rkey: string } | null = null
-	if (locals.user && locals.agent && !likesDisabled) {
+	if (locals.user && locals.agent) {
 		const like = await findLike(locals.agent, locals.user.did, log.uri)
 		viewerLike = like ? { rkey: like.rkey } : null
 	}
@@ -61,7 +63,6 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 		n,
 		total,
 		commentsClosed,
-		likesDisabled,
 		isSelf,
 		isLoggedIn: !!locals.user,
 		liked: viewerLike !== null,

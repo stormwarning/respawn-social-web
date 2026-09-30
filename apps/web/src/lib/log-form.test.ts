@@ -54,11 +54,14 @@ describe('toLogRecord', () => {
 		expect(toLogRecord(value, game, createdAt).log.review).toBeUndefined()
 	})
 
-	it('writes a gate only when comments are limited', () => {
-		expect(toLogRecord(emptyLogForm(), game).gate).toBeUndefined()
-		expect(toLogRecord({ ...emptyLogForm(), allow: 'followers' }, game).gate).toEqual({
-			allow: ['followers'],
+	it('writes a replygate only when comments are limited', () => {
+		expect(toLogRecord(emptyLogForm(), game).replygate).toBeUndefined()
+		expect(toLogRecord({ ...emptyLogForm(), allow: 'nobody' }, game).replygate).toEqual({
+			allow: [],
 		})
+		expect(
+			toLogRecord({ ...emptyLogForm(), allow: ['followers', 'mention'] }, game).replygate,
+		).toEqual({ allow: ['followers', 'mention'] })
 	})
 })
 
@@ -75,10 +78,16 @@ describe('fromLogRecord', () => {
 			liked: true,
 			review: { text: 'So good.' },
 			containsSpoilers: true,
-			allow: 'following',
+			allow: ['following', 'mention'],
 		}
-		const { log, gate } = toLogRecord(value, game, createdAt)
-		expect(fromLogRecord(log, gate)).toEqual(value)
+		const { log, replygate } = toLogRecord(value, game, createdAt)
+		expect(fromLogRecord(log, replygate)).toEqual(value)
+	})
+
+	it('reads a missing replygate or allow list as anyone', () => {
+		const { log } = toLogRecord(emptyLogForm(), game, createdAt)
+		expect(fromLogRecord(log).allow).toBe('anyone')
+		expect(fromLogRecord(log, {}).allow).toBe('anyone')
 	})
 
 	it('reads an empty allow list as nobody', () => {

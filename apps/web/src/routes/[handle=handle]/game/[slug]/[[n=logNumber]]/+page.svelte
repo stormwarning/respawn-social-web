@@ -73,7 +73,7 @@ const hiddenBySpoilers = $derived(Boolean(data.log.review?.containsSpoilers) && 
 		</section>
 	{/if}
 
-	{#if data.isLoggedIn && !data.likesDisabled}
+	{#if data.isLoggedIn}
 		<form
 			method="POST"
 			action="?/like"

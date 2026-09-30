@@ -10,7 +10,7 @@ const $nsid = 'social.respawn.feed.comment'
 
 export { $nsid }
 
-/** A comment on a log or list. Stored in the commenter's repo; the subject's author can hide it via their social.respawn.feed.gate record. */
+/** A comment on a log or list. Stored in the commenter's repo; the subject's author can hide it via their social.respawn.feed.replygate record. */
 type Main = {
   $type: 'social.respawn.feed.comment'
   text: string
@@ -30,7 +30,7 @@ type Main = {
 
 export type { Main }
 
-/** A comment on a log or list. Stored in the commenter's repo; the subject's author can hide it via their social.respawn.feed.gate record. */
+/** A comment on a log or list. Stored in the commenter's repo; the subject's author can hide it via their social.respawn.feed.replygate record. */
 const main = /*#__PURE__*/ l.record<'tid', Main>(
   'tid',
   $nsid,

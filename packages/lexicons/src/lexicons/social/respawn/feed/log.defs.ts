@@ -11,7 +11,7 @@ const $nsid = 'social.respawn.feed.log'
 
 export { $nsid }
 
-/** Record of a play session for a game, optionally including a review. Fields describe what happened during this session, not the resulting play state. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey. */
+/** Record of a play session for a game, optionally including a review. Fields describe what happened during this session, not the resulting play state. Who can comment is controlled by a social.respawn.feed.replygate record with the same rkey. */
 type Main = {
   $type: 'social.respawn.feed.log'
   game: RespawnDefs.GameRef
@@ -50,7 +50,7 @@ type Main = {
 
 export type { Main }
 
-/** Record of a play session for a game, optionally including a review. Fields describe what happened during this session, not the resulting play state. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey. */
+/** Record of a play session for a game, optionally including a review. Fields describe what happened during this session, not the resulting play state. Who can comment is controlled by a social.respawn.feed.replygate record with the same rkey. */
 const main = /*#__PURE__*/ l.record<'tid', Main>(
   'tid',
   $nsid,

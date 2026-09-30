@@ -4,29 +4,28 @@
 
 import { l } from '@atproto/lex'
 
-const $nsid = 'social.respawn.feed.gate'
+const $nsid = 'social.respawn.feed.replygate'
 
 export { $nsid }
 
-/** Interaction settings for a log or list, analogous to app.bsky.feed.threadgate/postgate. The record key (rkey) must match the rkey of the gated record. Absence of a gate record means everyone can interact. */
+/** Who can comment on a log or list, analogous to app.bsky.feed.threadgate. The record key (rkey) must match the rkey of the gated record. Absence of a replygate record means anyone can comment. */
 type Main = {
-  $type: 'social.respawn.feed.gate'
+  $type: 'social.respawn.feed.replygate'
 
   /**
-   * The log or list this gate applies to.
+   * The log or list this replygate applies to.
    */
   subject: l.AtUriString
 
   /**
-   * Rules for who can comment. Absent means everyone; an empty array or a nobody rule means no one.
+   * Rules for who can comment, combined as a union. Absent means anyone; an empty array means no one.
    */
   allow?: (
-    | l.$Typed<NobodyRule>
-    | l.$Typed<FollowingRule>
+    | l.$Typed<MentionRule>
     | l.$Typed<FollowerRule>
+    | l.$Typed<FollowingRule>
     | l.Unknown$TypedObject
   )[]
-  disableLikes?: boolean
 
   /**
    * AT-URIs of comments the author has hidden.
@@ -37,7 +36,7 @@ type Main = {
 
 export type { Main }
 
-/** Interaction settings for a log or list, analogous to app.bsky.feed.threadgate/postgate. The record key (rkey) must match the rkey of the gated record. Absence of a gate record means everyone can interact. */
+/** Who can comment on a log or list, analogous to app.bsky.feed.threadgate. The record key (rkey) must match the rkey of the gated record. Absence of a replygate record means anyone can comment. */
 const main = /*#__PURE__*/ l.record<'tid', Main>(
   'tid',
   $nsid,
@@ -47,18 +46,17 @@ const main = /*#__PURE__*/ l.record<'tid', Main>(
       /*#__PURE__*/ l.array(
         /*#__PURE__*/ l.typedUnion(
           [
-            /*#__PURE__*/ l.typedRef<NobodyRule>((() => nobodyRule) as any),
+            /*#__PURE__*/ l.typedRef<MentionRule>((() => mentionRule) as any),
+            /*#__PURE__*/ l.typedRef<FollowerRule>((() => followerRule) as any),
             /*#__PURE__*/ l.typedRef<FollowingRule>(
               (() => followingRule) as any,
             ),
-            /*#__PURE__*/ l.typedRef<FollowerRule>((() => followerRule) as any),
           ],
           false,
         ),
         { maxLength: 5 },
       ),
     ),
-    disableLikes: /*#__PURE__*/ l.optional(/*#__PURE__*/ l.boolean()),
     hiddenComments: /*#__PURE__*/ l.optional(
       /*#__PURE__*/ l.array(/*#__PURE__*/ l.string({ format: 'at-uri' }), {
         maxLength: 50,
@@ -83,36 +81,22 @@ export const $safeParse = /*#__PURE__*/ main.safeParse.bind(main)
 export const $validate = /*#__PURE__*/ main.validate.bind(main)
 export const $safeValidate = /*#__PURE__*/ main.safeValidate.bind(main)
 
-/** Disallow comments from everyone. */
-type NobodyRule = { $type?: 'social.respawn.feed.gate#nobodyRule' }
+/** Allow comments from actors mentioned in the gated record's text. */
+type MentionRule = { $type?: 'social.respawn.feed.replygate#mentionRule' }
 
-export type { NobodyRule }
+export type { MentionRule }
 
-/** Disallow comments from everyone. */
-const nobodyRule = /*#__PURE__*/ l.typedObject<NobodyRule>(
+/** Allow comments from actors mentioned in the gated record's text. */
+const mentionRule = /*#__PURE__*/ l.typedObject<MentionRule>(
   $nsid,
-  'nobodyRule',
+  'mentionRule',
   /*#__PURE__*/ l.object({}),
 )
 
-export { nobodyRule }
-
-/** Allow comments from actors the author follows. */
-type FollowingRule = { $type?: 'social.respawn.feed.gate#followingRule' }
-
-export type { FollowingRule }
-
-/** Allow comments from actors the author follows. */
-const followingRule = /*#__PURE__*/ l.typedObject<FollowingRule>(
-  $nsid,
-  'followingRule',
-  /*#__PURE__*/ l.object({}),
-)
-
-export { followingRule }
+export { mentionRule }
 
 /** Allow comments from actors who follow the author. */
-type FollowerRule = { $type?: 'social.respawn.feed.gate#followerRule' }
+type FollowerRule = { $type?: 'social.respawn.feed.replygate#followerRule' }
 
 export type { FollowerRule }
 
@@ -124,3 +108,17 @@ const followerRule = /*#__PURE__*/ l.typedObject<FollowerRule>(
 )
 
 export { followerRule }
+
+/** Allow comments from actors the author follows. */
+type FollowingRule = { $type?: 'social.respawn.feed.replygate#followingRule' }
+
+export type { FollowingRule }
+
+/** Allow comments from actors the author follows. */
+const followingRule = /*#__PURE__*/ l.typedObject<FollowingRule>(
+  $nsid,
+  'followingRule',
+  /*#__PURE__*/ l.object({}),
+)
+
+export { followingRule }

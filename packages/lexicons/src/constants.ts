@@ -7,7 +7,7 @@ export const Collections = {
 	log: 'social.respawn.feed.log',
 	like: 'social.respawn.feed.like',
 	comment: 'social.respawn.feed.comment',
-	gate: 'social.respawn.feed.gate',
+	replygate: 'social.respawn.feed.replygate',
 	follow: 'social.respawn.graph.follow',
 	block: 'social.respawn.graph.block',
 	profile: 'social.respawn.actor.profile',

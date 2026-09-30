@@ -59,7 +59,7 @@ const sample = fromLogRecord(
 		}),
 		createdAt: '2026-09-20T21:14:00.000Z',
 	},
-	{ allow: ['following'] },
+	{ allow: ['following', 'mention'] },
 )
 
 let mode = $state<Mode>('new')
@@ -91,8 +91,8 @@ function ondelete() {
 		<h1 class="heading">Log dialog</h1>
 		<p class="copy secondary">
 			Adds or edits a <code>social.respawn.feed.log</code> record and its
-			<code>social.respawn.feed.gate</code>. Progress fields describe what happened this session, so
-			the feed line comes from the log alone.
+			<code>social.respawn.feed.replygate</code>. Progress fields describe what happened this
+			session, so the feed line comes from the log alone.
 		</p>
 	</header>
 
@@ -161,10 +161,10 @@ function ondelete() {
 		</section>
 
 		<section class="demo">
-			<h2 class="label">Gate</h2>
-			<pre class="output">{saved.gate
-					? JSON.stringify(saved.gate, null, 2)
-					: 'None — everyone can comment.'}</pre>
+			<h2 class="label">Replygate</h2>
+			<pre class="output">{saved.replygate
+					? JSON.stringify(saved.replygate, null, 2)
+					: 'None — anyone can comment.'}</pre>
 		</section>
 	{/if}
 </article>

@@ -15,7 +15,15 @@
 					"type": "array",
 					"items": {
 						"type": "union",
-						"refs": ["#link", "#bold", "#italic", "#spoiler", "#blockquote", "#listItem"]
+						"refs": [
+							"#mention",
+							"#link",
+							"#bold",
+							"#italic",
+							"#spoiler",
+							"#blockquote",
+							"#listItem"
+						]
 					}
 				}
 			}
@@ -32,6 +40,17 @@
 				"byteEnd": {
 					"type": "integer",
 					"minimum": 0
+				}
+			}
+		},
+		"mention": {
+			"type": "object",
+			"description": "Facet feature for a mention of another account. The text is usually a handle, including a '@' prefix, but the facet reference is a DID.",
+			"required": ["did"],
+			"properties": {
+				"did": {
+					"type": "string",
+					"format": "did"
 				}
 			}
 		},

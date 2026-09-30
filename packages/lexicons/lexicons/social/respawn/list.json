@@ -4,7 +4,7 @@
 	"defs": {
 		"main": {
 			"type": "record",
-			"description": "A curated list of games. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey.",
+			"description": "A curated list of games. Who can comment is controlled by a social.respawn.feed.replygate record with the same rkey.",
 			"key": "tid",
 			"record": {
 				"type": "object",

@@ -1,10 +1,10 @@
 {
 	"lexicon": 1,
-	"id": "social.respawn.feed.gate",
+	"id": "social.respawn.feed.replygate",
 	"defs": {
 		"main": {
 			"type": "record",
-			"description": "Interaction settings for a log or list, analogous to app.bsky.feed.threadgate/postgate. The record key (rkey) must match the rkey of the gated record. Absence of a gate record means everyone can interact.",
+			"description": "Who can comment on a log or list, analogous to app.bsky.feed.threadgate. The record key (rkey) must match the rkey of the gated record. Absence of a replygate record means anyone can comment.",
 			"key": "tid",
 			"record": {
 				"type": "object",
@@ -13,19 +13,16 @@
 					"subject": {
 						"type": "string",
 						"format": "at-uri",
-						"description": "The log or list this gate applies to."
+						"description": "The log or list this replygate applies to."
 					},
 					"allow": {
 						"type": "array",
-						"description": "Rules for who can comment. Absent means everyone; an empty array or a nobody rule means no one.",
+						"description": "Rules for who can comment, combined as a union. Absent means anyone; an empty array means no one.",
 						"maxLength": 5,
 						"items": {
 							"type": "union",
-							"refs": ["#nobodyRule", "#followingRule", "#followerRule"]
+							"refs": ["#mentionRule", "#followerRule", "#followingRule"]
 						}
-					},
-					"disableLikes": {
-						"type": "boolean"
 					},
 					"hiddenComments": {
 						"type": "array",
@@ -43,19 +40,19 @@
 				}
 			}
 		},
-		"nobodyRule": {
+		"mentionRule": {
 			"type": "object",
-			"description": "Disallow comments from everyone.",
-			"properties": {}
-		},
-		"followingRule": {
-			"type": "object",
-			"description": "Allow comments from actors the author follows.",
+			"description": "Allow comments from actors mentioned in the gated record's text.",
 			"properties": {}
 		},
 		"followerRule": {
 			"type": "object",
 			"description": "Allow comments from actors who follow the author.",
+			"properties": {}
+		},
+		"followingRule": {
+			"type": "object",
+			"description": "Allow comments from actors the author follows.",
 			"properties": {}
 		}
 	}

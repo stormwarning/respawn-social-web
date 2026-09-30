@@ -1,5 +1,5 @@
 import { PLAYED_OPTIONS, type PlayedState } from '$lib/atproto/game'
-import type { GateAllowRule, GateSettings, RespawnLogRecord } from '$lib/atproto/log'
+import type { ReplyRule, ReplygateSettings, RespawnLogRecord } from '$lib/atproto/log'
 import type { RichTextValue } from '$lib/richtext/types'
 
 /** The game a log is about, as the dialog shows it. */
@@ -17,7 +17,18 @@ export interface CurrentPlayState {
 	played: PlayedState | null
 }
 
-export type GateAllow = 'everyone' | GateAllowRule
+/**
+ * Who can comment: anyone, no one, or the union of one or more rules. The rule
+ * list is never empty; unticking the last one goes back to anyone.
+ */
+export type ReplyAllow = 'anyone' | 'nobody' | ReplyRule[]
+
+/** The combinable comment rules, in menu order. */
+export const REPLY_RULE_OPTIONS: Array<{ value: ReplyRule; label: string }> = [
+	{ value: 'followers', label: 'Your followers' },
+	{ value: 'following', label: 'People you follow' },
+	{ value: 'mention', label: 'People you mention' },
+]
 
 /** Ways a session can leave a playthrough: still going, or one of the played states. */
 export const LOG_OUTCOMES: Array<{ value: PlayedState | null; label: string; hint: string }> = [
@@ -41,13 +52,13 @@ export interface LogFormValue {
 	liked: boolean
 	review: RichTextValue
 	containsSpoilers: boolean
-	allow: GateAllow
+	allow: ReplyAllow
 }
 
 export interface LogResult {
 	log: RespawnLogRecord
 	/** Only present when comments are limited. */
-	gate?: GateSettings
+	replygate?: ReplygateSettings
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -74,11 +85,11 @@ export function emptyLogForm(current?: CurrentPlayState, date = today()): LogFor
 		liked: false,
 		review: { text: '' },
 		containsSpoilers: false,
-		allow: 'everyone',
+		allow: 'anyone',
 	}
 }
 
-/** Build the log record and gate settings, dropping anything left unset. */
+/** Build the log record and replygate settings, dropping anything left unset. */
 export function toLogRecord(
 	value: LogFormValue,
 	game: LogGame,
@@ -114,12 +125,12 @@ export function toLogRecord(
 
 	return {
 		log: stripUndefined(log),
-		gate: value.allow === 'everyone' ? undefined : { allow: [value.allow] },
+		replygate: toReplygate(value.allow),
 	}
 }
 
 /** Form state for editing an existing log. */
-export function fromLogRecord(log: RespawnLogRecord, gate?: GateSettings): LogFormValue {
+export function fromLogRecord(log: RespawnLogRecord, replygate?: ReplygateSettings): LogFormValue {
 	const review = log.review
 	return {
 		datePlayed: log.datePlayed?.slice(0, 10) ?? '',
@@ -138,9 +149,19 @@ export function fromLogRecord(log: RespawnLogRecord, gate?: GateSettings): LogFo
 				})
 			: { text: '' },
 		containsSpoilers: review?.containsSpoilers ?? false,
-		// An empty allow list means no one, same as a nobody rule.
-		allow: gate?.allow ? (gate.allow[0] ?? 'nobody') : 'everyone',
+		allow: fromReplygate(replygate),
 	}
+}
+
+function toReplygate(allow: ReplyAllow): ReplygateSettings | undefined {
+	if (allow === 'anyone') return undefined
+	return { allow: allow === 'nobody' ? [] : allow }
+}
+
+function fromReplygate(replygate?: ReplygateSettings): ReplyAllow {
+	const allow = replygate?.allow
+	if (!allow) return 'anyone'
+	return allow.length ? allow : 'nobody'
 }
 
 const FINISHED_VERBS: Record<PlayedState, string> = {

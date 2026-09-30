@@ -6,7 +6,6 @@ import {
 	toLogRecord,
 	today,
 	type CurrentPlayState,
-	type GateAllow,
 	type LogFormValue,
 	type LogGame,
 	type LogResult,
@@ -18,6 +17,7 @@ import EditionMenu from './edition-menu.svelte'
 import FieldLabel from './field-label.svelte'
 import LikeButton from './like-button.svelte'
 import PlayStateMenu from './play-state-menu.svelte'
+import ReplygateMenu from './replygate-menu.svelte'
 import RichTextEditor from './rich-text-editor.svelte'
 import SelectField from './select-field.svelte'
 import StarRating from './star-rating.svelte'
@@ -37,7 +37,7 @@ interface Props {
 	editions?: string[]
 	/** The game's DLC. Shares a menu with editions, hidden when both are empty. */
 	dlcOptions?: string[]
-	/** Called with the record and gate settings just before the dialog closes. */
+	/** Called with the record and replygate settings just before the dialog closes. */
 	onsave: (result: LogResult) => void
 	/** Offered in edit mode only. */
 	ondelete?: () => void
@@ -223,16 +223,7 @@ function onclick(event: MouseEvent) {
 
 				<Divider />
 
-				<SelectField
-					label="Who can comment"
-					reserveMessageSpace={false}
-					bind:value={() => form.allow, (next) => (form.allow = next as GateAllow)}
-				>
-					<option value="everyone">Everyone</option>
-					<option value="following">People I follow</option>
-					<option value="followers">My followers</option>
-					<option value="nobody">Nobody</option>
-				</SelectField>
+				<ReplygateMenu bind:allow={form.allow} />
 			</div>
 
 			<footer class="dialog-footer">

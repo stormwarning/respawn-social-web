@@ -9,7 +9,7 @@ import {
 	type PlayedState,
 	type RespawnGameRecord,
 } from '$lib/atproto/game'
-import { createLog, type GateAllowRule, type RespawnLogRecord } from '$lib/atproto/log'
+import { createLog, type ReplyRule, type RespawnLogRecord } from '$lib/atproto/log'
 import { addToBacklog, migrateLegacyBacklog, removeFromBacklog } from '$lib/atproto/backlog'
 import { buildCover } from '$lib/server/cover'
 import { forgetViewerState } from '$lib/server/viewer-state'
@@ -17,7 +17,7 @@ import { loadConsolidatedGameRecord } from '$lib/atproto/title-identity'
 import type { Title } from '$lib/types/game'
 
 const PLAY_STATES = new Set(['played', 'completed', 'abandoned', 'retired', 'shelved'])
-const GATE_RULES = new Set(['nobody', 'following', 'followers'])
+const REPLY_RULES = new Set<string>(['followers', 'following', 'mention'])
 
 /**
  * The id, denormalized game ref, and cover every game-record form posts. The
@@ -325,8 +325,12 @@ export const actions: Actions = {
 		const liked = form.get('liked') === 'on'
 		const reviewText = String(form.get('review') ?? '').trim()
 		const containsSpoilers = form.get('containsSpoilers') === 'on'
-		const allowRule = String(form.get('allow') ?? 'everyone')
-		const disableLikes = form.get('disableLikes') === 'on'
+		// `anyone` (or nothing), `nobody`, or one or more combinable rules.
+		const allow = form
+			.getAll('allow')
+			.map(String)
+			.filter((value) => value !== 'anyone')
+		const nobody = allow.length === 1 && allow[0] === 'nobody'
 
 		if (finishedPlaying && !PLAY_STATES.has(finishedPlaying)) {
 			return fail(400, { logError: 'Invalid play state.' })
@@ -335,7 +339,7 @@ export const actions: Actions = {
 		if (rating != null && (!Number.isInteger(rating) || rating < 1 || rating > 10)) {
 			return fail(400, { logError: 'Rating must be a whole number from 1 to 10.' })
 		}
-		if (allowRule !== 'everyone' && !GATE_RULES.has(allowRule)) {
+		if (!nobody && !allow.every((value) => REPLY_RULES.has(value))) {
 			return fail(400, { logError: 'Invalid comment setting.' })
 		}
 
@@ -378,16 +382,10 @@ export const actions: Actions = {
 				}
 			}
 
-			const gate =
-				allowRule !== 'everyone' || disableLikes
-					? {
-							allow: allowRule === 'everyone' ? undefined : [allowRule as GateAllowRule],
-							disableLikes,
-						}
-					: undefined
+			const replygate = allow.length ? { allow: nobody ? [] : (allow as ReplyRule[]) } : undefined
 
 			await createLog(agent, user.did, log, {
-				gate,
+				replygate,
 				game: { igdbId: game.id, record: gameRecord, exists: existing !== null },
 			})
 			forgetViewerState(user.did)

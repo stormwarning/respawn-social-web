@@ -13,6 +13,7 @@ type Main = {
   $type?: 'social.respawn.richtext.facet'
   index: ByteSlice
   features: (
+    | l.$Typed<Mention>
     | l.$Typed<Link>
     | l.$Typed<Bold>
     | l.$Typed<Italic>
@@ -34,6 +35,7 @@ const main = /*#__PURE__*/ l.typedObject<Main>(
     features: /*#__PURE__*/ l.array(
       /*#__PURE__*/ l.typedUnion(
         [
+          /*#__PURE__*/ l.typedRef<Mention>((() => mention) as any),
           /*#__PURE__*/ l.typedRef<Link>((() => link) as any),
           /*#__PURE__*/ l.typedRef<Bold>((() => bold) as any),
           /*#__PURE__*/ l.typedRef<Italic>((() => italic) as any),
@@ -82,6 +84,23 @@ const byteSlice = /*#__PURE__*/ l.typedObject<ByteSlice>(
 )
 
 export { byteSlice }
+
+/** Facet feature for a mention of another account. The text is usually a handle, including a '@' prefix, but the facet reference is a DID. */
+type Mention = {
+  $type?: 'social.respawn.richtext.facet#mention'
+  did: l.DidString
+}
+
+export type { Mention }
+
+/** Facet feature for a mention of another account. The text is usually a handle, including a '@' prefix, but the facet reference is a DID. */
+const mention = /*#__PURE__*/ l.typedObject<Mention>(
+  $nsid,
+  'mention',
+  /*#__PURE__*/ l.object({ did: /*#__PURE__*/ l.string({ format: 'did' }) }),
+)
+
+export { mention }
 
 /** Facet feature for a URL. */
 type Link = { $type?: 'social.respawn.richtext.facet#link'; uri: l.UriString }

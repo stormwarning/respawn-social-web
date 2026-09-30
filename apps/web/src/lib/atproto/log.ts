@@ -6,7 +6,7 @@ import { generateTid } from '$lib/atproto/tid'
 import type { Facet } from '$lib/richtext/types'
 
 export const RESPAWN_LOG_COLLECTION = Collections.log
-export const RESPAWN_GATE_COLLECTION = Collections.gate
+export const RESPAWN_REPLYGATE_COLLECTION = Collections.replygate
 
 export type { GameRef }
 
@@ -43,36 +43,35 @@ export interface RespawnLogRecord {
 	createdAt: string
 }
 
-export type GateAllowRule = 'nobody' | 'following' | 'followers'
+/** A group of actors who may comment when comments are limited. */
+export type ReplyRule = 'followers' | 'following' | 'mention'
 
-export interface GateSettings {
-	/** Absent means everyone may comment; `['nobody']` or `[]` means no one. */
-	allow?: GateAllowRule[]
-	disableLikes?: boolean
+export interface ReplygateSettings {
+	/** The union of these rules may comment. Absent means anyone; `[]` means no one. */
+	allow?: ReplyRule[]
 }
 
 /**
- * Gate record controlling interactions on a log or list, stored at
- * `social.respawn.feed.gate/<rkey of the gated record>`.
+ * Replygate record controlling who can comment on a log or list, stored at
+ * `social.respawn.feed.replygate/<rkey of the gated record>`.
  */
-export interface RespawnGateRecord {
-	$type?: typeof RESPAWN_GATE_COLLECTION
+export interface RespawnReplygateRecord {
+	$type?: typeof RESPAWN_REPLYGATE_COLLECTION
 	subject: string
 	allow?: Array<{ $type: string }>
-	disableLikes?: boolean
 	hiddenComments?: string[]
 	createdAt: string
 }
 
-const GATE_RULE_TYPES: Record<GateAllowRule, string> = {
-	nobody: `${Collections.gate}#nobodyRule`,
-	following: `${Collections.gate}#followingRule`,
-	followers: `${Collections.gate}#followerRule`,
+const REPLY_RULE_TYPES: Record<ReplyRule, string> = {
+	followers: `${Collections.replygate}#followerRule`,
+	following: `${Collections.replygate}#followingRule`,
+	mention: `${Collections.replygate}#mentionRule`,
 }
 
 export interface CreateLogOptions {
-	/** Interaction settings; only written when provided (absent = everyone). */
-	gate?: GateSettings
+	/** Who can comment; only written when provided (absent = anyone). */
+	replygate?: ReplygateSettings
 	/**
 	 * Denormalized current-state update of the `social.respawn.game` record,
 	 * written atomically with the log. `exists` picks update vs create.
@@ -81,7 +80,7 @@ export interface CreateLogOptions {
 }
 
 /**
- * Create a log record — plus its gate record and the game record's
+ * Create a log record — plus its replygate record and the game record's
  * current-state update — in a single `applyWrites` batch.
  */
 export async function createLog(
@@ -100,18 +99,17 @@ export async function createLog(
 		},
 	]
 
-	if (options.gate) {
-		const gate: RespawnGateRecord = {
+	if (options.replygate) {
+		const replygate: RespawnReplygateRecord = {
 			subject: `at://${did}/${RESPAWN_LOG_COLLECTION}/${rkey}`,
-			allow: options.gate.allow?.map((rule) => ({ $type: GATE_RULE_TYPES[rule] })),
-			disableLikes: options.gate.disableLikes || undefined,
+			allow: options.replygate.allow?.map((rule) => ({ $type: REPLY_RULE_TYPES[rule] })),
 			createdAt: log.createdAt,
 		}
 		writes.push({
 			$type: 'com.atproto.repo.applyWrites#create',
-			collection: RESPAWN_GATE_COLLECTION,
+			collection: RESPAWN_REPLYGATE_COLLECTION,
 			rkey,
-			value: { $type: RESPAWN_GATE_COLLECTION, ...gate },
+			value: { $type: RESPAWN_REPLYGATE_COLLECTION, ...replygate },
 		})
 	}
 
@@ -130,13 +128,17 @@ export async function createLog(
 	return { uri: `at://${did}/${RESPAWN_LOG_COLLECTION}/${rkey}`, rkey }
 }
 
-/** Delete a log and its gate record (if any) in one batch. */
+/** Delete a log and its replygate record (if any) in one batch. */
 export async function deleteLog(agent: Agent, did: string, rkey: string): Promise<void> {
 	await agent.com.atproto.repo.applyWrites({
 		repo: did,
 		writes: [
 			{ $type: 'com.atproto.repo.applyWrites#delete', collection: RESPAWN_LOG_COLLECTION, rkey },
-			{ $type: 'com.atproto.repo.applyWrites#delete', collection: RESPAWN_GATE_COLLECTION, rkey },
+			{
+				$type: 'com.atproto.repo.applyWrites#delete',
+				collection: RESPAWN_REPLYGATE_COLLECTION,
+				rkey,
+			},
 		] as never,
 	})
 }

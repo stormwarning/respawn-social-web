@@ -102,16 +102,42 @@ describe('social.respawn.feed.comment', () => {
 	})
 })
 
-describe('social.respawn.feed.gate', () => {
-	const schema = social.respawn.feed.gate.main
+describe('social.respawn.richtext.facet', () => {
+	const schema = social.respawn.richtext.facet.main
+	const index = { byteStart: 0, byteEnd: 6 }
 
-	it('accepts allow rules and hidden comments', () => {
+	it('accepts a mention by DID', () => {
 		expect(
 			schema.$safeParse({
-				$type: Collections.gate,
+				index,
+				features: [{ $type: 'social.respawn.richtext.facet#mention', did }],
+			}).success,
+		).toBe(true)
+	})
+
+	it('rejects a mention without a DID', () => {
+		expect(
+			schema.$safeParse({
+				index,
+				features: [{ $type: 'social.respawn.richtext.facet#mention', did: 'alice.test' }],
+			}).success,
+		).toBe(false)
+	})
+})
+
+describe('social.respawn.feed.replygate', () => {
+	const schema = social.respawn.feed.replygate.main
+
+	it('accepts combined allow rules and hidden comments', () => {
+		expect(
+			schema.$safeParse({
+				$type: Collections.replygate,
 				subject: strongRef.uri,
-				allow: [{ $type: 'social.respawn.feed.gate#followingRule' }],
-				disableLikes: true,
+				allow: [
+					{ $type: 'social.respawn.feed.replygate#followerRule' },
+					{ $type: 'social.respawn.feed.replygate#followingRule' },
+					{ $type: 'social.respawn.feed.replygate#mentionRule' },
+				],
 				hiddenComments: [strongRef.uri],
 				createdAt,
 			}).success,
@@ -120,8 +146,12 @@ describe('social.respawn.feed.gate', () => {
 
 	it('accepts an empty allow array (nobody)', () => {
 		expect(
-			schema.$safeParse({ $type: Collections.gate, subject: strongRef.uri, allow: [], createdAt })
-				.success,
+			schema.$safeParse({
+				$type: Collections.replygate,
+				subject: strongRef.uri,
+				allow: [],
+				createdAt,
+			}).success,
 		).toBe(true)
 	})
 })

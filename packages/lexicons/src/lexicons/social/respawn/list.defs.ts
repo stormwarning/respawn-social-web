@@ -10,7 +10,7 @@ const $nsid = 'social.respawn.list'
 
 export { $nsid }
 
-/** A curated list of games. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey. */
+/** A curated list of games. Who can comment is controlled by a social.respawn.feed.replygate record with the same rkey. */
 type Main = {
   $type: 'social.respawn.list'
   name: string
@@ -31,7 +31,7 @@ type Main = {
 
 export type { Main }
 
-/** A curated list of games. Interaction settings are controlled by a social.respawn.feed.gate record with the same rkey. */
+/** A curated list of games. Who can comment is controlled by a social.respawn.feed.replygate record with the same rkey. */
 const main = /*#__PURE__*/ l.record<'tid', Main>(
   'tid',
   $nsid,
