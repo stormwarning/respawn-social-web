@@ -58,7 +58,7 @@
 			"properties": {
 				"type": {
 					"type": "string",
-					"knownValues": ["backlogAdd", "follow"]
+					"knownValues": ["backlogAdd", "follow", "log", "logLike"]
 				},
 				"uri": {
 					"type": "string",
@@ -76,7 +76,7 @@
 				"game": {
 					"type": "ref",
 					"ref": "social.respawn.defs#gameRef",
-					"description": "Present on backlogAdd."
+					"description": "Present on backlogAdd, log, and logLike (the liked log's game)."
 				},
 				"cover": {
 					"type": "ref",
@@ -87,6 +87,36 @@
 					"type": "string",
 					"format": "did",
 					"description": "Present on follow: the account followed."
+				},
+				"log": {
+					"type": "ref",
+					"ref": "#logView",
+					"description": "Present on log (the log itself) and logLike (the liked log)."
+				}
+			}
+		},
+		"logView": {
+			"type": "object",
+			"description": "A log as the feed shows it.",
+			"required": ["uri", "did", "number", "record"],
+			"properties": {
+				"uri": {
+					"type": "string",
+					"format": "at-uri"
+				},
+				"did": {
+					"type": "string",
+					"format": "did",
+					"description": "The log's author."
+				},
+				"number": {
+					"type": "integer",
+					"minimum": 1,
+					"description": "1-based position among the author's logs of this game, oldest first by createdAt. Addresses the log's page."
+				},
+				"record": {
+					"type": "unknown",
+					"description": "The social.respawn.feed.log record."
 				}
 			}
 		}

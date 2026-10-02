@@ -1,5 +1,8 @@
 import { Collections } from '@respawn-social/lexicons'
-import type { FeedItem, FeedPage } from '$lib/server/appview'
+import type { FeedItem, FeedLogView, FeedPage } from '$lib/server/appview'
+import { resolveIds } from '$lib/server/backend'
+import type { ResolveResult } from '$lib/types/game'
+import type { RespawnLogRecord } from '$lib/atproto/log'
 import { resolveHandleForDid, resolvePdsEndpoint } from '$lib/atproto/identity'
 import { publicAgent } from '$lib/atproto/public'
 import { getRecordOrNull } from '$lib/atproto/records'
@@ -23,6 +26,15 @@ export interface HydratedFeedItem {
 	game: { igdbId: number; slug: string; title: string } | null
 	coverUrl: string | null
 	subject: FeedActor | null
+	/** Set on log (the log itself) and logLike (the log liked). */
+	log: FeedLog | null
+}
+
+export interface FeedLog {
+	/** The log's page. */
+	url: string
+	author: FeedActor
+	record: RespawnLogRecord
 }
 
 export interface HydratedFeed {
@@ -31,15 +43,61 @@ export interface HydratedFeed {
 }
 
 /**
+ * Whether a game is still unreleased, so feed rows about logging it wait.
+ *
+ * A resolved title with no date is TBA and waits too. An id the backend never
+ * mirrored, or a backend too old to send dates, has nothing to wait on.
+ */
+export function isUnreleased(result: ResolveResult | undefined, now: Date): boolean {
+	if (!result || result.titleId === null || result.firstReleaseDate === undefined) return false
+	if (result.firstReleaseDate === null) return true
+	return new Date(result.firstReleaseDate) > now
+}
+
+/**
+ * Drop log and logLike rows whose game isn't out yet. Checked fresh on every
+ * read, against the backend rather than anything stored on the log, because
+ * release dates slip. The rows reappear in place once the game ships.
+ */
+async function withoutUnreleased(items: FeedItem[], fetchFn?: typeof fetch): Promise<FeedItem[]> {
+	const ids = items.flatMap((item) => (item.log && item.game ? [item.game.igdbId] : []))
+	if (ids.length === 0) return items
+
+	let resolved: Record<string, ResolveResult>
+	try {
+		resolved = await resolveIds(ids, fetchFn)
+	} catch (err) {
+		// A backend outage shouldn't empty the feed; an early log is the lesser harm.
+		console.error('[feed] release check failed:', err)
+		return items
+	}
+	const now = new Date()
+	return items.filter(
+		(item) => !(item.log && item.game && isUnreleased(resolved[item.game.igdbId], now)),
+	)
+}
+
+/** `/[handle]/game/[slug]/[n]/`, with the first log at the bare game path. */
+export function logPath(actor: string, slug: string, n: number): string {
+	return `/${actor}/game/${slug}/${n > 1 ? `${n}/` : ''}`
+}
+
+/**
  * HappyView returns raw records, so author identity and cover URLs are filled in
  * here. Handles and PDS endpoints come from the memoized resolvers; a lookup
  * that fails leaves the DID showing rather than dropping the row.
+ *
+ * Rows for unreleased games are dropped, so a page can come back shorter than
+ * asked for; the cursor still comes from the appview, so paging carries on.
  */
-export async function hydrateFeed(page: FeedPage): Promise<HydratedFeed> {
+export async function hydrateFeed(page: FeedPage, fetchFn?: typeof fetch): Promise<HydratedFeed> {
+	const feed = await withoutUnreleased(page.feed, fetchFn)
+
 	const dids = new Set<string>()
-	for (const item of page.feed) {
+	for (const item of feed) {
 		dids.add(item.did)
 		if (item.subject) dids.add(item.subject)
+		if (item.log) dids.add(item.log.did)
 	}
 
 	const actors = new Map<string, FeedActor>()
@@ -74,7 +132,7 @@ export async function hydrateFeed(page: FeedPage): Promise<HydratedFeed> {
 
 	return {
 		cursor: page.cursor,
-		items: page.feed.map((item) => ({
+		items: feed.map((item) => ({
 			type: item.type,
 			uri: item.uri,
 			createdAt: item.createdAt,
@@ -82,6 +140,15 @@ export async function hydrateFeed(page: FeedPage): Promise<HydratedFeed> {
 			game: item.game ?? null,
 			coverUrl: blobUrl(pdsByDid.get(item.did), item.did, item.cover?.image),
 			subject: item.subject ? actorFor(item.subject) : null,
+			log: item.log ? hydrateLog(item.log, actorFor(item.log.did)) : null,
 		})),
+	}
+}
+
+function hydrateLog(log: FeedLogView, author: FeedActor): FeedLog {
+	return {
+		url: logPath(author.handle ?? author.did, log.record.game.slug, log.number),
+		author,
+		record: log.record,
 	}
 }

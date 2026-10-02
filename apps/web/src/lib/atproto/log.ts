@@ -149,6 +149,23 @@ export async function deleteLog(agent: Agent, did: string, rkey: string): Promis
  * cross-user aggregation waits for HappyView to index logs.
  */
 /**
+ * Whether a log carries a review: text, or a link out to one. Only a log with a
+ * review can be liked or commented on.
+ */
+export function hasReview(log: Pick<RespawnLogRecord, 'review'>): boolean {
+	return Boolean(log.review?.text.trim() || log.review?.external)
+}
+
+/**
+ * When a log's session happened, for ordering a profile's logs: the day played
+ * when given, else when it was logged. Log numbers and the activity feed go by
+ * `createdAt` instead, so backdating a log never renumbers its page.
+ */
+export function playedAt(log: RespawnLogRecord): string {
+	return log.datePlayed ?? log.createdAt
+}
+
+/**
  * A user's logs, optionally for one game.
  *
  * `igdbIds` rather than a single id, because a title is made of several IGDB

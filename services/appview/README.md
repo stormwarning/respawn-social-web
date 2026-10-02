@@ -20,11 +20,18 @@ Only the collections behind the activity feeds:
 
 - `social.respawn.backlog.item` — "added a game to their backlog"
 - `social.respawn.graph.follow` — "followed someone"
+- `social.respawn.feed.log` — "completed / reviewed / rated a game"
+- `social.respawn.feed.like` — "liked someone's log" (likes of lists or
+  comments are indexed but left out of the feed)
 
-Plays, ratings, and likes are deliberately not indexed yet. Add those lexicons
-when game pages need cross-user counts. Until likes and comments are indexed,
-the `incoming` filter can only ever mean "someone followed you" — follow is the
-one indexed collection whose records name another account as their subject.
+Comments are deliberately not indexed yet. The `incoming` filter means "someone
+followed you" or "someone liked your log".
+
+Logs of unreleased games are not filtered here. The web app drops them while
+hydrating a page (`apps/web/src/lib/server/feed.ts`), asking the game backend's
+`/games/resolve` for a fresh release date, since release dates slip and a date
+stored on the log would go stale. Once the game is out the rows reappear in
+place, at their `createdAt`.
 
 ## Deploy (Railway)
 
@@ -46,9 +53,11 @@ one indexed collection whose records name another account as their subject.
 ## Configure
 
 1. **Record lexicons** — Lexicons → Add Lexicon, then upload
-   `social.respawn.backlog.item` and `social.respawn.graph.follow`. Both
-   reference `social.respawn.defs`, so upload that too. Adding a record lexicon
-   kicks off a backfill job; watch the per-collection counts on the dashboard.
+   `social.respawn.backlog.item`, `social.respawn.graph.follow`,
+   `social.respawn.feed.log`, and `social.respawn.feed.like`, plus what they
+   reference: `social.respawn.defs`, `social.respawn.richtext.facet`, and
+   `com.atproto.repo.strongRef`. Adding a record lexicon kicks off a backfill
+   job; watch the per-collection counts on the dashboard.
 2. **Query lexicon** — upload `social.respawn.feed.getActivity`, then attach
    `getActivity.lua` to it as `xrpc.query:social.respawn.feed.getActivity`. The
    script isn't optional: without one, HappyView falls back to its default list
@@ -170,16 +179,22 @@ top. So `getActivity.lua` uses `db.raw`:
 1. Resolve the filter to a set of author DIDs — `actor` alone, their follows
    (capped at 500), both, or none — and a subject predicate for the filters that
    include incoming activity.
-2. One query over both collections, `WHERE` the author set `OR` the subject
-   predicate, ordered by the record's `createdAt` descending, `uri` breaking
-   ties. A row matching both sides is still one row, so no dedupe is needed.
+2. One query over all four collections, `WHERE` the author set `OR` the
+   subject predicates (follows of `actor`, likes of `actor`'s logs), minus likes
+   of anything but a log and likes of your own log. Ordered by the record's
+   `createdAt` descending, `uri` breaking ties. A row matching several clauses
+   is still one row, so no dedupe is needed.
 3. Fetch `limit + 1` rows; if the extra row exists, return a cursor of
    `<createdAt>::<uri>` and resume with a keyset comparison on the next call.
+4. Fetch the logs the page's likes point at in one query (a like whose log is
+   gone drops out), then number every log on the page — its 1-based position
+   among the author's logs of that game by `createdAt`, the same numbering as
+   the `/[handle]/game/[slug]/[n]/` route.
 
 `following` short-circuits to an empty feed when the actor follows nobody;
 `all` does not, since their own and incoming activity still apply.
 
 Adding a new event type to the feed means adding its collection to the
 `collection IN (…)` list, mapping its record fields to a `#feedItem`, and — if
-it names a subject — widening the incoming clause, which is currently scoped to
-follows so the JSON comparison never touches backlog rows.
+it names a subject — widening the incoming clause, where each subject test is
+scoped to its own collection so the JSON comparisons never touch other rows.

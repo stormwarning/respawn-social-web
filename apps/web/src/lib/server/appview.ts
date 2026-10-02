@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/private'
 import type { BlobRef } from '@atproto/api'
+import type { RespawnLogRecord } from '$lib/atproto/log'
 
 /** Views returned by HappyView (see services/appview for the deployment runbook). */
 export interface FeedGameRef {
@@ -13,18 +14,29 @@ export interface FeedCover {
 	image?: BlobRef
 }
 
+/** A log as the feed carries it: the log itself, or the one a like points at. */
+export interface FeedLogView {
+	uri: string
+	/** The log's author. */
+	did: string
+	/** 1-based, per author and game, oldest first: the log page's `[n]` segment. */
+	number: number
+	record: RespawnLogRecord
+}
+
 /**
  * One activity event, matching `social.respawn.feed.getActivity#feedItem`.
  * `type` selects which optional fields are set.
  */
 export interface FeedItem {
-	type: 'backlogAdd' | 'follow' | (string & {})
+	type: 'backlogAdd' | 'follow' | 'log' | 'logLike' | (string & {})
 	uri: string
 	did: string
 	createdAt: string
 	game?: FeedGameRef
 	cover?: FeedCover
 	subject?: string
+	log?: FeedLogView
 }
 
 export interface FeedPage {

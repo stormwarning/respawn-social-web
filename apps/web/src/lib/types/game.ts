@@ -170,6 +170,8 @@ export interface ResolveResult {
 	status: 'live' | 'folded' | 'deleted'
 	via: 'members' | 'redirect' | 'tombstone' | 'unknown'
 	redirectedFrom?: number
+	/** The resolved title's first release; null when TBA or unresolved. */
+	firstReleaseDate?: string | null
 }
 
 /** Colours extracted from a cover, keyed by IGDB's content-addressed image id. */

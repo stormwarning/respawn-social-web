@@ -53,7 +53,7 @@ export const $lxm = $nsid
 /** One activity event. `type` selects which optional fields are present. */
 type FeedItem = {
   $type?: 'social.respawn.feed.getActivity#feedItem'
-  type: 'backlogAdd' | 'follow' | l.UnknownString
+  type: 'backlogAdd' | 'follow' | 'log' | 'logLike' | l.UnknownString
   uri: l.AtUriString
 
   /**
@@ -63,7 +63,7 @@ type FeedItem = {
   createdAt: l.DatetimeString
 
   /**
-   * Present on backlogAdd.
+   * Present on backlogAdd, log, and logLike (the liked log's game).
    */
   game?: RespawnDefs.GameRef
 
@@ -76,6 +76,11 @@ type FeedItem = {
    * Present on follow: the account followed.
    */
   subject?: l.DidString
+
+  /**
+   * Present on log (the log itself) and logLike (the liked log).
+   */
+  log?: LogView
 }
 
 export type { FeedItem }
@@ -85,7 +90,9 @@ const feedItem = /*#__PURE__*/ l.typedObject<FeedItem>(
   $nsid,
   'feedItem',
   /*#__PURE__*/ l.object({
-    type: /*#__PURE__*/ l.string<{ knownValues: ['backlogAdd', 'follow'] }>(),
+    type: /*#__PURE__*/ l.string<{
+      knownValues: ['backlogAdd', 'follow', 'log', 'logLike']
+    }>(),
     uri: /*#__PURE__*/ l.string({ format: 'at-uri' }),
     did: /*#__PURE__*/ l.string({ format: 'did' }),
     createdAt: /*#__PURE__*/ l.string({ format: 'datetime' }),
@@ -100,7 +107,47 @@ const feedItem = /*#__PURE__*/ l.typedObject<FeedItem>(
     subject: /*#__PURE__*/ l.optional(
       /*#__PURE__*/ l.string({ format: 'did' }),
     ),
+    log: /*#__PURE__*/ l.optional(
+      /*#__PURE__*/ l.ref<LogView>((() => logView) as any),
+    ),
   }),
 )
 
 export { feedItem }
+
+/** A log as the feed shows it. */
+type LogView = {
+  $type?: 'social.respawn.feed.getActivity#logView'
+  uri: l.AtUriString
+
+  /**
+   * The log's author.
+   */
+  did: l.DidString
+
+  /**
+   * 1-based position among the author's logs of this game, oldest first by createdAt. Addresses the log's page.
+   */
+  number: number
+
+  /**
+   * The social.respawn.feed.log record.
+   */
+  record: l.LexMap
+}
+
+export type { LogView }
+
+/** A log as the feed shows it. */
+const logView = /*#__PURE__*/ l.typedObject<LogView>(
+  $nsid,
+  'logView',
+  /*#__PURE__*/ l.object({
+    uri: /*#__PURE__*/ l.string({ format: 'at-uri' }),
+    did: /*#__PURE__*/ l.string({ format: 'did' }),
+    number: /*#__PURE__*/ l.integer({ minimum: 1 }),
+    record: /*#__PURE__*/ l.lexMap(),
+  }),
+)
+
+export { logView }

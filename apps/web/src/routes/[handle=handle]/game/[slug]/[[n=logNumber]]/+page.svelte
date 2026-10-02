@@ -92,7 +92,7 @@ let hideReview = $derived(
 		</section>
 	{/if}
 
-	{#if data.isLoggedIn}
+	{#if data.isLoggedIn && data.interactive}
 		<form
 			bind:this={likeForm}
 			method="POST"
@@ -114,24 +114,26 @@ let hideReview = $derived(
 		</form>
 	{/if}
 
-	<section class="comments">
-		<SectionHeading>Comments</SectionHeading>
-		{#if data.commentsClosed}
-			<p class="sub">The author has closed comments on this log.</p>
-		{:else if data.isLoggedIn}
-			{#if data.commentsLimited}
-				<p class="sub">The author has limited who can comment on this log.</p>
+	{#if data.interactive}
+		<section class="comments">
+			<SectionHeading>Comments</SectionHeading>
+			{#if data.commentsClosed}
+				<p class="sub">The author has closed comments on this log.</p>
+			{:else if data.isLoggedIn}
+				{#if data.commentsLimited}
+					<p class="sub">The author has limited who can comment on this log.</p>
+				{/if}
+				<form method="POST" action="?/comment" use:enhance>
+					<textarea name="text" rows="3" maxlength="3000" placeholder="Add a comment"></textarea>
+					{#if form?.error}<p class="error">{form.error}</p>{/if}
+					{#if form?.commented}<p class="success">Comment posted.</p>{/if}
+					<button class="button" type="submit"><span>Comment</span></button>
+				</form>
+			{:else}
+				<p class="sub"><a href="/login/">Log in</a> to comment.</p>
 			{/if}
-			<form method="POST" action="?/comment" use:enhance>
-				<textarea name="text" rows="3" maxlength="3000" placeholder="Add a comment"></textarea>
-				{#if form?.error}<p class="error">{form.error}</p>{/if}
-				{#if form?.commented}<p class="success">Comment posted.</p>{/if}
-				<button class="button" type="submit"><span>Comment</span></button>
-			</form>
-		{:else}
-			<p class="sub"><a href="/login/">Log in</a> to comment.</p>
-		{/if}
-	</section>
+		</section>
+	{/if}
 </article>
 
 <style>

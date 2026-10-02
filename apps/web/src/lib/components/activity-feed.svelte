@@ -2,6 +2,8 @@
 import type { HydratedFeed, FeedActor } from '$lib/server/feed'
 import ActivityBacklog from './activity-backlog.svelte'
 import ActivityFollow from './activity-follow.svelte'
+import ActivityLog from './activity-log.svelte'
+import ActivityLogLike from './activity-log-like.svelte'
 import Divider from './divider.svelte'
 
 interface Props {
@@ -55,6 +57,18 @@ function activityActor(actor: FeedActor) {
 					<ActivityFollow
 						actor={activityActor(item.actor)}
 						subject={activityActor(item.subject)}
+						createdAt={item.createdAt}
+					/>
+				{:else if item.type === 'log' && item.log}
+					<ActivityLog
+						actor={activityActor(item.actor)}
+						log={item.log}
+						createdAt={item.createdAt}
+					/>
+				{:else if item.type === 'logLike' && item.log}
+					<ActivityLogLike
+						actor={activityActor(item.actor)}
+						log={{ ...item.log, author: activityActor(item.log.author) }}
 						createdAt={item.createdAt}
 					/>
 				{/if}

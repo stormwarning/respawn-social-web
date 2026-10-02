@@ -1,5 +1,10 @@
 import { PLAYED_OPTIONS, type PlayedState } from '$lib/atproto/game'
-import type { ReplyRule, ReplygateSettings, RespawnLogRecord } from '$lib/atproto/log'
+import {
+	hasReview,
+	type ReplyRule,
+	type ReplygateSettings,
+	type RespawnLogRecord,
+} from '$lib/atproto/log'
 import type { RichTextValue } from '$lib/richtext/types'
 
 /** The game a log is about, as the dialog shows it. */
@@ -189,7 +194,7 @@ export function activityVerb(log: ActivityFields): string {
 	}
 	if (log.startedPlaying) return 'started playing'
 	if (log.finishedPlaying) return FINISHED_VERBS[log.finishedPlaying]
-	if (log.review?.text.trim() || log.review?.external) return 'reviewed'
+	if (hasReview(log)) return 'reviewed'
 	if (log.rating) return 'rated'
 	return 'logged'
 }

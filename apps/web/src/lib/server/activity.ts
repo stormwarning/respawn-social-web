@@ -34,7 +34,7 @@ export async function loadActivity(
 			fetchFn,
 		)
 		stage = 'hydrateFeed'
-		return { feed: await hydrateFeed(page), feedError: false, appviewConfigured }
+		return { feed: await hydrateFeed(page, fetchFn), feedError: false, appviewConfigured }
 	} catch (err) {
 		console.error(`[activity] ${filter} feed failed during ${stage}:`, err)
 		return { feed: null, feedError: true, appviewConfigured }

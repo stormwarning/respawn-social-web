@@ -3,7 +3,7 @@ import { Collections } from '@respawn-social/lexicons'
 import { cachePageData } from '$lib/server/page-cache'
 import { avatarUrlForBlob, blobUrl, type RespawnProfileRecord } from '$lib/atproto/profile'
 import { listAllRecords, getRecordOrNull, type RecordEnvelope } from '$lib/atproto/records'
-import { listLogs } from '$lib/atproto/log'
+import { listLogs, playedAt } from '$lib/atproto/log'
 import { loadBacklog } from '$lib/atproto/backlog'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
 import type { GameRef, RespawnGameRecord } from '$lib/atproto/game'
@@ -39,11 +39,12 @@ export async function loadGamesPage(
 	for (const fave of profile?.value.faves ?? []) refs.set(fave.game.igdbId, fave.game)
 	for (const log of logs) refs.set(log.value.game.igdbId, log.value.game)
 
-	// Newest log wins; games never logged fall back to when the record was made.
+	// Most recently played log wins; games never logged fall back to when the
+	// record was made.
 	const lastPlayed = new Map<number, string>()
 	for (const log of logs) {
 		const id = log.value.game.igdbId
-		const at = log.value.createdAt
+		const at = playedAt(log.value)
 		if (at > (lastPlayed.get(id) ?? '')) lastPlayed.set(id, at)
 	}
 

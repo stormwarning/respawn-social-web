@@ -56,7 +56,9 @@ can also be formatted as a spoiler. This will scramble the text stored in
 `review.text`; the unscrambled text will be saved in `review.textWithSpoilers`.
 
 A Log can be interacted with by others, based on settings during creation,
-similar to Bluesky posts. Comments are similar to replies; they exist in the
+similar to Bluesky posts — but only when it has a review. A Log without one
+can't be liked or commented on, and the appview ignores likes of it (including
+ones left behind after the author removes the review). Comments are similar to replies; they exist in the
 commenter’s PDS but the author can choose to hide them.
 
 - game

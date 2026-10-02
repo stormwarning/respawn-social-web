@@ -99,7 +99,8 @@ function relativeAge(iso: string): string {
 	}
 }
 
-:global(.backlog-link) {
+:global(.backlog-link),
+:global(.log-link) {
 	color: var(--color-grey-300);
 	text-decoration: none;
 

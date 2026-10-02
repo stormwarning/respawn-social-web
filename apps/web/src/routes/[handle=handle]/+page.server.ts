@@ -4,7 +4,7 @@ import type { Actions, PageServerLoad } from './$types'
 import { avatarUrlForBlob, blobUrl, type RespawnProfileRecord } from '$lib/atproto/profile'
 import { findFollow, follow, unfollow } from '$lib/atproto/graph'
 import { getRecordOrNull, listAllRecords, toPlainRecord } from '$lib/atproto/records'
-import { listLogs } from '$lib/atproto/log'
+import { hasReview, listLogs, playedAt } from '$lib/atproto/log'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
 import { listLists } from '$lib/atproto/list'
 import { loadBacklog } from '$lib/atproto/backlog'
@@ -60,16 +60,19 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 		did: actor.did,
 		profile: profile ? toPlainRecord(profile.value) : null,
 		avatarUrl: avatarUrlForBlob(actor.pds, actor.did, profile?.value.avatar),
-		recentLogs: logs.slice(0, 10).map((log) => ({
-			uri: log.uri,
-			game: log.value.game,
-			rating: log.value.rating ?? null,
-			liked: log.value.liked ?? false,
-			finishedPlaying: log.value.finishedPlaying ?? null,
-			createdAt: log.value.createdAt,
-			n: logNumbers.get(log.uri) ?? 1,
-			hasReview: Boolean(log.value.review?.text),
-		})),
+		recentLogs: logs
+			.toSorted((a, b) => playedAt(b.value).localeCompare(playedAt(a.value)))
+			.slice(0, 10)
+			.map((log) => ({
+				uri: log.uri,
+				game: log.value.game,
+				rating: log.value.rating ?? null,
+				liked: log.value.liked ?? false,
+				finishedPlaying: log.value.finishedPlaying ?? null,
+				createdAt: log.value.createdAt,
+				n: logNumbers.get(log.uri) ?? 1,
+				hasReview: hasReview(log.value),
+			})),
 		logCount: logs.length,
 		gameCount: games.length,
 		faves: (profile?.value.faves ?? []).map((fave) => ({

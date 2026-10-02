@@ -4,7 +4,7 @@ import type { Actions, PageServerLoad } from './$types'
 import { createComment } from '$lib/atproto/comment'
 import { createLike, deleteLike, findLike } from '$lib/atproto/like'
 import { getRecordOrNull, toPlainRecord } from '$lib/atproto/records'
-import { listLogs, type RespawnReplygateRecord } from '$lib/atproto/log'
+import { hasReview, listLogs, type RespawnReplygateRecord } from '$lib/atproto/log'
 import { avatarUrlForBlob, type RespawnProfileRecord } from '$lib/atproto/profile'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
 import { cachePageData } from '$lib/server/page-cache'
@@ -64,6 +64,8 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 		logCid: log.cid,
 		n,
 		total,
+		// Only a review can be liked or commented on.
+		interactive: hasReview(log.value),
 		commentsClosed,
 		commentsLimited,
 		isSelf,
@@ -83,6 +85,10 @@ export const actions: Actions = {
 		try {
 			const { log } = await loadLog(params.handle, params.slug, params.n ? Number(params.n) : 1)
 			if (!log) return fail(404, { error: 'Log not found.' })
+			// Unliking stays open, so a like left behind by a removed review can go.
+			if (liked && !hasReview(log.value)) {
+				return fail(400, { error: 'Only a log with a review can be liked.' })
+			}
 			const existing = await findLike(agent, user.did, log.uri)
 			if (liked && !existing) await createLike(agent, user.did, { uri: log.uri, cid: log.cid })
 			if (!liked && existing) await deleteLike(agent, user.did, existing.rkey)
@@ -104,6 +110,9 @@ export const actions: Actions = {
 		try {
 			const { log } = await loadLog(params.handle, params.slug, params.n ? Number(params.n) : 1)
 			if (!log) return fail(404, { error: 'Log not found.' })
+			if (!hasReview(log.value)) {
+				return fail(400, { error: 'Only a log with a review can be commented on.' })
+			}
 			await createComment(agent, user.did, {
 				text,
 				subject: { uri: log.uri, cid: log.cid },
