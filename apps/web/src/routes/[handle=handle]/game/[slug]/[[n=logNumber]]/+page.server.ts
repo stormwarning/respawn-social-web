@@ -5,6 +5,7 @@ import { createComment } from '$lib/atproto/comment'
 import { createLike, deleteLike, findLike } from '$lib/atproto/like'
 import { getRecordOrNull, toPlainRecord } from '$lib/atproto/records'
 import { listLogs, type RespawnReplygateRecord } from '$lib/atproto/log'
+import { avatarUrlForBlob, type RespawnProfileRecord } from '$lib/atproto/profile'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
 import { cachePageData } from '$lib/server/page-cache'
 
@@ -34,20 +35,19 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 
 	// Replygate record shares the log's rkey. Enforcement is advisory until
 	// HappyView can apply it on read.
-	const replygate = await getRecordOrNull<RespawnReplygateRecord>(
-		repo,
-		actor.did,
-		Collections.replygate,
-		log.rkey,
-	)
-	const commentsClosed = replygate?.value.allow?.length === 0
+	const { agent, user } = locals
+	const [profile, replygate, viewerLike] = await Promise.all([
+		getRecordOrNull<RespawnProfileRecord>(repo, actor.did, Collections.profile, 'self'),
+		getRecordOrNull<RespawnReplygateRecord>(repo, actor.did, Collections.replygate, log.rkey),
+		user && agent ? findLike(agent, user.did, log.uri) : null,
+	])
+	// Absent `allow` means anyone; `[]` means no one; otherwise a union of rules.
+	const allow = replygate?.value.allow
+	const commentsClosed = allow?.length === 0
+	const commentsLimited = Boolean(allow?.length)
 
-	const isSelf = locals.user?.did === actor.did
-	let viewerLike: { rkey: string } | null = null
-	if (locals.user && locals.agent) {
-		const like = await findLike(locals.agent, locals.user.did, log.uri)
-		viewerLike = like ? { rkey: like.rkey } : null
-	}
+	const isSelf = user?.did === actor.did
+	const handle = actor.handle ?? actor.did
 
 	// A signed-in viewer can like or comment from here, and the like state is part
 	// of this payload, so only the logged-out view is safe to hold. Set only once
@@ -56,33 +56,37 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 	cachePageData(setHeaders, { viewerCanMutate: Boolean(locals.user) })
 
 	return {
-		handle: actor.handle ?? actor.did,
+		handle,
+		displayName: profile?.value.displayName || handle,
+		avatarUrl: avatarUrlForBlob(actor.pds, actor.did, profile?.value.avatar),
 		log: toPlainRecord(log.value),
 		logUri: log.uri,
 		logCid: log.cid,
 		n,
 		total,
 		commentsClosed,
+		commentsLimited,
 		isSelf,
-		isLoggedIn: !!locals.user,
-		liked: viewerLike !== null,
+		isLoggedIn: !!user,
+		// Whether the viewer liked this log, not `log.liked` (the author liking the game).
+		viewerLiked: viewerLike !== null,
 	}
 }
 
 export const actions: Actions = {
-	like: async ({ params, locals }) => {
+	like: async ({ params, locals, request }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user } = locals
+		// The button has already flipped, so it sends the state it wants rather than
+		// asking for a toggle: rapid taps then settle on the last one, not on parity.
+		const liked = (await request.formData()).get('liked') === 'true'
 		try {
 			const { log } = await loadLog(params.handle, params.slug, params.n ? Number(params.n) : 1)
 			if (!log) return fail(404, { error: 'Log not found.' })
 			const existing = await findLike(agent, user.did, log.uri)
-			if (existing) {
-				await deleteLike(agent, user.did, existing.rkey)
-				return { liked: false }
-			}
-			await createLike(agent, user.did, { uri: log.uri, cid: log.cid })
-			return { liked: true }
+			if (liked && !existing) await createLike(agent, user.did, { uri: log.uri, cid: log.cid })
+			if (!liked && existing) await deleteLike(agent, user.did, existing.rkey)
+			return { liked }
 		} catch (err) {
 			console.error('[log] like failed', err)
 			return fail(500, { error: 'Could not update like. Try again.' })
