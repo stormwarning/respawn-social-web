@@ -56,7 +56,7 @@ function ontoggle(event: ToggleEvent) {
 	if (!CSS.supports('position-anchor', anchor) && trigger) {
 		const rect = trigger.getBoundingClientRect()
 		menu.style.insetBlockStart = `${rect.bottom + 4}px`
-		menu.style.insetInlineStart = `${rect.left}px`
+		menu.style.insetInlineEnd = `${document.documentElement.clientWidth - rect.right}px`
 	}
 
 	const items = menuItems()
@@ -232,9 +232,10 @@ function choose(value: PlayedState | null) {
 		corner-shape: var(--corner-shape);
 	}
 
+	/* Its right edge lines up with the trigger's. */
 	@supports (position-anchor: --a) {
 		margin-block-start: 4px;
-		position-area: block-end span-inline-end;
+		position-area: block-end span-inline-start;
 		position-try-fallbacks: flip-block, flip-inline;
 	}
 }

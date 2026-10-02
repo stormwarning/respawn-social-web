@@ -26,6 +26,8 @@ const uid = $props.id()
 const triggerId = `${uid}--trigger`
 const menuId = `${uid}--menu`
 const anchor = `--edition-menu-${uid}`
+/** Matches `--viewport-gap` in the styles below. */
+const VIEWPORT_GAP = 16
 
 let trigger = $state<HTMLButtonElement>()
 let menu = $state<HTMLDivElement>()
@@ -59,7 +61,8 @@ function menuItems() {
 
 /**
  * The menu lives in the top layer, so it is anchored to its trigger with CSS
- * anchor positioning where supported and measured by hand elsewhere.
+ * anchor positioning where supported and measured by hand elsewhere. A long
+ * list scrolls, stopping short of the viewport edge.
  */
 function ontoggle(event: ToggleEvent) {
 	menuOpen = event.newState === 'open'
@@ -68,7 +71,8 @@ function ontoggle(event: ToggleEvent) {
 	if (!CSS.supports('position-anchor', anchor) && trigger) {
 		const rect = trigger.getBoundingClientRect()
 		menu.style.insetBlockStart = `${rect.bottom + 4}px`
-		menu.style.insetInlineStart = `${rect.left}px`
+		menu.style.insetInlineEnd = `${document.documentElement.clientWidth - rect.right}px`
+		menu.style.maxBlockSize = `${window.innerHeight - rect.bottom - 4 - VIEWPORT_GAP}px`
 	}
 
 	const items = menuItems()
@@ -251,10 +255,14 @@ function onkeydown(event: KeyboardEvent) {
 
 /* The menu is the game page's play-state menu, with grouped radio and checkbox items. */
 .menu {
+	--viewport-gap: 16px;
+
 	inset: auto;
 	min-inline-size: 240px;
 	padding: 4px;
 	margin: 0;
+	overflow-block: auto;
+	overscroll-behavior: contain;
 	color: var(--color-grey-800);
 	background-color: var(--color-grey-050);
 	border: none;
@@ -268,9 +276,15 @@ function onkeydown(event: KeyboardEvent) {
 		corner-shape: var(--corner-shape);
 	}
 
+	/*
+	 * Its right edge lines up with the trigger's. It opens on whichever side of
+	 * the trigger has more room, and scrolls rather than reach the viewport edge.
+	 */
 	@supports (position-anchor: --a) {
+		max-block-size: calc(100% - 4px - var(--viewport-gap));
 		margin-block-start: 4px;
-		position-area: block-end span-inline-end;
+		position-area: block-end span-inline-start;
+		position-try-order: most-block-size;
 		position-try-fallbacks: flip-block, flip-inline;
 	}
 }
