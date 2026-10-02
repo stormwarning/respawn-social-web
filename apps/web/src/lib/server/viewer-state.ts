@@ -2,6 +2,7 @@ import type { Agent } from '@atproto/api'
 import { Collections } from '@respawn-social/lexicons'
 import type { BacklogItem } from '$lib/atproto/backlog'
 import type { PlayedState, RespawnGameRecord } from '$lib/atproto/game'
+import type { RespawnLogRecord } from '$lib/atproto/log'
 import { listAllRecords } from '$lib/atproto/records'
 import { createMemo } from './memo'
 
@@ -18,13 +19,15 @@ export interface ViewerState {
 	/** Keyed by IGDB id — the game record's rkey — as a string. */
 	games: Record<string, ViewerGameState>
 	backlog: number[]
+	/** IGDB ids the viewer has logged at least once, under whichever id the log names. */
+	logged: number[]
 }
 
 /**
  * The signed-in viewer's own state across every game they have touched.
  *
  * A list page shows dozens of games, and asking the PDS about each one costs two
- * `getRecord`s per item. Two `listRecords` calls cover the whole repo instead,
+ * `getRecord`s per item. Three `listRecords` calls cover the whole repo instead,
  * and the client store hydrates from them once per session.
  *
  * Records still sitting under an id that has since folded into another title are
@@ -38,9 +41,10 @@ const byDid = createMemo<ViewerState>({ ttlMs: 15_000 })
 
 export function loadViewerState(agent: Agent, did: string): Promise<ViewerState> {
 	return byDid.get(did, async () => {
-		const [gameRecords, backlogRecords] = await Promise.all([
+		const [gameRecords, backlogRecords, logRecords] = await Promise.all([
 			listAllRecords<RespawnGameRecord>(agent, did, Collections.game),
 			listAllRecords<BacklogItem>(agent, did, Collections.backlogItem),
+			listAllRecords<RespawnLogRecord>(agent, did, Collections.log),
 		])
 
 		const games: Record<string, ViewerGameState> = {}
@@ -59,11 +63,18 @@ export function loadViewerState(agent: Agent, did: string): Promise<ViewerState>
 		return {
 			games,
 			backlog: backlogRecords.map((rec) => Number(rec.rkey)).filter(Number.isInteger),
+			logged: [
+				...new Set(
+					logRecords.flatMap(({ value }) =>
+						Number.isInteger(value.game?.igdbId) ? [value.game.igdbId] : [],
+					),
+				),
+			],
 		}
 	})
 }
 
-/** Drop a DID's cached state. Call after writing their game or backlog records. */
+/** Drop a DID's cached state. Call after writing their game, backlog or log records. */
 export function forgetViewerState(did: string): void {
 	byDid.delete(did)
 }

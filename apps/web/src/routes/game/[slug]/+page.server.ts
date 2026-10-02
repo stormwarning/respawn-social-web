@@ -3,18 +3,25 @@ import { BackendError, getTitleBySlug } from '$lib/server/backend'
 import type { Actions, PageServerLoad } from './$types'
 import { cachePageData } from '$lib/server/page-cache'
 import {
-	loadGameRecord,
 	putGameRecord,
 	type GameRef,
 	type PlayedState,
 	type RespawnGameRecord,
 } from '$lib/atproto/game'
-import { createLog, type ReplyRule, type RespawnLogRecord } from '$lib/atproto/log'
+import {
+	createLog,
+	type LogReview,
+	type ReplygateSettings,
+	type ReplyRule,
+	type RespawnLogRecord,
+} from '$lib/atproto/log'
 import { addToBacklog, migrateLegacyBacklog, removeFromBacklog } from '$lib/atproto/backlog'
 import { buildCover } from '$lib/server/cover'
 import { forgetViewerState } from '$lib/server/viewer-state'
 import { loadConsolidatedGameRecord } from '$lib/atproto/title-identity'
 import type { Title } from '$lib/types/game'
+import { countGraphemes, normalize } from '$lib/richtext/facets'
+import type { Facet } from '$lib/richtext/types'
 
 const PLAY_STATES = new Set(['played', 'completed', 'abandoned', 'retired', 'shelved'])
 const REPLY_RULES = new Set<string>(['followers', 'following', 'mention'])
@@ -54,6 +61,143 @@ function withReleaseDate(
 	releaseDate: string | undefined,
 ): RespawnGameRecord {
 	return releaseDate && releaseDate !== record.releaseDate ? { ...record, releaseDate } : record
+}
+
+/** Lexicon limits for a log's short strings and its review. */
+const LOG_STRING_MAX_GRAPHEMES = 100
+const LOG_DLC_MAX_ITEMS = 20
+const REVIEW_MAX_GRAPHEMES = 10000
+
+type LogFields = Omit<RespawnLogRecord, 'game' | 'createdAt' | 'cover'>
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+	typeof value === 'object' && value !== null && !Array.isArray(value)
+
+/** A trimmed, length-checked string, `undefined` when blank, or `null` when invalid. */
+function shortString(value: unknown): string | undefined | null {
+	if (value == null) return undefined
+	if (typeof value !== 'string') return null
+	const trimmed = value.trim()
+	if (countGraphemes(trimmed) > LOG_STRING_MAX_GRAPHEMES) return null
+	return trimmed || undefined
+}
+
+/**
+ * The log dialog posts its record and replygate as JSON. Both come from the
+ * client, so every field is checked against the lexicon and copied over by
+ * name — nothing is spread — and the review's rich text is re-serialized. The
+ * game ref and `createdAt` are the server's to set.
+ */
+function parseLogForm(
+	form: FormData,
+): { fields: LogFields; replygate?: ReplygateSettings } | { error: string } {
+	let raw: unknown
+	let rawGate: unknown
+	try {
+		raw = JSON.parse(String(form.get('log') ?? ''))
+		const gate = String(form.get('replygate') ?? '')
+		rawGate = gate ? JSON.parse(gate) : undefined
+	} catch {
+		return { error: 'Invalid log.' }
+	}
+	if (!isRecord(raw)) return { error: 'Invalid log.' }
+
+	const platform = shortString(raw.platform)
+	const edition = shortString(raw.edition)
+	if (platform === null || edition === null) return { error: 'Invalid platform or edition.' }
+
+	let dlc: string[] | undefined
+	if (raw.dlc != null) {
+		if (!Array.isArray(raw.dlc) || raw.dlc.length > LOG_DLC_MAX_ITEMS) {
+			return { error: 'Invalid DLC.' }
+		}
+		const items = raw.dlc.map(shortString)
+		if (items.some((item) => item === null)) return { error: 'Invalid DLC.' }
+		const kept = items.filter((item): item is string => Boolean(item))
+		dlc = kept.length ? kept : undefined
+	}
+
+	let datePlayed: string | undefined
+	if (raw.datePlayed != null) {
+		const timestamp = typeof raw.datePlayed === 'string' ? Date.parse(raw.datePlayed) : NaN
+		if (!Number.isFinite(timestamp)) return { error: 'Invalid date played.' }
+		datePlayed = new Date(timestamp).toISOString()
+	}
+
+	if (raw.startedPlaying != null && typeof raw.startedPlaying !== 'boolean') {
+		return { error: 'Invalid play state.' }
+	}
+	if (
+		raw.finishedPlaying != null &&
+		(typeof raw.finishedPlaying !== 'string' || !PLAY_STATES.has(raw.finishedPlaying))
+	) {
+		return { error: 'Invalid play state.' }
+	}
+
+	const rating = raw.rating
+	if (
+		rating != null &&
+		(typeof rating !== 'number' || !Number.isInteger(rating) || rating < 1 || rating > 10)
+	) {
+		return { error: 'Invalid rating.' }
+	}
+	if (raw.liked != null && typeof raw.liked !== 'boolean') return { error: 'Invalid like.' }
+
+	let review: LogReview | undefined
+	if (raw.review != null) {
+		const r = raw.review
+		if (
+			!isRecord(r) ||
+			typeof r.text !== 'string' ||
+			(r.textWithSpoilers != null && typeof r.textWithSpoilers !== 'string') ||
+			(r.facets != null && !Array.isArray(r.facets)) ||
+			(r.containsSpoilers != null && typeof r.containsSpoilers !== 'boolean')
+		) {
+			return { error: 'Invalid review.' }
+		}
+		const text = normalize({
+			text: r.text,
+			textWithSpoilers: r.textWithSpoilers as string | undefined,
+			facets: r.facets as Facet[] | undefined,
+		})
+		if (
+			Math.max(countGraphemes(text.text), countGraphemes(text.textWithSpoilers ?? '')) >
+			REVIEW_MAX_GRAPHEMES
+		) {
+			return { error: 'Your review is too long.' }
+		}
+		if (text.text.trim()) {
+			review = {
+				text: text.text,
+				...(text.textWithSpoilers ? { textWithSpoilers: text.textWithSpoilers } : {}),
+				...(text.facets?.length ? { facets: text.facets } : {}),
+				...(r.containsSpoilers ? { containsSpoilers: true } : {}),
+			}
+		}
+	}
+
+	// Absent means anyone; `[]` means no one; otherwise the union of the rules.
+	let replygate: ReplygateSettings | undefined
+	if (rawGate !== undefined) {
+		const allow = isRecord(rawGate) ? rawGate.allow : undefined
+		if (!Array.isArray(allow) || !allow.every((rule) => REPLY_RULES.has(rule))) {
+			return { error: 'Invalid comment setting.' }
+		}
+		replygate = { allow: [...new Set(allow as ReplyRule[])] }
+	}
+
+	const fields: LogFields = {
+		...(edition ? { edition } : {}),
+		...(dlc ? { dlc } : {}),
+		...(platform ? { platform } : {}),
+		...(datePlayed ? { datePlayed } : {}),
+		...(raw.startedPlaying ? { startedPlaying: true } : {}),
+		...(raw.finishedPlaying ? { finishedPlaying: raw.finishedPlaying as PlayedState } : {}),
+		...(rating ? { rating } : {}),
+		...(raw.liked ? { liked: true } : {}),
+		...(review ? { review } : {}),
+	}
+	return { fields, replygate }
 }
 
 /** The `CoverList` item shape, which keys on `igdbId` and renders `title`. */
@@ -315,84 +459,75 @@ export const actions: Actions = {
 
 	log: async ({ params, request, fetch, locals }) => {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
-		const { agent, user } = locals
+		const { agent, user, timings } = locals
 
-		const form = await request.formData()
-		const platform = String(form.get('platform') ?? '').trim()
-		const datePlayed = String(form.get('datePlayed') ?? '').trim()
-		const finishedPlaying = String(form.get('finishedPlaying') ?? '')
-		const ratingRaw = String(form.get('rating') ?? '').trim()
-		const liked = form.get('liked') === 'on'
-		const reviewText = String(form.get('review') ?? '').trim()
-		const containsSpoilers = form.get('containsSpoilers') === 'on'
-		// `anyone` (or nothing), `nobody`, or one or more combinable rules.
-		const allow = form
-			.getAll('allow')
-			.map(String)
-			.filter((value) => value !== 'anyone')
-		const nobody = allow.length === 1 && allow[0] === 'nobody'
-
-		if (finishedPlaying && !PLAY_STATES.has(finishedPlaying)) {
-			return fail(400, { logError: 'Invalid play state.' })
-		}
-		const rating = ratingRaw ? Number(ratingRaw) : undefined
-		if (rating != null && (!Number.isInteger(rating) || rating < 1 || rating > 10)) {
-			return fail(400, { logError: 'Rating must be a whole number from 1 to 10.' })
-		}
-		if (!nobody && !allow.every((value) => REPLY_RULES.has(value))) {
-			return fail(400, { logError: 'Invalid comment setting.' })
-		}
+		const parsed = parseLogForm(await request.formData())
+		if ('error' in parsed) return fail(400, parsed)
+		const { fields, replygate } = parsed
 
 		try {
 			// Refetch the game server-side so the denormalized ref can't drift.
-			const game = await getTitleBySlug(params.slug, fetch)
+			const game = await timings.track('game.title', () => getTitleBySlug(params.slug, fetch))
 			const createdAt = new Date().toISOString()
 
 			const log: RespawnLogRecord = {
 				// `displayName`, not `name`: the ref is what other people see.
 				game: { igdbId: game.id, slug: params.slug, title: game.displayName },
-				platform: platform || undefined,
-				datePlayed: datePlayed ? new Date(`${datePlayed}T00:00:00Z`).toISOString() : undefined,
-				finishedPlaying: (finishedPlaying as PlayedState) || undefined,
-				rating,
-				liked: liked || undefined,
-				review: reviewText
-					? { text: reviewText, containsSpoilers: containsSpoilers || undefined }
-					: undefined,
+				...fields,
 				createdAt,
 			}
 
 			// Denormalized current state on the game record, written atomically.
-			const existing = await loadGameRecord(agent, user.did, game.id)
+			// Fold in any record left under an id that has since folded into this
+			// title, so logging it does not create a second one.
+			const existing = await timings.track('action.existing', () =>
+				loadConsolidatedGameRecord(agent, user.did, game.id, game.members, fetch),
+			)
+			const {
+				played: prevPlayed,
+				playing: prevPlaying,
+				...rest
+			}: Partial<RespawnGameRecord> = existing ?? {}
+			// A finished session ends the playthrough; one that only started it begins one.
+			const playing = fields.finishedPlaying ? false : fields.startedPlaying || prevPlaying === true
+			const played = fields.finishedPlaying ?? prevPlayed
 			const gameRecord: RespawnGameRecord = {
-				...existing,
-				game: existing?.game ?? log.game,
-				rating: rating ?? existing?.rating,
-				liked: liked || existing?.liked || undefined,
-				played: (finishedPlaying as PlayedState) || existing?.played,
-				playing: finishedPlaying ? undefined : existing?.playing,
-				releaseDate: game.firstReleaseDate ?? existing?.releaseDate,
-				createdAt: existing?.createdAt ?? createdAt,
+				...rest,
+				game: rest.game ?? log.game,
+				...(playing ? { playing: true } : {}),
+				...(played ? { played } : {}),
+				rating: fields.rating ?? rest.rating,
+				liked: fields.liked || rest.liked || undefined,
+				releaseDate: game.firstReleaseDate ?? rest.releaseDate,
+				createdAt: rest.createdAt ?? createdAt,
 			}
-			if (!gameRecord.cover && game.coverUrl) {
+			const { coverUrl } = game
+			if (!gameRecord.cover && coverUrl) {
 				try {
-					gameRecord.cover = await buildCover(agent, game.coverUrl, fetch)
+					gameRecord.cover = await timings.track('action.cover', () =>
+						buildCover(agent, coverUrl, fetch),
+					)
 				} catch (err) {
 					console.error('[game/[slug]] cover build failed, logging without it', err)
 				}
 			}
 
-			const replygate = allow.length ? { allow: nobody ? [] : (allow as ReplyRule[]) } : undefined
-
-			await createLog(agent, user.did, log, {
-				replygate,
-				game: { igdbId: game.id, record: gameRecord, exists: existing !== null },
-			})
+			await timings.track('action.put', () =>
+				createLog(agent, user.did, log, {
+					replygate,
+					game: { igdbId: game.id, record: gameRecord, exists: existing !== null },
+				}),
+			)
 			forgetViewerState(user.did)
-			return { logged: true }
+			return {
+				played: gameRecord.played ?? null,
+				playing: gameRecord.playing === true,
+				rating: gameRecord.rating ?? 0,
+				liked: gameRecord.liked === true,
+			}
 		} catch (err) {
 			console.error('[game/[slug]] log failed', err)
-			return fail(500, { logError: 'Could not save your log. Try again.' })
+			return fail(500, { error: 'Could not save your log. Try again.' })
 		}
 	},
 }

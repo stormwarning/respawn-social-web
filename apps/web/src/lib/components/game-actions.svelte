@@ -4,8 +4,11 @@ import { applyAction, enhance } from '$app/forms'
 import type { ActionResult } from '@sveltejs/kit'
 import { Icon } from '@respawn-social/icons'
 import { PLAYED_OPTIONS, type PlayedState } from '$lib/atproto/game'
+import type { LogResult } from '$lib/log-form'
 import { viewerState } from '$lib/viewer-state.svelte'
 import StarRating from './star-rating.svelte'
+import Divider from './divider.svelte'
+import LogDialog from './log-dialog.svelte'
 
 let {
 	isLoggedIn,
@@ -14,6 +17,11 @@ let {
 	title,
 	coverUrl = '',
 	releaseDate = '',
+	members = [igdbId],
+	year = null,
+	platforms = [],
+	editions = [],
+	dlcOptions = [],
 }: {
 	isLoggedIn: boolean
 	igdbId: number
@@ -21,12 +29,20 @@ let {
 	title: string
 	coverUrl?: string
 	releaseDate?: string
+	/** Every IGDB id in the title; a log under any of them counts as logged. */
+	members?: number[]
+	year?: number | null
+	/** Offered by the log dialog. */
+	platforms?: string[]
+	editions?: string[]
+	dlcOptions?: string[]
 } = $props()
 
 // The viewer's own state lives in the store, not in the page payload, so it is
 // read straight from there and every optimistic flip below writes back to it.
 let gameState = $derived(viewerState.game(igdbId))
 let inBacklog = $derived(viewerState.inBacklog(igdbId))
+let logged = $derived(viewerState.hasLogged(members))
 /**
  * Until the store has answered, an untouched game and an unknown one look the
  * same. Acting on that would post a guess — a backlog click would send the
@@ -39,8 +55,13 @@ let savingPlayState = $state(false)
 let savingBacklog = $state(false)
 let savingRating = $state(false)
 let savingLike = $state(false)
+let savingLog = $state(false)
 let error = $state<string | null>(null)
 let ratingForm = $state<HTMLFormElement>()
+let logForm = $state<HTMLFormElement>()
+let logDialog = $state<LogDialog>()
+/** The dialog's last save, posted by the hidden log form. */
+let pendingLog = $state.raw<LogResult>()
 let playStateMenu = $state<HTMLDivElement>()
 let playStateTrigger = $state<HTMLButtonElement>()
 let playStateMenuOpen = $state(false)
@@ -78,6 +99,12 @@ function handleFailure(result: ActionResult) {
 async function submitRating() {
 	await tick()
 	ratingForm?.requestSubmit()
+}
+
+async function saveLog(result: LogResult) {
+	pendingLog = result
+	await tick()
+	logForm?.requestSubmit()
 }
 
 function closePlayStateMenu() {
@@ -303,6 +330,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 				</button>
 			</form>
 		</div>
+		<Divider />
 		<div class="actions-rating" aria-busy={ready ? undefined : 'true'}>
 			<form
 				bind:this={ratingForm}
@@ -376,88 +404,72 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 		{#if errorMessage}
 			<p class="error" role="status">{errorMessage}</p>
 		{/if}
-	{/if}
-</section>
-
-<!-- TODO: refactor and re-enable the log controls.
-<section class="log">
-	{#if data.ownLogs.length}
-		<h2>Your logs</h2>
-		<ul>
-			{#each data.ownLogs as log (log.n)}
-				<li>
-					<a href="/{data.viewerHandle}/game/{data.game.slug}/{log.n > 1 ? `${log.n}/` : ''}">
-						Log {log.n} · {new Date(log.createdAt).toLocaleDateString()}
-					</a>
-					{#if log.rating}· {log.rating}/10{/if}
-				</li>
-			{/each}
-		</ul>
-	{/if}
-
-	{#if !showLogForm}
-		<button type="button" onclick={() => (showLogForm = true)}>Log a play</button>
-	{:else}
+		<Divider />
 		<form
+			bind:this={logForm}
+			hidden
 			method="POST"
 			action="?/log"
-			class="log-form"
 			use:enhance={() => {
-				saving = true
-				return ({ result, update }) => {
-					saving = false
-					if (result.type === 'success') showLogForm = false
-					update()
+				error = null
+				const log = pendingLog?.log
+				const prev = { ...gameState }
+				const wasLogged = viewerState.logged.has(igdbId)
+				// Mirror the action's merge so the controls above move with the log.
+				if (log) {
+					viewerState.setGame(igdbId, {
+						playing: log.finishedPlaying ? false : log.startedPlaying || prev.playing,
+						played: log.finishedPlaying ?? prev.played,
+						rating: log.rating ?? prev.rating,
+						liked: log.liked || prev.liked,
+					})
+				}
+				viewerState.setLogged(igdbId, true)
+				savingLog = true
+				return ({ result }) => {
+					savingLog = false
+					if (result.type === 'success' && result.data) {
+						viewerState.setGame(igdbId, {
+							played: (result.data.played as PlayedState | null) ?? null,
+							playing: Boolean(result.data.playing),
+							rating: Number(result.data.rating),
+							liked: Boolean(result.data.liked),
+						})
+						return
+					}
+					viewerState.setGame(igdbId, prev)
+					viewerState.setLogged(igdbId, wasLogged)
+					handleFailure(result)
 				}
 			}}
 		>
-			<label for="platform">Platform</label>
-			<input id="platform" name="platform" type="text" placeholder="e.g. PC, Switch" />
-
-			<label for="datePlayed">Date played</label>
-			<input id="datePlayed" name="datePlayed" type="date" />
-
-			<label for="finishedPlaying">Play state</label>
-			<select id="finishedPlaying" name="finishedPlaying">
-				<option value="">—</option>
-				<option value="played">Played</option>
-				<option value="completed">Completed</option>
-				<option value="abandoned">Abandoned</option>
-				<option value="retired">Retired</option>
-				<option value="shelved">Shelved</option>
-			</select>
-
-			<label for="rating">Rating (1–10)</label>
-			<input id="rating" name="rating" type="number" min="1" max="10" step="1" />
-
-			<label><input name="liked" type="checkbox" /> Liked it</label>
-
-			<label for="review">Review</label>
-			<textarea id="review" name="review" rows="4" placeholder="What did you think?"></textarea>
-			<label><input name="containsSpoilers" type="checkbox" /> Review contains spoilers</label>
-
-			<label for="allow">Who can comment</label>
-			<select id="allow" name="allow">
-				<option value="everyone">Everyone</option>
-				<option value="following">People I follow</option>
-				<option value="followers">My followers</option>
-				<option value="nobody">Nobody</option>
-			</select>
-			<label><input name="disableLikes" type="checkbox" /> Disable likes</label>
-
-			{#if form && 'logError' in form && form.logError}
-				<p class="error">{form.logError}</p>
-			{/if}
-
-			<button type="submit" disabled={saving}>Save log</button>
-			<button type="button" onclick={() => (showLogForm = false)}>Cancel</button>
+			<input type="hidden" name="igdbId" value={igdbId} />
+			<input type="hidden" name="log" value={pendingLog ? JSON.stringify(pendingLog.log) : ''} />
+			<input
+				type="hidden"
+				name="replygate"
+				value={pendingLog?.replygate ? JSON.stringify(pendingLog.replygate) : ''}
+			/>
 		</form>
-	{/if}
-	{#if form && 'logged' in form && form.logged}
-		<p class="success">Log saved.</p>
+		<button
+			class="action-button is-text"
+			type="button"
+			disabled={!ready || savingLog}
+			onclick={() => logDialog?.open()}
+		>
+			<span>{logged ? 'Log or review again…' : 'Log or review…'}</span>
+		</button>
+		<LogDialog
+			bind:this={logDialog}
+			game={{ igdbId, slug, title, year, coverUrl: coverUrl || null }}
+			currentState={{ playing: gameState.playing, played: gameState.played }}
+			{platforms}
+			{editions}
+			{dlcOptions}
+			onsave={saveLog}
+		/>
 	{/if}
 </section>
--->
 
 <style>
 .actions {
@@ -527,10 +539,6 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 		fill: currentcolor;
 	}
 
-	&:hover {
-		background-color: var(--color-blue-200);
-	}
-
 	&:focus-visible {
 		outline: 2px solid var(--color-blue-500);
 		outline-offset: 2px;
@@ -551,8 +559,16 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 		opacity: 0.5;
 	}
 
+	&:hover:not(:active) {
+		background-color: var(--color-blue-200);
+	}
+
 	&.has-played {
 		padding-inline-end: 12px;
+	}
+
+	&.is-text {
+		padding-block: 8px;
 	}
 
 	&[aria-pressed='true'] {

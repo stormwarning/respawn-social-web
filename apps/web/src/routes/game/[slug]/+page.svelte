@@ -90,6 +90,11 @@ let relatedGroups = $derived.by(() => {
 				title={game.displayName}
 				coverUrl={game.coverUrl ?? ''}
 				releaseDate={game.firstReleaseDate ?? ''}
+				members={game.members}
+				year={game.releaseYear}
+				platforms={game.platforms.map((platform) => platform.displayName)}
+				editions={game.editions}
+				dlcOptions={game.expansionsNormalized}
 			/>
 		</div>
 	</section>

@@ -19,6 +19,7 @@ const UNTOUCHED: ViewerGameState = { played: null, playing: false, liked: false,
 class ViewerStateStore {
 	games = $state<Record<string, ViewerGameState>>({})
 	backlog = new SvelteSet<number>()
+	logged = new SvelteSet<number>()
 	status = $state<'idle' | 'loading' | 'ready' | 'error'>('idle')
 
 	/** Shared with concurrent callers so a layout effect and a button make one request. */
@@ -48,6 +49,7 @@ class ViewerStateStore {
 			if (session !== this.#session) return
 			this.games = state.games
 			for (const igdbId of state.backlog) this.backlog.add(igdbId)
+			for (const igdbId of state.logged) this.logged.add(igdbId)
 			this.status = 'ready'
 		} catch (err) {
 			// Buttons fall back to their untouched look, which is wrong but legible.
@@ -63,6 +65,7 @@ class ViewerStateStore {
 		this.#inFlight = null
 		this.games = {}
 		this.backlog.clear()
+		this.logged.clear()
 		this.status = 'idle'
 	}
 
@@ -74,6 +77,14 @@ class ViewerStateStore {
 		return this.backlog.has(igdbId)
 	}
 
+	/**
+	 * A title spans several IGDB ids, and a log names whichever one it was made
+	 * under, so callers pass every member of the title.
+	 */
+	hasLogged(igdbIds: number[]): boolean {
+		return igdbIds.some((igdbId) => this.logged.has(igdbId))
+	}
+
 	setGame(igdbId: number, patch: Partial<ViewerGameState>): void {
 		const key = String(igdbId)
 		this.games = { ...this.games, [key]: { ...(this.games[key] ?? UNTOUCHED), ...patch } }
@@ -82,6 +93,11 @@ class ViewerStateStore {
 	setBacklog(igdbId: number, inBacklog: boolean): void {
 		if (inBacklog) this.backlog.add(igdbId)
 		else this.backlog.delete(igdbId)
+	}
+
+	setLogged(igdbId: number, logged: boolean): void {
+		if (logged) this.logged.add(igdbId)
+		else this.logged.delete(igdbId)
 	}
 }
 
