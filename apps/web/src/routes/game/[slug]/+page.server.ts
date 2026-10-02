@@ -491,13 +491,16 @@ export const actions: Actions = {
 			// A finished session ends the playthrough; one that only started it begins one.
 			const playing = fields.finishedPlaying ? false : fields.startedPlaying || prevPlaying === true
 			const played = fields.finishedPlaying ?? prevPlayed
+			// The dialog opens on the game's current rating and like, so what it sends
+			// is the new state: clearing either there clears it here.
+			const { rating: _rating, liked: _liked, ...kept } = rest
 			const gameRecord: RespawnGameRecord = {
-				...rest,
+				...kept,
 				game: rest.game ?? log.game,
 				...(playing ? { playing: true } : {}),
 				...(played ? { played } : {}),
-				rating: fields.rating ?? rest.rating,
-				liked: fields.liked || rest.liked || undefined,
+				...(fields.rating ? { rating: fields.rating } : {}),
+				...(fields.liked ? { liked: true } : {}),
 				releaseDate: game.firstReleaseDate ?? rest.releaseDate,
 				createdAt: rest.createdAt ?? createdAt,
 			}

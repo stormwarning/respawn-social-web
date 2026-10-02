@@ -2,7 +2,7 @@ import type { Agent } from '@atproto/api'
 import { Collections } from '@respawn-social/lexicons'
 import type { BacklogItem } from '$lib/atproto/backlog'
 import type { PlayedState, RespawnGameRecord } from '$lib/atproto/game'
-import type { RespawnLogRecord } from '$lib/atproto/log'
+import { playedAt, type RespawnLogRecord } from '$lib/atproto/log'
 import { listAllRecords } from '$lib/atproto/records'
 import { createMemo } from './memo'
 
@@ -21,6 +21,17 @@ export interface ViewerState {
 	backlog: number[]
 	/** IGDB ids the viewer has logged at least once, under whichever id the log names. */
 	logged: number[]
+	/**
+	 * The platform of the newest log naming one, keyed like `games`. `at` is when
+	 * it was played, so the client can pick the newest across a title's members.
+	 */
+	platforms: Record<string, LoggedPlatform>
+}
+
+export interface LoggedPlatform {
+	platform: string
+	/** ISO datetime: the log's date played, or when it was written. */
+	at: string
 }
 
 /**
@@ -60,6 +71,16 @@ export function loadViewerState(agent: Agent, did: string): Promise<ViewerState>
 			if (state.played || state.playing || state.liked || state.rating) games[rkey] = state
 		}
 
+		const platforms: Record<string, LoggedPlatform> = {}
+		for (const { value } of logRecords) {
+			if (!value.platform || !Number.isInteger(value.game?.igdbId)) continue
+			const at = playedAt(value)
+			const key = String(value.game.igdbId)
+			if (!platforms[key] || platforms[key].at < at) {
+				platforms[key] = { platform: value.platform, at }
+			}
+		}
+
 		return {
 			games,
 			backlog: backlogRecords.map((rec) => Number(rec.rkey)).filter(Number.isInteger),
@@ -70,6 +91,7 @@ export function loadViewerState(agent: Agent, did: string): Promise<ViewerState>
 					),
 				),
 			],
+			platforms,
 		}
 	})
 }

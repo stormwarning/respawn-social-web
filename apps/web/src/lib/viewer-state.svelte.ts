@@ -1,6 +1,6 @@
 import { browser } from '$app/environment'
 import { SvelteSet } from 'svelte/reactivity'
-import type { ViewerGameState, ViewerState } from '$lib/server/viewer-state'
+import type { LoggedPlatform, ViewerGameState, ViewerState } from '$lib/server/viewer-state'
 
 export type { ViewerGameState }
 
@@ -20,6 +20,7 @@ class ViewerStateStore {
 	games = $state<Record<string, ViewerGameState>>({})
 	backlog = new SvelteSet<number>()
 	logged = new SvelteSet<number>()
+	platforms = $state<Record<string, LoggedPlatform>>({})
 	status = $state<'idle' | 'loading' | 'ready' | 'error'>('idle')
 
 	/** Shared with concurrent callers so a layout effect and a button make one request. */
@@ -50,6 +51,7 @@ class ViewerStateStore {
 			this.games = state.games
 			for (const igdbId of state.backlog) this.backlog.add(igdbId)
 			for (const igdbId of state.logged) this.logged.add(igdbId)
+			this.platforms = state.platforms
 			this.status = 'ready'
 		} catch (err) {
 			// Buttons fall back to their untouched look, which is wrong but legible.
@@ -66,6 +68,7 @@ class ViewerStateStore {
 		this.games = {}
 		this.backlog.clear()
 		this.logged.clear()
+		this.platforms = {}
 		this.status = 'idle'
 	}
 
@@ -83,6 +86,22 @@ class ViewerStateStore {
 	 */
 	hasLogged(igdbIds: number[]): boolean {
 		return igdbIds.some((igdbId) => this.logged.has(igdbId))
+	}
+
+	/** The platform the viewer last logged this title on, across all its members. */
+	lastPlatform(igdbIds: number[]): string | null {
+		let newest: LoggedPlatform | undefined
+		for (const igdbId of igdbIds) {
+			const entry = this.platforms[String(igdbId)]
+			if (entry && (!newest || entry.at > newest.at)) newest = entry
+		}
+		return newest?.platform ?? null
+	}
+
+	setPlatform(igdbId: number, entry: LoggedPlatform): void {
+		const current = this.platforms[String(igdbId)]
+		if (current && current.at > entry.at) return
+		this.platforms = { ...this.platforms, [String(igdbId)]: entry }
 	}
 
 	setGame(igdbId: number, patch: Partial<ViewerGameState>): void {

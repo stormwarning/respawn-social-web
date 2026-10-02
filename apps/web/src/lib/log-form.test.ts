@@ -17,6 +17,18 @@ describe('emptyLogForm', () => {
 		expect(emptyLogForm({ playing: false, played: null }).startedPlaying).toBe(true)
 	})
 
+	it('starts from the game’s rating, like and last platform', () => {
+		const value = emptyLogForm({
+			playing: false,
+			played: 'completed',
+			rating: 8,
+			liked: true,
+			platform: 'PC',
+		})
+		expect(value).toMatchObject({ rating: 8, liked: true, platform: 'PC' })
+		expect(emptyLogForm({ playing: false, played: null, platform: null }).platform).toBe('')
+	})
+
 	it('continues when already playing or finished', () => {
 		expect(emptyLogForm({ playing: true, played: null }).startedPlaying).toBe(false)
 		expect(emptyLogForm({ playing: false, played: 'completed' }).startedPlaying).toBe(false)

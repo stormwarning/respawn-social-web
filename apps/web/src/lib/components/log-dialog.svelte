@@ -5,7 +5,7 @@ import {
 	emptyLogForm,
 	toLogRecord,
 	today,
-	type CurrentPlayState,
+	type CurrentGameState,
 	type LogFormValue,
 	type LogGame,
 	type LogResult,
@@ -29,7 +29,7 @@ interface Props {
 	/** An existing log to edit. Without one the dialog creates a new log. */
 	value?: LogFormValue
 	/** The viewer's current state for the game; picks the progress defaults for a new log. */
-	currentState?: CurrentPlayState
+	currentState?: CurrentGameState
 	/** Who the feed preview names. */
 	actor?: string
 	/** The game's platforms, e.g. from IGDB. The field is hidden without any. */
@@ -70,8 +70,9 @@ let session = $state(0)
 let confirmingDelete = $state(false)
 
 let editing = $derived(value !== undefined)
-// A log's saved choice stays pickable even if the game's data no longer lists it.
-let platformOptions = $derived(withSaved(platforms, value?.platform ? [value.platform] : []))
+// A saved choice stays pickable even if the game's data no longer lists it.
+let savedPlatform = $derived(value ? value.platform : currentState?.platform)
+let platformOptions = $derived(withSaved(platforms, savedPlatform ? [savedPlatform] : []))
 let editionOptions = $derived(
 	withSavedInGroups(editionGroups, value?.edition ? [value.edition] : [], {
 		kind: 'edition',

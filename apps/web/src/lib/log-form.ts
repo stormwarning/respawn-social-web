@@ -17,9 +17,14 @@ export interface LogGame {
 }
 
 /** The viewer's current state for the game, used to pick the dialog's defaults. */
-export interface CurrentPlayState {
+export interface CurrentGameState {
 	playing: boolean
 	played: PlayedState | null
+	/** 0–10; 0 means unrated. */
+	rating?: number
+	liked?: boolean
+	/** The platform of the viewer's most recent log that named one. */
+	platform?: string | null
 }
 
 /**
@@ -77,17 +82,20 @@ export function today(now = new Date()): string {
  * A blank log. Only a game with no state at all defaults to "started playing":
  * someone already playing is continuing, and someone who has finished it has to
  * opt in to a replay.
+ *
+ * Rating and like start from the game's, since saving the log writes them back
+ * to it; platform starts from the last one the viewer logged it on.
  */
-export function emptyLogForm(current?: CurrentPlayState, date = today()): LogFormValue {
+export function emptyLogForm(current?: CurrentGameState, date = today()): LogFormValue {
 	return {
 		datePlayed: date,
-		platform: '',
+		platform: current?.platform ?? '',
 		edition: '',
 		dlc: [],
 		startedPlaying: !current || (!current.playing && current.played === null),
 		finishedPlaying: null,
-		rating: 0,
-		liked: false,
+		rating: current?.rating ?? 0,
+		liked: current?.liked ?? false,
 		review: { text: '' },
 		containsSpoilers: false,
 		allow: 'anyone',

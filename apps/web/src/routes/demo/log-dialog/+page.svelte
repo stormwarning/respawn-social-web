@@ -3,7 +3,7 @@ import LogDialog from '$lib/components/log-dialog.svelte'
 import {
 	activitySentence,
 	fromLogRecord,
-	type CurrentPlayState,
+	type CurrentGameState,
 	type LogGame,
 	type LogResult,
 } from '$lib/log-form'
@@ -13,10 +13,19 @@ import { serialize } from '$lib/richtext/facets'
 type Mode = 'new' | 'edit'
 type StateKey = 'none' | 'playing' | 'completed'
 
-const STATES: Record<StateKey, { label: string; value: CurrentPlayState }> = {
+const STATES: Record<StateKey, { label: string; value: CurrentGameState }> = {
 	none: { label: 'Not played', value: { playing: false, played: null } },
 	playing: { label: 'Playing', value: { playing: true, played: null } },
-	completed: { label: 'Completed', value: { playing: false, played: 'completed' } },
+	completed: {
+		label: 'Completed',
+		value: {
+			playing: false,
+			played: 'completed',
+			rating: 9,
+			liked: true,
+			platform: 'PC (Microsoft Windows)',
+		},
+	},
 }
 
 const game: LogGame = {

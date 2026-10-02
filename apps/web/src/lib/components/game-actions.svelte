@@ -4,6 +4,7 @@ import { applyAction, enhance } from '$app/forms'
 import type { ActionResult } from '@sveltejs/kit'
 import { Icon } from '@respawn-social/icons'
 import { PLAYED_OPTIONS, type PlayedState } from '$lib/atproto/game'
+import { playedAt } from '$lib/atproto/log'
 import type { FoldedGroup } from '$lib/folded'
 import type { LogResult } from '$lib/log-form'
 import { viewerState } from '$lib/viewer-state.svelte'
@@ -421,8 +422,8 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 					viewerState.setGame(igdbId, {
 						playing: log.finishedPlaying ? false : log.startedPlaying || prev.playing,
 						played: log.finishedPlaying ?? prev.played,
-						rating: log.rating ?? prev.rating,
-						liked: log.liked || prev.liked,
+						rating: log.rating ?? 0,
+						liked: log.liked === true,
 					})
 				}
 				viewerState.setLogged(igdbId, true)
@@ -436,6 +437,12 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 							rating: Number(result.data.rating),
 							liked: Boolean(result.data.liked),
 						})
+						if (log?.platform) {
+							viewerState.setPlatform(igdbId, {
+								platform: log.platform,
+								at: playedAt(log),
+							})
+						}
 						return
 					}
 					viewerState.setGame(igdbId, prev)
@@ -463,7 +470,13 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 		<LogDialog
 			bind:this={logDialog}
 			game={{ igdbId, slug, title, year, coverUrl: coverUrl || null }}
-			currentState={{ playing: gameState.playing, played: gameState.played }}
+			currentState={{
+				playing: gameState.playing,
+				played: gameState.played,
+				rating: gameState.rating,
+				liked: gameState.liked,
+				platform: viewerState.lastPlatform(members),
+			}}
 			{platforms}
 			{editionGroups}
 			{dlcGroups}
