@@ -29,6 +29,7 @@
 	--color-purple-600: oklch(54.1% 0.281 293.009deg);
 
 	/** Pink/red */
+	--color-pink-500: oklch(65.6% 0.241 354.308);
 	--color-pink-600: oklch(59.2% 0.249 0.584deg);
 
 	/** Green */
