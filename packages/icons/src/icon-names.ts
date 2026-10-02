@@ -14,6 +14,7 @@ export const iconNames = [
 	'magnifying-glass',
 	'plus',
 	'quotes',
+	'star-half-solid',
 	'star-solid',
 	'text-bold',
 	'text-italic',
