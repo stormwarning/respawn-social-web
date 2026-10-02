@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { baseName, groupFolded, nameFoldedGroup } from './folded'
+import { baseName, groupFolded, logOptions, nameFoldedGroup } from './folded'
 import type { FoldedMember } from '$lib/types/game'
 
 const member = (partial: Partial<FoldedMember> = {}): FoldedMember => ({
@@ -139,8 +139,8 @@ describe('groupFolded', () => {
 			'Super Mario Bros. 2',
 		)
 		expect(groups).toEqual([
-			{ heading: 'Original release', names: ['Yume Koujou: Doki-doki Panic'] },
-			{ heading: 'Remasters', names: ['Super Mario All-Stars'] },
+			{ kind: 'original', heading: 'Original release', names: ['Yume Koujou: Doki-doki Panic'] },
+			{ kind: 'remaster', heading: 'Remasters', names: ['Super Mario All-Stars'] },
 		])
 	})
 
@@ -153,7 +153,7 @@ describe('groupFolded', () => {
 			'A Game',
 		)
 		expect(groups).toEqual([
-			{ heading: 'Editions', names: ['Deluxe Edition', 'Hand-folded Edition'] },
+			{ kind: 'edition', heading: 'Editions', names: ['Deluxe Edition', 'Hand-folded Edition'] },
 		])
 	})
 
@@ -176,10 +176,82 @@ describe('groupFolded', () => {
 			],
 			'Grand Theft Auto V',
 		)
-		expect(groups).toEqual([{ heading: 'Editions', names: ['Special Edition'] }])
+		expect(groups).toEqual([{ kind: 'edition', heading: 'Editions', names: ['Special Edition'] }])
+	})
+
+	it('drops editions of expansions, which are listed already', () => {
+		// World of Warcraft: each expansion's Collector's Edition folds in with it.
+		const groups = groupFolded(
+			[
+				member({ id: 1, shortName: 'Collector’s Edition' }),
+				member({ id: 2, foldType: 'expansion', shortName: 'Cataclysm' }),
+				member({ id: 3, shortName: 'Collector’s Edition', parentName: 'Cataclysm' }),
+				member({ id: 4, foldType: 'expansion', shortName: 'Battle for Azeroth' }),
+				member({
+					id: 5,
+					shortName: 'WoW: Battle for Azeroth – Collector’s Edition',
+					parentName: 'Battle for Azeroth',
+				}),
+				member({ id: 6, shortName: '15th Anniversary Collector’s Edition' }),
+				member({
+					id: 7,
+					foldType: 'expansion',
+					shortName: 'Burning Crusade Classic',
+					parentName: 'Classic',
+				}),
+				member({ id: 8, shortName: 'Anniversary Edition', parentName: 'Burning Crusade Classic' }),
+			],
+			'World of Warcraft',
+		)
+		expect(groups).toEqual([
+			{
+				kind: 'expansion',
+				heading: 'Expansions',
+				names: ['Cataclysm', 'Battle for Azeroth', 'Burning Crusade Classic'],
+			},
+			{
+				kind: 'edition',
+				heading: 'Editions',
+				names: ['Collector’s Edition', '15th Anniversary Collector’s Edition'],
+			},
+		])
+	})
+
+	it('keeps an edition of another edition', () => {
+		const groups = groupFolded(
+			[
+				member({ id: 1, foldType: 'expansion', shortName: 'Blood and Wine' }),
+				member({ id: 2, shortName: 'Complete Edition' }),
+				member({ id: 3, shortName: '10th Anniversary Edition', parentName: 'Complete Edition' }),
+			],
+			'The Witcher 3: Wild Hunt',
+		)
+		expect(groups.at(-1)).toEqual({
+			kind: 'edition',
+			heading: 'Editions',
+			names: ['Complete Edition', '10th Anniversary Edition'],
+		})
 	})
 
 	it('returns nothing when a title folded nothing in', () => {
 		expect(groupFolded([], 'A Game')).toEqual([])
+	})
+})
+
+describe('logOptions', () => {
+	it('offers editions to pick one of and add-ons to pick any of, under the page’s headings', () => {
+		const groups = groupFolded(
+			[
+				member({ id: 1, foldType: 'original', shortName: 'The Original' }),
+				member({ id: 2, foldType: 'expansion', shortName: 'Blood and Wine' }),
+				member({ id: 3, foldType: 'dlc', shortName: 'Fool’s Gold' }),
+				member({ id: 4, foldType: 'remaster', shortName: 'Remastered' }),
+				member({ id: 5, shortName: 'Complete Edition' }),
+			],
+			'A Game',
+		)
+		const { editions, addOns } = logOptions(groups)
+		expect(editions.map((g) => g.heading)).toEqual(['Remasters', 'Editions'])
+		expect(addOns.map((g) => g.heading)).toEqual(['Expansions', 'DLC'])
 	})
 })

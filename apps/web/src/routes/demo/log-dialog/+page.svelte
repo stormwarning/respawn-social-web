@@ -7,6 +7,7 @@ import {
 	type LogGame,
 	type LogResult,
 } from '$lib/log-form'
+import type { FoldedGroup } from '$lib/folded'
 import { serialize } from '$lib/richtext/facets'
 
 type Mode = 'new' | 'edit'
@@ -27,8 +28,12 @@ const game: LogGame = {
 }
 
 const platforms = ['PC (Microsoft Windows)', 'PlayStation 5', 'Xbox Series X|S', 'Nintendo Switch']
-const editions = ['Standard Edition', 'Archaeologist Edition']
-const dlcOptions = ['Echoes of the Eye']
+const editionGroups: FoldedGroup[] = [
+	{ kind: 'edition', heading: 'Editions', names: ['Standard Edition', 'Archaeologist Edition'] },
+]
+const dlcGroups: FoldedGroup[] = [
+	{ kind: 'expansion', heading: 'Expansions', names: ['Echoes of the Eye'] },
+]
 
 const sample = fromLogRecord(
 	{
@@ -137,8 +142,8 @@ function ondelete() {
 		value={mode === 'edit' ? sample : undefined}
 		currentState={STATES[stateKey].value}
 		platforms={suggestions ? platforms : []}
-		editions={suggestions ? editions : []}
-		dlcOptions={suggestions ? dlcOptions : []}
+		editionGroups={suggestions ? editionGroups : []}
+		dlcGroups={suggestions ? dlcGroups : []}
 	/>
 
 	<section class="demo">

@@ -4,13 +4,14 @@ import type { FoldedMember } from '$lib/types/game'
  * Naming the games folded into a title.
  *
  * The fold is transitive. World of Warcraft absorbs its expansions, and each
- * expansion's own Collector's Edition comes up with it — so eleven members
- * arrive, eight of them named "Collector's Edition", while being eight
- * different products. Listing that verbatim is noise; collapsing it to one
- * entry reads tidily and quietly claims WoW shipped a single Collector's
- * Edition. Neither is true to the data.
+ * expansion's own Collector's Edition comes up with it. Those editions are the
+ * expansion sold another way, and the expansion is already listed, so they are
+ * dropped (see `groupFolded`).
  *
- * So: reduce every name to its bare form, and qualify only the ones that then
+ * What remains can still collide: editions of editions, or IGDB filing the
+ * same name under different parents. Listing those verbatim is noise;
+ * collapsing them to one entry claims one product where there are several. So:
+ * reduce every name to its bare form, and qualify only the ones that then
  * collide.
  */
 
@@ -23,6 +24,18 @@ export const FOLD_ORDER = [
 	'version',
 	'override',
 ] as const
+
+/** What a group of folded members is; `version` and `override` are both editions. */
+export type FoldKind = 'original' | 'expansion' | 'dlc' | 'remaster' | 'edition'
+
+const FOLD_KIND: Record<(typeof FOLD_ORDER)[number], FoldKind> = {
+	original: 'original',
+	expansion: 'expansion',
+	dlc: 'dlc',
+	remaster: 'remaster',
+	version: 'edition',
+	override: 'edition',
+}
 
 export const FOLD_HEADING: Record<string, string> = {
 	original: 'Original release',
@@ -96,39 +109,67 @@ export function nameFoldedGroup(
 }
 
 export interface FoldedGroup {
+	kind: FoldKind
 	heading: string
 	names: string[]
 }
 
+const isEdition = (m: FoldedMember) => m.foldType === 'version' || m.foldType === 'override'
+const isAddOn = (m: FoldedMember) => m.foldType === 'expansion' || m.foldType === 'dlc'
+
 /**
  * Group everything folded into a title, ready to render.
  *
- * Two kinds of member are dropped here rather than in the API, because both are
- * presentation calls rather than facts about the data:
+ * Three kinds of member are dropped here rather than in the API, because all
+ * are presentation calls rather than facts about the data:
  *
  *   - Ports. They merge platforms and contribute nothing worth listing; "Halo
  *     (Xbox 360)" under Halo is noise.
  *   - Members whose name is just the title's own — 4,430 of them, version
  *     children IGDB filed with no version title. "Includes: Grand Theft Auto V"
  *     on the Grand Theft Auto V page says nothing.
+ *   - Editions of an expansion or DLC. WoW's "Cataclysm: Collector's Edition"
+ *     is Cataclysm in a bigger box, and Cataclysm is already listed. An edition
+ *     of an edition — The Witcher 3's "10th Anniversary Edition" of its
+ *     Complete Edition — stays.
  */
 export function groupFolded(folded: FoldedMember[], titleName: string): FoldedGroup[] {
-	const groups: Array<{ heading: string; members: FoldedMember[] }> = []
+	const addOnNames = new Set(folded.filter(isAddOn).map((m) => m.shortName.toLowerCase()))
+	const listed = folded.filter(
+		(m) =>
+			m.shortName.toLowerCase() !== titleName.toLowerCase() &&
+			!(isEdition(m) && m.parentName && addOnNames.has(m.parentName.toLowerCase())),
+	)
+
+	const groups: Array<{ kind: FoldKind; heading: string; members: FoldedMember[] }> = []
 
 	for (const foldType of FOLD_ORDER) {
-		const members = folded.filter(
-			(m) => m.foldType === foldType && m.shortName.toLowerCase() !== titleName.toLowerCase(),
-		)
+		const members = listed.filter((m) => m.foldType === foldType)
 		if (members.length === 0) continue
 
 		// `version` and `override` both read as editions, so they share a row.
-		const heading = FOLD_HEADING[foldType] ?? 'Editions'
-		const existing = groups.find((g) => g.heading === heading)
+		const kind = FOLD_KIND[foldType]
+		const existing = groups.find((g) => g.kind === kind)
 		if (existing) existing.members.push(...members)
-		else groups.push({ heading, members })
+		else groups.push({ kind, heading: FOLD_HEADING[foldType] ?? 'Editions', members })
 	}
 
 	return groups
-		.map((group) => ({ heading: group.heading, names: nameFoldedGroup(group.members) }))
+		.map(({ kind, heading, members }) => ({ kind, heading, names: nameFoldedGroup(members) }))
 		.filter((group) => group.names.length > 0)
+}
+
+/**
+ * The page's groups as the log dialog offers them: a session is played on one
+ * remaster or edition, with any number of expansions and DLC. The original
+ * release is a different game, so it is not offered.
+ */
+export function logOptions(groups: FoldedGroup[]): {
+	editions: FoldedGroup[]
+	addOns: FoldedGroup[]
+} {
+	return {
+		editions: groups.filter((g) => g.kind === 'remaster' || g.kind === 'edition'),
+		addOns: groups.filter((g) => g.kind === 'expansion' || g.kind === 'dlc'),
+	}
 }

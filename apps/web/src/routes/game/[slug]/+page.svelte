@@ -5,7 +5,7 @@ import CoverImage from '$lib/components/cover-image.svelte'
 import CoverList from '$lib/components/cover-list.svelte'
 import GameActions from '$lib/components/game-actions.svelte'
 import SectionHeading from '$lib/components/section-heading.svelte'
-import { groupFolded } from '$lib/folded'
+import { groupFolded, logOptions } from '$lib/folded'
 import type { PageData } from './$types'
 
 let { data }: { data: PageData } = $props()
@@ -13,6 +13,8 @@ let { game } = $derived(data)
 let developers = $derived(game.developers.join(', '))
 
 let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
+// The log dialog offers the same names under the same headings.
+let logChoices = $derived(logOptions(foldedGroups))
 
 // The game this one was ported from, folded underneath it — Super Mario
 // Bros. 2 carries Doki-doki Panic. Its native-script title makes the subtitle
@@ -93,8 +95,8 @@ let relatedGroups = $derived.by(() => {
 				members={game.members}
 				year={game.releaseYear}
 				platforms={game.platforms.map((platform) => platform.displayName)}
-				editions={game.editions}
-				dlcOptions={game.expansionsNormalized}
+				editionGroups={logChoices.editions}
+				dlcGroups={logChoices.addOns}
 			/>
 		</div>
 	</section>

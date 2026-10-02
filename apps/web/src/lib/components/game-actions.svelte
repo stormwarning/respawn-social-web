@@ -4,6 +4,7 @@ import { applyAction, enhance } from '$app/forms'
 import type { ActionResult } from '@sveltejs/kit'
 import { Icon } from '@respawn-social/icons'
 import { PLAYED_OPTIONS, type PlayedState } from '$lib/atproto/game'
+import type { FoldedGroup } from '$lib/folded'
 import type { LogResult } from '$lib/log-form'
 import { viewerState } from '$lib/viewer-state.svelte'
 import StarRating from './star-rating.svelte'
@@ -20,8 +21,8 @@ let {
 	members = [igdbId],
 	year = null,
 	platforms = [],
-	editions = [],
-	dlcOptions = [],
+	editionGroups = [],
+	dlcGroups = [],
 }: {
 	isLoggedIn: boolean
 	igdbId: number
@@ -34,8 +35,8 @@ let {
 	year?: number | null
 	/** Offered by the log dialog. */
 	platforms?: string[]
-	editions?: string[]
-	dlcOptions?: string[]
+	editionGroups?: FoldedGroup[]
+	dlcGroups?: FoldedGroup[]
 } = $props()
 
 // The viewer's own state lives in the store, not in the page payload, so it is
@@ -464,8 +465,8 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 			game={{ igdbId, slug, title, year, coverUrl: coverUrl || null }}
 			currentState={{ playing: gameState.playing, played: gameState.played }}
 			{platforms}
-			{editions}
-			{dlcOptions}
+			{editionGroups}
+			{dlcGroups}
 			onsave={saveLog}
 		/>
 	{/if}

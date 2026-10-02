@@ -10,6 +10,7 @@ import {
 	type LogGame,
 	type LogResult,
 } from '$lib/log-form'
+import type { FoldedGroup } from '$lib/folded'
 import { countGraphemes } from '$lib/richtext/facets'
 import CoverImage from './cover-image.svelte'
 import Divider from './divider.svelte'
@@ -33,10 +34,10 @@ interface Props {
 	actor?: string
 	/** The game's platforms, e.g. from IGDB. The field is hidden without any. */
 	platforms?: string[]
-	/** The game's editions. Shares a menu with DLC, hidden when both are empty. */
-	editions?: string[]
-	/** The game's DLC. Shares a menu with editions, hidden when both are empty. */
-	dlcOptions?: string[]
+	/** The game's remasters and editions. Shares a menu with DLC, hidden when both are empty. */
+	editionGroups?: FoldedGroup[]
+	/** The game's expansions and DLC. Shares a menu with editions, hidden when both are empty. */
+	dlcGroups?: FoldedGroup[]
 	/** Called with the record and replygate settings just before the dialog closes. */
 	onsave: (result: LogResult) => void
 	/** Offered in edit mode only. */
@@ -49,8 +50,8 @@ let {
 	currentState,
 	actor = 'You',
 	platforms = [],
-	editions = [],
-	dlcOptions = [],
+	editionGroups = [],
+	dlcGroups = [],
 	onsave,
 	ondelete,
 }: Props = $props()
@@ -71,8 +72,15 @@ let confirmingDelete = $state(false)
 let editing = $derived(value !== undefined)
 // A log's saved choice stays pickable even if the game's data no longer lists it.
 let platformOptions = $derived(withSaved(platforms, value?.platform ? [value.platform] : []))
-let editionOptions = $derived(withSaved(editions, value?.edition ? [value.edition] : []))
-let dlcChoices = $derived(withSaved(dlcOptions, value?.dlc ?? []))
+let editionOptions = $derived(
+	withSavedInGroups(editionGroups, value?.edition ? [value.edition] : [], {
+		kind: 'edition',
+		heading: 'Editions',
+	}),
+)
+let dlcOptions = $derived(
+	withSavedInGroups(dlcGroups, value?.dlc ?? [], { kind: 'dlc', heading: 'DLC' }),
+)
 let verb = $derived(activityVerb(toLogRecord(form, game).log))
 let hasReviewText = $derived(form.review.text.trim() !== '')
 let overLimit = $derived(
@@ -91,6 +99,23 @@ let started = $derived.by(() => {
 
 function withSaved(options: string[], saved: string[]) {
 	return [...options, ...saved.filter((item) => !options.includes(item))]
+}
+
+/**
+ * Saved choices the game no longer lists — including names stored before they
+ * were normalized — join the last group, or a group of their own when there
+ * is none.
+ */
+function withSavedInGroups(
+	groups: FoldedGroup[],
+	saved: string[],
+	fallback: Omit<FoldedGroup, 'names'>,
+): FoldedGroup[] {
+	const missing = saved.filter((item) => !groups.some((group) => group.names.includes(item)))
+	if (!missing.length) return groups
+	const last = groups.at(-1)
+	if (!last) return [{ ...fallback, names: missing }]
+	return [...groups.slice(0, -1), { ...last, names: withSaved(last.names, missing) }]
 }
 
 export function open() {
@@ -181,10 +206,10 @@ function onclick(event: MouseEvent) {
 							{/each}
 						</SelectField>
 					{/if}
-					{#if editionOptions.length || dlcChoices.length}
+					{#if editionOptions.length || dlcOptions.length}
 						<EditionMenu
-							editions={editionOptions}
-							dlcOptions={dlcChoices}
+							editionGroups={editionOptions}
+							dlcGroups={dlcOptions}
 							bind:edition={form.edition}
 							bind:dlc={form.dlc}
 						/>

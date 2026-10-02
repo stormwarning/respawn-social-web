@@ -1,42 +1,44 @@
 <script lang="ts">
+import type { FoldedGroup } from '$lib/folded'
 import FieldLabel from './field-label.svelte'
 
 interface Props {
 	/** The chosen edition; empty means not specified. */
 	edition?: string
-	/** The chosen DLC, kept in the order of `dlcOptions`. */
+	/** The chosen DLC, kept in the order of `dlcGroups`. */
 	dlc?: string[]
-	editions?: string[]
-	dlcOptions?: string[]
+	/** Remasters and editions, one of which can be chosen. */
+	editionGroups?: FoldedGroup[]
+	/** Expansions and DLC, any of which can be chosen. */
+	dlcGroups?: FoldedGroup[]
 	label?: string
 }
 
 let {
 	edition = $bindable(''),
 	dlc = $bindable([]),
-	editions = [],
-	dlcOptions = [],
+	editionGroups = [],
+	dlcGroups = [],
 	label = 'Edition and DLC',
 }: Props = $props()
 
 const uid = $props.id()
 const triggerId = `${uid}--trigger`
 const menuId = `${uid}--menu`
-const editionHeadingId = `${uid}--editions`
-const dlcHeadingId = `${uid}--dlc`
 const anchor = `--edition-menu-${uid}`
 
 let trigger = $state<HTMLButtonElement>()
 let menu = $state<HTMLDivElement>()
 let menuOpen = $state(false)
 
+let dlcOptions = $derived(dlcGroups.flatMap((group) => group.names))
 let chosen = $derived([edition, ...dlc].filter(Boolean))
 let summary = $derived(chosen.length ? chosen.join(' + ') : 'Not specified')
 
 function chooseEdition(value: string) {
 	edition = value
 	// With DLC to pick too, stay open so both can be set in one go.
-	if (!dlcOptions.length) close()
+	if (!dlcGroups.length) close()
 }
 
 function toggleDlc(option: string) {
@@ -135,31 +137,46 @@ function onkeydown(event: KeyboardEvent) {
 		{ontoggle}
 		{onkeydown}
 	>
-		{#if editions.length}
-			<div role="group" aria-labelledby={editionHeadingId}>
-				<div id={editionHeadingId} class="menu-heading" role="presentation">Edition</div>
-				{#each ['', ...editions] as option (option)}
-					<button
-						class="menu-item has-indicator"
-						type="button"
-						role="menuitemradio"
-						aria-checked={edition === option}
-						tabindex="-1"
-						onclick={() => chooseEdition(option)}
-					>
-						<span class="radio" aria-hidden="true"></span>
-						<span class="menu-item-label">{option || 'Not specified'}</span>
-					</button>
-				{/each}
-			</div>
+		{#if editionGroups.length}
+			<button
+				class="menu-item has-indicator"
+				type="button"
+				role="menuitemradio"
+				aria-checked={edition === ''}
+				tabindex="-1"
+				onclick={() => chooseEdition('')}
+			>
+				<span class="radio" aria-hidden="true"></span>
+				<span class="menu-item-label">Not specified</span>
+			</button>
+			{#each editionGroups as group, index (group.kind)}
+				{@const headingId = `${uid}--edition-${index}`}
+				<div role="group" aria-labelledby={headingId}>
+					<div id={headingId} class="menu-heading" role="presentation">{group.heading}</div>
+					{#each group.names as option (option)}
+						<button
+							class="menu-item has-indicator"
+							type="button"
+							role="menuitemradio"
+							aria-checked={edition === option}
+							tabindex="-1"
+							onclick={() => chooseEdition(option)}
+						>
+							<span class="radio" aria-hidden="true"></span>
+							<span class="menu-item-label">{option}</span>
+						</button>
+					{/each}
+				</div>
+			{/each}
 		{/if}
-		{#if editions.length && dlcOptions.length}
+		{#if editionGroups.length && dlcGroups.length}
 			<hr class="menu-divider" />
 		{/if}
-		{#if dlcOptions.length}
-			<div role="group" aria-labelledby={dlcHeadingId}>
-				<div id={dlcHeadingId} class="menu-heading" role="presentation">DLC</div>
-				{#each dlcOptions as option (option)}
+		{#each dlcGroups as group, index (group.kind)}
+			{@const headingId = `${uid}--dlc-${index}`}
+			<div role="group" aria-labelledby={headingId}>
+				<div id={headingId} class="menu-heading" role="presentation">{group.heading}</div>
+				{#each group.names as option (option)}
 					<button
 						class="menu-item has-indicator"
 						type="button"
@@ -173,7 +190,7 @@ function onkeydown(event: KeyboardEvent) {
 					</button>
 				{/each}
 			</div>
-		{/if}
+		{/each}
 	</div>
 </div>
 
