@@ -118,7 +118,12 @@ let hideReview = $derived(
 				}
 			}}
 		>
-			<LikeButton bind:liked onchange={() => likeForm?.requestSubmit()} />
+			<LikeButton
+				size="small"
+				label={liked ? 'Liked' : 'Like'}
+				bind:liked
+				onchange={() => likeForm?.requestSubmit()}
+			/>
 		</form>
 	{/if}
 

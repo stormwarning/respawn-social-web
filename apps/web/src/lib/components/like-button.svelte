@@ -259,11 +259,11 @@ onDestroy(clearTimers)
 	}
 
 	&.small {
-		--icon-size: 20px;
+		--icon-size: 16px;
 		--burst-distance: 18px;
 		--particle-size: 4px;
 
-		gap: 5px;
+		gap: 4px;
 		padding: 4px 6px;
 	}
 }
@@ -272,8 +272,13 @@ onDestroy(clearTimers)
 	font-family: var(--font-ui);
 	font-size: 0.8125rem;
 	font-weight: 600;
+	color: var(--color-blue-100);
 	letter-spacing: 0.01em;
 	text-box: trim-both cap alphabetic;
+
+	.like-button[aria-pressed='true'] & {
+		color: var(--color-grey-050);
+	}
 }
 
 .visual {
@@ -284,6 +289,7 @@ onDestroy(clearTimers)
 }
 
 .ring {
+	position: absolute;
 	grid-area: 1 / 1;
 	opacity: 0;
 	rotate: -90deg;
