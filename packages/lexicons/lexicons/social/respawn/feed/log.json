@@ -65,6 +65,15 @@
 						"type": "ref",
 						"ref": "#review"
 					},
+					"media": {
+						"type": "array",
+						"description": "Grain (grain.social) photos shown with the log.",
+						"maxLength": 10,
+						"items": {
+							"type": "ref",
+							"ref": "#media"
+						}
+					},
 					"createdAt": {
 						"type": "string",
 						"format": "datetime"
@@ -103,15 +112,23 @@
 				"external": {
 					"type": "ref",
 					"ref": "#external"
+				}
+			}
+		},
+		"media": {
+			"type": "object",
+			"description": "A Grain photo shown with a log, credited to the gallery it was picked from.",
+			"required": ["photo"],
+			"properties": {
+				"photo": {
+					"type": "ref",
+					"ref": "com.atproto.repo.strongRef",
+					"description": "A social.grain.photo record in the log author's repo."
 				},
-				"media": {
-					"type": "array",
-					"description": "References to Grain gallery records to display with the review.",
-					"maxLength": 10,
-					"items": {
-						"type": "ref",
-						"ref": "com.atproto.repo.strongRef"
-					}
+				"gallery": {
+					"type": "ref",
+					"ref": "com.atproto.repo.strongRef",
+					"description": "The social.grain.gallery the photo was picked from. Grain has no page for a single photo, so this is what the credit links to."
 				}
 			}
 		},

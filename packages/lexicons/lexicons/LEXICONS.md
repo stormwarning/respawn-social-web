@@ -47,7 +47,13 @@ A Log can’t be created for unreleased games.
 
 A Log can include a review. A review is richtext facets or a reference to a
 standard.site document. (need to check how feasible it is to render external
-posts inline) A review can include images from a Grain gallery.
+posts inline)
+
+A Log can show photos from the author's Grain (grain.social) account, separate
+from the review text. Each item references a `social.grain.photo` record and
+the gallery it was picked from, which the credit links back to (Grain has no
+page for a single photo). Photos deleted on Grain are hidden; edited ones show
+their current version.
 
 A review can be marked as containing spoilers (hides review text from current
 user until pressing "show", unless current user has the game in their
@@ -85,8 +91,9 @@ commenter’s PDS but the author can choose to hide them.
   - external
     - url: string
     - ref: cid
-  - media: array
-    - ref (to Grain records)
+- media: array (max 10)
+  - photo: strongRef to a `social.grain.photo` in the author's repo
+  - gallery: strongRef to the `social.grain.gallery` it was picked from (optional)
 
 ## `social.respawn.feed.comment`
 

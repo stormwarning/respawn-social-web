@@ -45,6 +45,11 @@ type Main = {
   rating?: number
   liked?: boolean
   review?: Review
+
+  /**
+   * Grain (grain.social) photos shown with the log.
+   */
+  media?: Media[]
   createdAt: l.DatetimeString
 }
 
@@ -89,6 +94,11 @@ const main = /*#__PURE__*/ l.record<'tid', Main>(
     review: /*#__PURE__*/ l.optional(
       /*#__PURE__*/ l.ref<Review>((() => review) as any),
     ),
+    media: /*#__PURE__*/ l.optional(
+      /*#__PURE__*/ l.array(/*#__PURE__*/ l.ref<Media>((() => media) as any), {
+        maxLength: 10,
+      }),
+    ),
     createdAt: /*#__PURE__*/ l.string({ format: 'datetime' }),
   }),
 )
@@ -128,11 +138,6 @@ type Review = {
   containsSpoilers?: boolean
   facets?: RichtextFacet.Main[]
   external?: External
-
-  /**
-   * References to Grain gallery records to display with the review.
-   */
-  media?: RepoStrongRef.Main[]
 }
 
 export type { Review }
@@ -157,18 +162,45 @@ const review = /*#__PURE__*/ l.typedObject<Review>(
     external: /*#__PURE__*/ l.optional(
       /*#__PURE__*/ l.ref<External>((() => external) as any),
     ),
-    media: /*#__PURE__*/ l.optional(
-      /*#__PURE__*/ l.array(
-        /*#__PURE__*/ l.ref<RepoStrongRef.Main>(
-          (() => RepoStrongRef.main) as any,
-        ),
-        { maxLength: 10 },
+  }),
+)
+
+export { review }
+
+/** A Grain photo shown with a log, credited to the gallery it was picked from. */
+type Media = {
+  $type?: 'social.respawn.feed.log#media'
+
+  /**
+   * A social.grain.photo record in the log author's repo.
+   */
+  photo: RepoStrongRef.Main
+
+  /**
+   * The social.grain.gallery the photo was picked from. Grain has no page for a single photo, so this is what the credit links to.
+   */
+  gallery?: RepoStrongRef.Main
+}
+
+export type { Media }
+
+/** A Grain photo shown with a log, credited to the gallery it was picked from. */
+const media = /*#__PURE__*/ l.typedObject<Media>(
+  $nsid,
+  'media',
+  /*#__PURE__*/ l.object({
+    photo: /*#__PURE__*/ l.ref<RepoStrongRef.Main>(
+      (() => RepoStrongRef.main) as any,
+    ),
+    gallery: /*#__PURE__*/ l.optional(
+      /*#__PURE__*/ l.ref<RepoStrongRef.Main>(
+        (() => RepoStrongRef.main) as any,
       ),
     ),
   }),
 )
 
-export { review }
+export { media }
 
 /** Reference to an external document (e.g. standard.site) holding the full review. */
 type External = {

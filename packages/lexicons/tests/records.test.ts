@@ -56,6 +56,33 @@ describe('social.respawn.feed.log', () => {
 		)
 	})
 
+	it('accepts Grain media, with or without the gallery it came from', () => {
+		const photo = { uri: `at://${did}/social.grain.photo/3m2pnw0001`, cid: strongRef.cid }
+		const gallery = { uri: `at://${did}/social.grain.gallery/3m2galpnw`, cid: strongRef.cid }
+		const result = schema.$safeParse({
+			$type: Collections.log,
+			game,
+			media: [{ photo, gallery }, { photo }],
+			createdAt,
+		})
+		expect(result.success).toBe(true)
+	})
+
+	it('rejects media without a photo, or more than 10 items', () => {
+		const photo = { uri: `at://${did}/social.grain.photo/3m2pnw0001`, cid: strongRef.cid }
+		expect(
+			schema.$safeParse({ $type: Collections.log, game, media: [{}], createdAt }).success,
+		).toBe(false)
+		expect(
+			schema.$safeParse({
+				$type: Collections.log,
+				game,
+				media: Array.from({ length: 11 }, () => ({ photo })),
+				createdAt,
+			}).success,
+		).toBe(false)
+	})
+
 	it('accepts unknown play states (knownValues is an open enum)', () => {
 		const result = schema.$safeParse({
 			$type: Collections.log,
