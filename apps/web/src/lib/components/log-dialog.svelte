@@ -223,25 +223,7 @@ function onclick(event: MouseEvent) {
 					{/if}
 				</div>
 
-				<RichTextEditor
-					label="Review"
-					placeholder="What did you think?"
-					maxGraphemes={REVIEW_MAX_GRAPHEMES}
-					spoilers
-					bind:value={form.review}
-				/>
-				<label class={['check', { muted: !hasReviewText }]}>
-					<input type="checkbox" disabled={!hasReviewText} bind:checked={form.containsSpoilers} />
-					<span class="check-text">
-						<span>Hide the whole review as a spoiler</span>
-						<span class="hint">Or mark parts with the spoiler button</span>
-					</span>
-				</label>
-
-				<!-- Mounted on first open, so the Grain check doesn't run on every page view. -->
-				{#if session > 0}
-					<GrainPhotosField bind:items={form.media} source={grainSource} />
-				{/if}
+				<Divider />
 
 				<div class="verdict">
 					<div class="verdict-field">
@@ -258,7 +240,26 @@ function onclick(event: MouseEvent) {
 					</div>
 				</div>
 
-				<Divider />
+				<RichTextEditor
+					label="Review"
+					placeholder="What did you think?"
+					maxGraphemes={REVIEW_MAX_GRAPHEMES}
+					spoilers
+					bind:value={form.review}
+				/>
+
+				<!-- Mounted on first open, so the Grain check doesn't run on every page view. -->
+				{#if session > 0}
+					<GrainPhotosField bind:items={form.media} source={grainSource} />
+				{/if}
+
+				<label class={['check', { muted: !hasReviewText }]}>
+					<input type="checkbox" disabled={!hasReviewText} bind:checked={form.containsSpoilers} />
+					<span class="check-text">
+						<span>Hide the whole review as a spoiler</span>
+						<span class="hint">Or mark parts with the spoiler button</span>
+					</span>
+				</label>
 
 				<ReplygateMenu bind:allow={form.allow} />
 			</div>

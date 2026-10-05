@@ -85,7 +85,6 @@ const toDraft = (photo: GrainPhoto): MediaDraft => ({
 		<FieldLabel
 			id={labelId}
 			label="Photos"
-			description="From your Grain galleries, shown after your review with a credit."
 			tertiaryLabel={items.length ? `${items.length} / ${max}` : undefined}
 		/>
 
