@@ -1,4 +1,5 @@
 import { PLAYED_OPTIONS, type PlayedState } from '$lib/atproto/game'
+import type { MediaDraft } from '$lib/atproto/grain'
 import {
 	hasReview,
 	type ReplyRule,
@@ -62,6 +63,8 @@ export interface LogFormValue {
 	liked: boolean
 	review: RichTextValue
 	containsSpoilers: boolean
+	/** Grain photos, in display order. */
+	media: MediaDraft[]
 	allow: ReplyAllow
 }
 
@@ -98,6 +101,7 @@ export function emptyLogForm(current?: CurrentGameState, date = today()): LogFor
 		liked: current?.liked ?? false,
 		review: { text: '' },
 		containsSpoilers: false,
+		media: [],
 		allow: 'anyone',
 	}
 }
@@ -133,6 +137,7 @@ export function toLogRecord(
 					containsSpoilers: value.containsSpoilers || undefined,
 				})
 			: undefined,
+		media: value.media.length ? value.media.map(({ id: _, ...item }) => item) : undefined,
 		createdAt,
 	}
 
@@ -162,6 +167,7 @@ export function fromLogRecord(log: RespawnLogRecord, replygate?: ReplygateSettin
 				})
 			: { text: '' },
 		containsSpoilers: review?.containsSpoilers ?? false,
+		media: (log.media ?? []).map((item) => Object.assign({ id: item.photo.uri }, item)),
 		allow: fromReplygate(replygate),
 	}
 }

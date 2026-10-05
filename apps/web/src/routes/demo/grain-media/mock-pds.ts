@@ -1,15 +1,15 @@
 import {
-	GALLERY,
-	GALLERY_ITEM,
-	PHOTO,
+	GRAIN_GALLERY,
+	GRAIN_GALLERY_ITEM,
+	GRAIN_PHOTO,
 	type AspectRatio,
-	type GalleryItemRecord,
-	type GalleryRecord,
+	type GrainGalleryItemRecord,
+	type GrainGalleryRecord,
+	type GrainPhotoRecord,
 	type GrainRepo,
 	type GrainSource,
-	type PhotoRecord,
-	type RecordEnvelope,
-} from './grain'
+} from '$lib/atproto/grain'
+import type { RecordEnvelope } from '$lib/atproto/records'
 
 /*
  * A pretend PDS with two accounts: one with Grain photos, one without. Blobs are served by
@@ -218,15 +218,16 @@ function buildRepo(actor: ActorFixture): GrainRepo {
 	const at = (collection: string, rkey: string) => `at://${actor.did}/${collection}/${rkey}`
 	const blobs = new Map<string, PhotoFixture>()
 
-	const photos: RecordEnvelope<PhotoRecord>[] = actor.photos.map((fixture) => {
+	const photos: RecordEnvelope<GrainPhotoRecord>[] = actor.photos.map((fixture) => {
 		const blobCid = fakeBlobCid(fixture.rkey)
 		blobs.set(blobCid, fixture)
 		const aspectRatio: AspectRatio = { width: fixture.aspect[0], height: fixture.aspect[1] }
 		return {
-			uri: at(PHOTO, fixture.rkey),
+			uri: at(GRAIN_PHOTO, fixture.rkey),
 			cid: fakeCid(fixture.rkey),
+			rkey: fixture.rkey,
 			value: {
-				photo: { $type: 'blob', ref: { $link: blobCid }, mimeType: 'image/jpeg', size: 480_000 },
+				photo: { ref: { $link: blobCid }, mimeType: 'image/jpeg', size: 480_000 },
 				...(fixture.alt && { alt: fixture.alt }),
 				aspectRatio,
 				createdAt: datetime(fixture.date),
@@ -234,9 +235,10 @@ function buildRepo(actor: ActorFixture): GrainRepo {
 		}
 	})
 
-	const galleries: RecordEnvelope<GalleryRecord>[] = actor.galleries.map((fixture) => ({
-		uri: at(GALLERY, fixture.rkey),
+	const galleries: RecordEnvelope<GrainGalleryRecord>[] = actor.galleries.map((fixture) => ({
+		uri: at(GRAIN_GALLERY, fixture.rkey),
 		cid: fakeCid(fixture.rkey),
+		rkey: fixture.rkey,
 		value: {
 			title: fixture.title,
 			...(fixture.description && { description: fixture.description }),
@@ -244,15 +246,16 @@ function buildRepo(actor: ActorFixture): GrainRepo {
 		},
 	}))
 
-	const items: RecordEnvelope<GalleryItemRecord>[] = actor.galleries.flatMap((gallery) =>
+	const items: RecordEnvelope<GrainGalleryItemRecord>[] = actor.galleries.flatMap((gallery) =>
 		gallery.photos.map((photo, position) => {
 			const rkey = `${gallery.rkey}i${position}`
 			return {
-				uri: at(GALLERY_ITEM, rkey),
+				uri: at(GRAIN_GALLERY_ITEM, rkey),
 				cid: fakeCid(rkey),
+				rkey,
 				value: {
-					gallery: at(GALLERY, gallery.rkey),
-					item: at(PHOTO, photo),
+					gallery: at(GRAIN_GALLERY, gallery.rkey),
+					item: at(GRAIN_PHOTO, photo),
 					position,
 					createdAt: datetime(gallery.date),
 				},
@@ -299,7 +302,10 @@ function later<T>(value: () => T, ms: number): Promise<T> {
 	})
 }
 
-export const mockSource: GrainSource = {
-	hasPhotos: (actor) => later(() => mockRepo(actor.replace(/^@/, '')).photos.length > 0, 150),
-	load: (actor) => later(() => mockRepo(actor.replace(/^@/, '')), 350),
+/** A mock account's Grain records, with a little latency so loading states show. */
+export function mockSource(actor: string): GrainSource {
+	return {
+		hasPhotos: () => later(() => mockRepo(actor).photos.length > 0, 150),
+		load: () => later(() => mockRepo(actor), 350),
+	}
 }

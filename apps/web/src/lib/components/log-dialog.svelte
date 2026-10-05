@@ -11,11 +11,14 @@ import {
 	type LogResult,
 } from '$lib/log-form'
 import type { FoldedGroup } from '$lib/folded'
+import type { GrainSource } from '$lib/atproto/grain'
+import { viewerGrainSource } from '$lib/grain-source'
 import { countGraphemes } from '$lib/richtext/facets'
 import CoverImage from './cover-image.svelte'
 import Divider from './divider.svelte'
 import EditionMenu from './edition-menu.svelte'
 import FieldLabel from './field-label.svelte'
+import GrainPhotosField from './grain-photos-field.svelte'
 import LikeButton from './like-button.svelte'
 import PlayStateMenu from './play-state-menu.svelte'
 import ReplygateMenu from './replygate-menu.svelte'
@@ -42,6 +45,8 @@ interface Props {
 	onsave: (result: LogResult) => void
 	/** Offered in edit mode only. */
 	ondelete?: () => void
+	/** Where the photos field reads the viewer's Grain records; demos pass a mock. */
+	grainSource?: GrainSource
 }
 
 let {
@@ -54,6 +59,7 @@ let {
 	dlcGroups = [],
 	onsave,
 	ondelete,
+	grainSource = viewerGrainSource,
 }: Props = $props()
 
 const REVIEW_MAX_GRAPHEMES = 10000
@@ -231,6 +237,11 @@ function onclick(event: MouseEvent) {
 						<span class="hint">Or mark parts with the spoiler button</span>
 					</span>
 				</label>
+
+				<!-- Mounted on first open, so the Grain check doesn't run on every page view. -->
+				{#if session > 0}
+					<GrainPhotosField bind:items={form.media} source={grainSource} />
+				{/if}
 
 				<div class="verdict">
 					<div class="verdict-field">

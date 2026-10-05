@@ -6,6 +6,7 @@ import type { ActionData, PageData } from './$types'
 import SectionHeading from '$lib/components/section-heading.svelte'
 import LikeButton from '$lib/components/like-button.svelte'
 import RichText from '$lib/components/rich-text.svelte'
+import GrainCard from '$lib/components/grain-card.svelte'
 import RatingStars from '$lib/components/rating-stars.svelte'
 import { activityVerb } from '$lib/log-form'
 import { viewerState } from '$lib/viewer-state.svelte'
@@ -89,6 +90,13 @@ let hideReview = $derived(
 					>
 				</p>
 			{/if}
+		</section>
+	{/if}
+
+	<!-- Photos can spoil as much as text, so a hidden review hides them too. -->
+	{#if data.photos.length && !hideReview}
+		<section class="photos">
+			<GrainCard photos={data.photos} />
 		</section>
 	{/if}
 
@@ -181,8 +189,8 @@ header {
 .avatar {
 	display: inline-flex;
 	align-items: center;
-	width: 20px;
-	height: 1cap;
+	inline-size: 20px;
+	block-size: 1cap;
 }
 
 .title {

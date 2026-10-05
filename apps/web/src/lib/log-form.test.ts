@@ -90,10 +90,32 @@ describe('fromLogRecord', () => {
 			liked: true,
 			review: { text: 'So good.' },
 			containsSpoilers: true,
+			media: [
+				{
+					id: 'at://did:plc:me/social.grain.photo/1',
+					photo: { uri: 'at://did:plc:me/social.grain.photo/1', cid: 'bafy1' },
+					gallery: { uri: 'at://did:plc:me/social.grain.gallery/g', cid: 'bafyg' },
+				},
+				{
+					id: 'at://did:plc:me/social.grain.photo/2',
+					photo: { uri: 'at://did:plc:me/social.grain.photo/2', cid: 'bafy2' },
+				},
+			],
 			allow: ['following', 'mention'],
 		}
 		const { log, replygate } = toLogRecord(value, game, createdAt)
+		expect(log.media).toEqual([
+			{
+				photo: { uri: 'at://did:plc:me/social.grain.photo/1', cid: 'bafy1' },
+				gallery: { uri: 'at://did:plc:me/social.grain.gallery/g', cid: 'bafyg' },
+			},
+			{ photo: { uri: 'at://did:plc:me/social.grain.photo/2', cid: 'bafy2' } },
+		])
 		expect(fromLogRecord(log, replygate)).toEqual(value)
+	})
+
+	it('leaves media out when there are no photos', () => {
+		expect(toLogRecord(emptyLogForm(), game, createdAt).log).not.toHaveProperty('media')
 	})
 
 	it('reads a missing replygate or allow list as anyone', () => {

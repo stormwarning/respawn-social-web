@@ -6,6 +6,7 @@ import { createLike, deleteLike, findLike } from '$lib/atproto/like'
 import { getRecordOrNull, toPlainRecord } from '$lib/atproto/records'
 import { hasReview, listLogs, type RespawnReplygateRecord } from '$lib/atproto/log'
 import { avatarUrlForBlob, type RespawnProfileRecord } from '$lib/atproto/profile'
+import { getBlobUrl, resolveLogMedia, visiblePhotos } from '$lib/atproto/grain'
 import { publicAgent, resolveActor } from '$lib/atproto/public'
 import { cachePageData } from '$lib/server/page-cache'
 
@@ -36,10 +37,25 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 	// Replygate record shares the log's rkey. Enforcement is advisory until
 	// HappyView can apply it on read.
 	const { agent, user } = locals
-	const [profile, replygate, viewerLike] = await Promise.all([
+	const handle = actor.handle ?? actor.did
+	const media = log.value.media ?? []
+	const [profile, replygate, viewerLike, photos] = await Promise.all([
 		getRecordOrNull<RespawnProfileRecord>(repo, actor.did, Collections.profile, 'self'),
 		getRecordOrNull<RespawnReplygateRecord>(repo, actor.did, Collections.replygate, log.rkey),
 		user && agent ? findLike(agent, user.did, log.uri) : null,
+		// Checked against Grain as it is now: deleted photos drop out, edited ones show as edited.
+		media.length
+			? resolveLogMedia(
+					repo,
+					{ did: actor.did, handle, blobUrl: getBlobUrl(actor.pds, actor.did) },
+					media,
+				)
+					.then(visiblePhotos)
+					.catch((err) => {
+						console.error('[log] grain media failed', err)
+						return []
+					})
+			: [],
 	])
 	// Absent `allow` means anyone; `[]` means no one; otherwise a union of rules.
 	const allow = replygate?.value.allow
@@ -47,7 +63,6 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 	const commentsLimited = Boolean(allow?.length)
 
 	const isSelf = user?.did === actor.did
-	const handle = actor.handle ?? actor.did
 
 	// A signed-in viewer can like or comment from here, and the like state is part
 	// of this payload, so only the logged-out view is safe to hold. Set only once
@@ -60,6 +75,7 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 		displayName: profile?.value.displayName || handle,
 		avatarUrl: avatarUrlForBlob(actor.pds, actor.did, profile?.value.avatar),
 		log: toPlainRecord(log.value),
+		photos,
 		logUri: log.uri,
 		logCid: log.cid,
 		n,

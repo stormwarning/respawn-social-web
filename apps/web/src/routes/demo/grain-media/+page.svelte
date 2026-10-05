@@ -1,58 +1,36 @@
 <script lang="ts">
 import { page } from '$app/state'
+import {
+	allPhotos,
+	GRAIN_GALLERY,
+	GRAIN_PHOTO,
+	repoLookups,
+	resolveMedia,
+	visiblePhotos,
+	type GalleryRef,
+	type GrainRepo,
+	type MediaDraft,
+	type MediaItem,
+	type ResolvedMedia,
+	type StrongRef,
+} from '$lib/atproto/grain'
+import GrainCard from '$lib/components/grain-card.svelte'
+import GrainMedia from '$lib/components/grain-media.svelte'
+import GrainPhotosField from '$lib/components/grain-photos-field.svelte'
 import RichTextEditor from '$lib/components/rich-text-editor.svelte'
 import RichText from '$lib/components/rich-text.svelte'
 import { serialize } from '$lib/richtext/facets'
 import type { RichDoc, RichTextValue } from '$lib/richtext/types'
-import {
-	allPhotos,
-	credits,
-	GALLERY,
-	grainPhotoUrl,
-	PHOTO,
-	resolveMedia,
-	toGallery,
-	type GalleryRef,
-	type MediaDraft,
-	type MediaItem,
-	type MediaLookups,
-	type PhotoAttrs,
-	type ResolvedMedia,
-	type StrongRef,
-} from './grain'
-import GrainMedia from './grain-media.svelte'
-import GrainPhotosField from './grain-photos-field.svelte'
-import GrainPickerDialog from './grain-picker-dialog.svelte'
 import { liveSource } from './live-source'
 import { MOCK_EMPTY_HANDLE, MOCK_HANDLE, mockRepo, mockSource } from './mock-pds'
 
 type Account = 'mock' | 'mock-empty' | 'live'
 
-const MAX_MEDIA = 10
 const REVIEW_MAX_GRAPHEMES = 10000
 
 const repo = mockRepo(MOCK_HANDLE)
 const mockPhotos = allPhotos(repo)
 const byRkey = (rkey: string) => mockPhotos.find((photo) => photo.uri.endsWith(`/${rkey}`))!
-
-/*
- * What the page can resolve a stored ref against: the mock repo plus anything
- * picked from a live one. A real reader would call getRecord on the author's PDS.
- */
-const known = new Map<string, PhotoAttrs>(mockPhotos.map((photo) => [photo.uri, photo]))
-const knownGalleries = new Map<string, GalleryRef>(
-	repo.galleries.map(({ uri, cid, value }) => [uri, { uri, cid, title: value.title }]),
-)
-const lookups: MediaLookups = {
-	photo: (uri) => known.get(uri),
-	gallery: (uri) => knownGalleries.get(uri),
-}
-function remember(photos: PhotoAttrs[]) {
-	for (const photo of photos) {
-		known.set(photo.uri, photo)
-		if (photo.gallery) knownGalleries.set(photo.gallery.uri, photo.gallery)
-	}
-}
 
 const ref = ({ uri, cid }: StrongRef): StrongRef => ({ uri, cid })
 const rkeyOf = (uri: string) => uri.slice(uri.lastIndexOf('/') + 1)
@@ -92,8 +70,8 @@ const REVIEW: RichDoc = {
 	],
 }
 
-const pnw = toGallery(repo, repo.galleries[0])
-const pnwRef: GalleryRef = { uri: pnw.uri, cid: pnw.cid, title: pnw.title }
+const pnwRecord = repo.galleries[0]
+const pnwRef: GalleryRef = { uri: pnwRecord.uri, cid: pnwRecord.cid, title: pnwRecord.value.title }
 
 const SAMPLE = ['3m2pnw0001', '3m2pnw0006', '3m2pnw0007', '3m2pnw0003'].map((rkey) =>
 	draft(byRkey(rkey), pnwRef),
@@ -103,11 +81,14 @@ const SAMPLE = ['3m2pnw0001', '3m2pnw0006', '3m2pnw0007', '3m2pnw0003'].map((rke
 const BROKEN_SAMPLE: MediaDraft[] = [
 	draft(byRkey('3m2pnw0001'), pnwRef),
 	// The photo record was deleted.
-	draft({ uri: at(PHOTO, '3m2deleted1'), cid: 'bafyreimock3m2deleted1' }, pnwRef),
+	draft({ uri: at(GRAIN_PHOTO, '3m2deleted1'), cid: 'bafyreimock3m2deleted1' }, pnwRef),
 	// The photo record was edited (e.g. alt text changed), so its CID moved on.
 	draft({ uri: byRkey('3m2pnw0004').uri, cid: 'bafyreimockpicked3m2pnw0004' }, pnwRef),
 	// The gallery it was picked from was deleted; the photo survives.
-	draft(byRkey('3m2sky0001'), { uri: at(GALLERY, '3m2galgone'), cid: 'bafyreimock3m2galgone' }),
+	draft(byRkey('3m2sky0001'), {
+		uri: at(GRAIN_GALLERY, '3m2galgone'),
+		cid: 'bafyreimock3m2galgone',
+	}),
 ]
 
 // --- Account ---
@@ -117,12 +98,11 @@ let liveDraft = $state(page.data.user?.handle ?? '')
 /** Committed on change, so typing doesn't fire a lookup per keystroke. */
 let liveActor = $state(page.data.user?.handle ?? '')
 
-let source = $derived(account === 'live' ? liveSource : mockSource)
 let actor = $derived(
 	{ mock: MOCK_HANDLE, 'mock-empty': MOCK_EMPTY_HANDLE, live: liveActor }[account],
 )
-/** Gate for the photos field: one describeRepo call, made when the log form opens. */
-let hasGrain = $derived(actor ? source.hasPhotos(actor) : Promise.resolve(false))
+/** One source per account, shared by the field and the preview so a live repo loads once. */
+let source = $derived(account === 'live' ? liveSource(liveActor) : mockSource(actor))
 
 function switchAccount() {
 	media = account === 'mock' ? SAMPLE : []
@@ -132,25 +112,31 @@ function switchAccount() {
 
 let review = $state.raw<RichTextValue>(serialize(REVIEW))
 let media = $state.raw<MediaDraft[]>(SAMPLE)
-let picker = $state<GrainPickerDialog>()
+
+// --- Preview: what a reader of the saved log sees ---
+
+let previewRepo = $state.raw<GrainRepo | undefined>(repo)
+
+$effect(() => {
+	const current = source
+	if (!media.length) return
+	current.load().then(
+		(loaded) => {
+			if (current === source) previewRepo = loaded
+		},
+		() => {},
+	)
+})
 
 let resolved = $derived(
-	new Map<string, ResolvedMedia>(media.map((item) => [item.id, resolveMedia(item, lookups)])),
+	previewRepo
+		? new Map<string, ResolvedMedia>(
+				media.map((item) => [item.id, resolveMedia(item, repoLookups(previewRepo!))]),
+			)
+		: new Map<string, ResolvedMedia>(),
 )
-/** What a reader sees: deleted photos drop out, everything else shows as it is now. */
-let photos = $derived(
-	[...resolved.values()].flatMap((entry) => (entry.status === 'deleted' ? [] : [entry.photo])),
-)
-let photoCredits = $derived(credits(photos))
+let photos = $derived(visiblePhotos([...resolved.values()]))
 let problems = $derived([...resolved.values()].some((entry) => describe(entry) !== 'OK'))
-
-function onpicked(picked: PhotoAttrs[]) {
-	remember(picked)
-	media = picked.map((photo) => draft(photo, photo.gallery))
-}
-
-const linkOnGrain = (photo: PhotoAttrs) =>
-	photo.handle ? grainPhotoUrl({ handle: photo.handle, gallery: photo.gallery }) : photo.fullsize
 
 function describe(entry: ResolvedMedia): string {
 	if (entry.status === 'deleted') return 'Photo deleted: hidden from readers.'
@@ -168,36 +154,6 @@ let record = $derived({
 })
 
 const layoutCounts = [1, 2, 3, 4, 7]
-
-const LEXICON = JSON.stringify(
-	{
-		'main.record.properties.media': {
-			type: 'array',
-			description: 'Grain photos shown with the log.',
-			maxLength: MAX_MEDIA,
-			items: { type: 'ref', ref: '#media' },
-		},
-		media: {
-			type: 'object',
-			required: ['photo'],
-			properties: {
-				photo: {
-					type: 'ref',
-					ref: 'com.atproto.repo.strongRef',
-					description: 'A social.grain.photo record.',
-				},
-				gallery: {
-					type: 'ref',
-					ref: 'com.atproto.repo.strongRef',
-					description:
-						'The social.grain.gallery the photo was picked from, used for credit and linking back.',
-				},
-			},
-		},
-	},
-	null,
-	'\t',
-)
 </script>
 
 <svelte:head>
@@ -285,21 +241,13 @@ const LEXICON = JSON.stringify(
 			maxGraphemes={REVIEW_MAX_GRAPHEMES}
 			spoilers
 		/>
-		{#await hasGrain then has}
-			{#if has}
-				<GrainPhotosField
-					bind:items={media}
-					{resolved}
-					max={MAX_MEDIA}
-					onadd={() => picker?.open(photos)}
-				/>
-			{:else}
+		<GrainPhotosField bind:items={media} {source} />
+		{#await source.hasPhotos() then has}
+			{#if !has && !media.length}
 				<p class="demo-note copy sm">
 					No photos field: @{actor || '…'} has no <code>social.grain.photo</code> records.
 				</p>
 			{/if}
-		{:catch}
-			<p class="demo-note copy sm">No photos field: couldn’t read @{actor}’s repo.</p>
 		{/await}
 	</section>
 
@@ -307,29 +255,7 @@ const LEXICON = JSON.stringify(
 		<h2 class="label">Rendered</h2>
 		<div class="preview">
 			<RichText value={review} />
-			{#if photos.length}
-				<figure class="grain-card">
-					<GrainMedia {photos} href={linkOnGrain} />
-					<figcaption class="credit copy sm">
-						{#if photoCredits.length === 1 && photoCredits[0].gallery}
-							{@const [credit] = photoCredits}
-							<a href={credit.href} target="_blank" rel="noopener noreferrer"
-								><strong>{credit.gallery?.title}</strong></a
-							>
-							<span class="secondary">by @{credit.handle} on Grain</span>
-						{:else}
-							<span class="secondary">Photos by</span>
-							{#each photoCredits as credit, i (credit.handle)}
-								{#if i > 0}<span class="secondary"
-										>{i === photoCredits.length - 1 ? 'and' : ','}</span
-									>{/if}
-								<a href={credit.href} target="_blank" rel="noopener noreferrer">@{credit.handle}</a>
-							{/each}
-							<span class="secondary">on Grain</span>
-						{/if}
-					</figcaption>
-				</figure>
-			{/if}
+			<GrainCard {photos} />
 			{#if problems}
 				<ul class="resolution copy sm">
 					{#each media as item (item.id)}
@@ -397,12 +323,13 @@ const LEXICON = JSON.stringify(
 			current version; re-picking pins the new CID. If the gallery is gone, the credit falls back to the
 			author’s profile.
 		</p>
-		<p><strong>Proposed lexicon</strong>, on <code>social.respawn.feed.log</code>:</p>
-		<pre class="output">{LEXICON}</pre>
+		<p>
+			<strong>In the app</strong>, this is the Photos field in the log dialog. It is stored as
+			<code>media: [{'{ photo, gallery? }'}]</code> on <code>social.respawn.feed.log</code>, and the
+			log page resolves it the way the preview above does.
+		</p>
 	</section>
 </article>
-
-<GrainPickerDialog bind:this={picker} {source} {actor} max={MAX_MEDIA} onphotos={onpicked} />
 
 <style>
 .intro,
@@ -492,23 +419,6 @@ code {
 	@supports (corner-shape: squircle) {
 		border-radius: 16px;
 		corner-shape: var(--corner-shape);
-	}
-}
-
-.grain-card {
-	display: grid;
-	gap: 8px;
-	margin: 0;
-}
-
-.credit {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0 0.3em;
-	align-items: baseline;
-
-	a {
-		color: inherit;
 	}
 }
 

@@ -9,8 +9,10 @@ export interface RecordEnvelope<T> {
 }
 
 export function isRecordNotFound(err: unknown): boolean {
+	// The XRPC error name is the reliable part; PDS implementations word the message differently.
+	if ((err as { error?: unknown } | null)?.error === 'RecordNotFound') return true
 	const msg = err instanceof Error ? err.message : String(err)
-	return /Could not locate record|RecordNotFound/i.test(msg)
+	return /Could not locate record|Record not found|RecordNotFound/i.test(msg)
 }
 
 const rkeyFromUri = (uri: string) => uri.slice(uri.lastIndexOf('/') + 1)

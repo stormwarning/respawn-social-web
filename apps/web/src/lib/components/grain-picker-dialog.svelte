@@ -1,31 +1,29 @@
 <script lang="ts">
 import { Icon } from '@respawn-social/icons'
-import type { PhotoAttrs } from './grain'
 import {
+	allGalleries,
 	allPhotos,
 	galleriesContaining,
+	MEDIA_MAX_ITEMS,
 	photosInGalleries,
-	toGallery,
 	type GalleryRef,
 	type GrainGallery,
 	type GrainPhoto,
 	type GrainRepo,
-	type GrainSource,
-} from './grain'
+} from '$lib/atproto/grain'
 
 type Tab = 'galleries' | 'photos'
 
 interface Props {
-	source: GrainSource
-	/** Whose repo to browse: the signed-in user's handle or DID. */
-	actor: string
-	/** Most photos one selection may hold (the log's `media` maxLength is 10). */
+	/** The viewer's Grain records; called on every open, so it should cache. */
+	load: () => Promise<GrainRepo>
+	/** Most photos one selection may hold. */
 	max?: number
 	/** Each photo carries the gallery it was picked from, for linking back to Grain. */
-	onphotos: (photos: PhotoAttrs[]) => void
+	onphotos: (photos: GrainPhoto[]) => void
 }
 
-let { source, actor, max = 10, onphotos }: Props = $props()
+let { load, max = MEDIA_MAX_ITEMS, onphotos }: Props = $props()
 
 // oxlint-disable-next-line no-unassigned-vars
 let dialog: HTMLDialogElement
@@ -34,13 +32,9 @@ let repo = $state.raw<GrainRepo>()
 let loading = $state(false)
 let error = $state('')
 let openGallery = $state<string>()
-let selected = $state.raw<PhotoAttrs[]>([])
+let selected = $state.raw<GrainPhoto[]>([])
 
-let galleries = $derived(
-	repo?.galleries
-		.toSorted((a, b) => b.value.createdAt.localeCompare(a.value.createdAt))
-		.map((record) => toGallery(repo!, record)) ?? [],
-)
+let galleries = $derived(repo ? allGalleries(repo) : [])
 let photos = $derived(repo ? allPhotos(repo) : [])
 let grouped = $derived(repo ? photosInGalleries(repo) : new Set<string>())
 let current = $derived(galleries.find((gallery) => gallery.uri === openGallery))
@@ -56,15 +50,14 @@ const galleryRef = ({ uri, cid, title }: GrainGallery): GalleryRef => ({ uri, ci
 const newestGallery: Context = (photo) =>
 	repo ? galleriesContaining(repo, photo.uri)[0] : undefined
 
-export async function open(initial: PhotoAttrs[] = []) {
+export async function open(initial: GrainPhoto[] = []) {
 	selected = initial
 	dialog.showModal()
-	if (repo && (repo.handle === actor || repo.did === actor)) return
+	if (repo) return
 	loading = true
 	error = ''
-	repo = undefined
 	try {
-		repo = await source.load(actor)
+		repo = await load()
 	} catch (cause) {
 		error = cause instanceof Error ? cause.message : String(cause)
 	} finally {
@@ -162,7 +155,7 @@ function onclick(event: MouseEvent) {
 	<div class="dialog-content">
 		<div class="dialog-header">
 			<h2>Add photos from Grain</h2>
-			<span class="meta">@{repo?.handle ?? actor}</span>
+			{#if repo}<span class="meta">@{repo.handle}</span>{/if}
 			<button class="close" type="button" onclick={() => dialog.close()} aria-label="Close">
 				<Icon name="x" width="24" height="24" />
 			</button>
@@ -185,7 +178,7 @@ function onclick(event: MouseEvent) {
 
 		<div class="body" role="tabpanel">
 			{#if loading}
-				<p class="copy sm meta">Reading {actor}’s repo…</p>
+				<p class="copy sm meta">Loading your Grain photos…</p>
 			{:else if error}
 				<p class="copy sm error">{error}</p>
 			{:else if tab === 'photos'}
@@ -294,6 +287,7 @@ dialog::backdrop {
 .close {
 	display: flex;
 	padding: 4px;
+	margin-inline-start: auto;
 	color: var(--color-grey-300);
 	background: transparent;
 	border: none;

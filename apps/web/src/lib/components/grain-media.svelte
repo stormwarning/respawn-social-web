@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { PhotoAttrs as Photo } from './grain'
+import type { GrainPhoto as Photo } from '$lib/atproto/grain'
 
 interface Props {
 	photos: Photo[]
@@ -28,15 +28,15 @@ let layout = $derived(
 			? clamp(ratio(photo), 0.75, 2)
 			: undefined}
 	>
-		{#if photo.thumb}<img
-				src={photo.thumb}
-				alt={photo.alt ?? ''}
-				width={photo.aspectRatio.width * 100}
-				height={photo.aspectRatio.height * 100}
-				loading={index > 2 ? 'lazy' : undefined}
-				draggable="false"
-			/>{:else}<span class="missing">{photo.alt}</span>{/if}
-		{#if photo.thumb && photo.alt}<span class="alt" title={photo.alt}>ALT</span>{/if}
+		<img
+			src={photo.thumb}
+			alt={photo.alt ?? ''}
+			width={photo.aspectRatio.width * 100}
+			height={photo.aspectRatio.height * 100}
+			loading={index > 2 ? 'lazy' : undefined}
+			draggable="false"
+		/>
+		{#if photo.alt}<span class="alt" title={photo.alt}>ALT</span>{/if}
 	</a>
 {/snippet}
 
@@ -111,16 +111,6 @@ img {
 	inline-size: 100%;
 	block-size: 100%;
 	object-fit: cover;
-}
-
-.missing {
-	display: grid;
-	place-items: center;
-	block-size: 100%;
-	padding: 8px;
-	font-size: var(--text-sm);
-	color: var(--color-grey-400);
-	text-align: center;
 }
 
 .alt {

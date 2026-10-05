@@ -1,6 +1,7 @@
 import type { Agent } from '@atproto/api'
 import { Collections } from '@respawn-social/lexicons'
 import type { CoverRef, GameRef, PlayedState, RespawnGameRecord } from '$lib/atproto/game'
+import type { MediaItem } from '$lib/atproto/grain'
 import { listAllRecords, type RecordEnvelope } from '$lib/atproto/records'
 import { generateTid } from '$lib/atproto/tid'
 import type { Facet } from '$lib/richtext/types'
@@ -40,6 +41,8 @@ export interface RespawnLogRecord {
 	rating?: number
 	liked?: boolean
 	review?: LogReview
+	/** Grain photos shown with the log, separate from the review. */
+	media?: MediaItem[]
 	createdAt: string
 }
 

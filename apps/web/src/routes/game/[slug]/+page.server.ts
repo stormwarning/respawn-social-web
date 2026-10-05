@@ -21,6 +21,7 @@ import { forgetViewerState } from '$lib/server/viewer-state'
 import { loadConsolidatedGameRecord } from '$lib/atproto/title-identity'
 import type { Title } from '$lib/types/game'
 import { countGraphemes, normalize } from '$lib/richtext/facets'
+import { parseMedia } from '$lib/atproto/grain'
 import type { Facet } from '$lib/richtext/types'
 
 const PLAY_STATES = new Set(['played', 'completed', 'abandoned', 'retired', 'shelved'])
@@ -90,6 +91,7 @@ function shortString(value: unknown): string | undefined | null {
  */
 function parseLogForm(
 	form: FormData,
+	did: string,
 ): { fields: LogFields; replygate?: ReplygateSettings } | { error: string } {
 	let raw: unknown
 	let rawGate: unknown
@@ -176,6 +178,9 @@ function parseLogForm(
 		}
 	}
 
+	const media = parseMedia(raw.media, did)
+	if ('error' in media) return media
+
 	// Absent means anyone; `[]` means no one; otherwise the union of the rules.
 	let replygate: ReplygateSettings | undefined
 	if (rawGate !== undefined) {
@@ -196,6 +201,7 @@ function parseLogForm(
 		...(rating ? { rating } : {}),
 		...(raw.liked ? { liked: true } : {}),
 		...(review ? { review } : {}),
+		...(media.length ? { media } : {}),
 	}
 	return { fields, replygate }
 }
@@ -461,7 +467,7 @@ export const actions: Actions = {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user, timings } = locals
 
-		const parsed = parseLogForm(await request.formData())
+		const parsed = parseLogForm(await request.formData(), user.did)
 		if ('error' in parsed) return fail(400, parsed)
 		const { fields, replygate } = parsed
 

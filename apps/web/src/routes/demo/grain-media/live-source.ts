@@ -1,40 +1,33 @@
 import {
-	PHOTO,
-	type GalleryItemRecord,
-	type GalleryRecord,
+	GRAIN_PHOTO,
+	toGrainRepo,
 	type GrainRepo,
+	type GrainRepoData,
 	type GrainSource,
-	type PhotoRecord,
-	type RecordEnvelope,
-} from './grain'
-
-interface RepoResponse {
-	did: string
-	handle: string
-	pds: string
-	galleries: RecordEnvelope<GalleryRecord>[]
-	items: RecordEnvelope<GalleryItemRecord>[]
-	photos: RecordEnvelope<PhotoRecord>[]
-}
+} from '$lib/atproto/grain'
 
 /**
- * Reads a real actor's Grain records via `./repo`, which lists them from the
- * actor's PDS without auth. Blobs come straight from the PDS too; `getBlob`
- * doesn't resize, so thumbs and fullsize are the same (≤1MB per Grain's lexicon).
+ * Reads any actor's Grain records without logging in, via this demo's `./repo`
+ * and `./collections` endpoints. The app itself only reads the viewer's own,
+ * through `/api/viewer/grain`.
  */
-export const liveSource: GrainSource = {
-	async hasPhotos(actor) {
-		const res = await fetch(`/demo/grain-media/collections?actor=${encodeURIComponent(actor)}`)
-		if (!res.ok) return false
-		const { collections }: { collections: string[] } = await res.json()
-		return collections.includes(PHOTO)
-	},
-	async load(actor) {
-		const res = await fetch(`/demo/grain-media/repo?actor=${encodeURIComponent(actor)}`)
-		if (!res.ok) throw new Error((await res.json().catch(() => null))?.message ?? res.statusText)
-		const { pds, ...repo }: RepoResponse = await res.json()
-		const blobUrl: GrainRepo['blobUrl'] = (cid) =>
-			`${pds}/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(repo.did)}&cid=${cid}`
-		return { ...repo, blobUrl }
-	},
+export function liveSource(actor: string): GrainSource {
+	let repo: Promise<GrainRepo> | undefined
+	const query = `actor=${encodeURIComponent(actor)}`
+	return {
+		async hasPhotos() {
+			const res = await fetch(`/demo/grain-media/collections?${query}`)
+			if (!res.ok) return false
+			const { collections }: { collections: string[] } = await res.json()
+			return collections.includes(GRAIN_PHOTO)
+		},
+		load() {
+			repo ??= fetch(`/demo/grain-media/repo?${query}`).then(async (res) => {
+				if (!res.ok)
+					throw new Error((await res.json().catch(() => null))?.message ?? res.statusText)
+				return toGrainRepo((await res.json()) as GrainRepoData)
+			})
+			return repo
+		},
+	}
 }

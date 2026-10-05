@@ -1,6 +1,6 @@
 import { BlobRef, jsonToLex } from '@atproto/api'
 import { describe, expect, it } from 'vitest'
-import { toPlainRecord } from './records'
+import { isRecordNotFound, toPlainRecord } from './records'
 import { blobUrl } from './profile'
 
 const CID_STR = 'bafkreibk7ebiuohwvyaekcijrvkekyjd5sbipmjtlbxn5msywdohzaory4'
@@ -55,5 +55,15 @@ describe('blobUrl', () => {
 
 		expect(fromAgent).toContain(`cid=${CID_STR}`)
 		expect(blobUrl('https://pds.example', did, toPlainRecord(record).avatar)).toBe(fromAgent)
+	})
+})
+
+describe('isRecordNotFound', () => {
+	it('recognises the XRPC error name and the common messages', () => {
+		const xrpc = Object.assign(new Error('Record not found'), { error: 'RecordNotFound' })
+		expect(isRecordNotFound(xrpc)).toBe(true)
+		expect(isRecordNotFound(new Error('Record not found'))).toBe(true)
+		expect(isRecordNotFound(new Error('Could not locate record: at://did:plc:x/a/b'))).toBe(true)
+		expect(isRecordNotFound(new Error('Internal Server Error'))).toBe(false)
 	})
 })

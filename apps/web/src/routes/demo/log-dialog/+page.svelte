@@ -9,6 +9,7 @@ import {
 } from '$lib/log-form'
 import type { FoldedGroup } from '$lib/folded'
 import { serialize } from '$lib/richtext/facets'
+import { MOCK_HANDLE, mockRepo, mockSource } from '../grain-media/mock-pds'
 
 type Mode = 'new' | 'edit'
 type StateKey = 'none' | 'playing' | 'completed'
@@ -71,10 +72,16 @@ const sample = fromLogRecord(
 				},
 			],
 		}),
+		media: mockRepo(MOCK_HANDLE)
+			.photos.slice(0, 3)
+			.map(({ uri, cid }) => ({ photo: { uri, cid } })),
 		createdAt: '2026-09-20T21:14:00.000Z',
 	},
 	{ allow: ['following', 'mention'] },
 )
+
+/** The demo isn't signed in, so the photos field reads the Grain demo's mock account. */
+const grainSource = mockSource(MOCK_HANDLE)
 
 let mode = $state<Mode>('new')
 let stateKey = $state<StateKey>('none')
@@ -153,6 +160,7 @@ function ondelete() {
 		platforms={suggestions ? platforms : []}
 		editionGroups={suggestions ? editionGroups : []}
 		dlcGroups={suggestions ? dlcGroups : []}
+		{grainSource}
 	/>
 
 	<section class="demo">
