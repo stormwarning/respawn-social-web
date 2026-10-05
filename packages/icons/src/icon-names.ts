@@ -8,6 +8,7 @@ export const iconNames = [
 	'controller-solid',
 	'eye-slash',
 	'heart-solid',
+	'image',
 	'link',
 	'list-bullets',
 	'list-numbers',
