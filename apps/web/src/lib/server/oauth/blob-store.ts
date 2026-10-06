@@ -37,25 +37,28 @@ export interface TextKV {
 }
 
 const memory = new Map<string, string>()
-let warned = false
-let cachedStore: TextKV | null = null
+let memoryStore: TextKV | null = null
 
+/**
+ * Resolve a fresh Blobs store on every call — never cache it. `getStore`
+ * snapshots the per-invocation NETLIFY_BLOBS_CONTEXT (including a short-lived
+ * auth token) into the client it builds. Netlify reuses warm function
+ * instances across invocations, so a module-level cached store keeps sending
+ * the first invocation's token until Blobs rejects it with "Failed to decode
+ * token: Token expired". Construction is cheap (no I/O).
+ */
 export function resolveStore(): TextKV {
-	if (cachedStore) return cachedStore
+	if (memoryStore) return memoryStore
 	try {
-		cachedStore = getStore({
+		return getStore({
 			name: 'atproto-oauth',
 			consistency: 'strong',
 		}) as unknown as TextKV
-		return cachedStore
 	} catch {
-		if (!warned) {
-			console.warn(
-				'[oauth] Netlify Blobs unavailable — using in-memory store (dev only, not durable).',
-			)
-			warned = true
-		}
-		cachedStore = {
+		console.warn(
+			'[oauth] Netlify Blobs unavailable — using in-memory store (dev only, not durable).',
+		)
+		memoryStore = {
 			async get(key: string) {
 				return memory.get(key) ?? null
 			},
@@ -68,7 +71,7 @@ export function resolveStore(): TextKV {
 				memory.delete(key)
 			},
 		}
-		return cachedStore
+		return memoryStore
 	}
 }
 
