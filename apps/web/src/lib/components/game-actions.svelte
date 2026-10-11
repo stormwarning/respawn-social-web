@@ -1,12 +1,14 @@
 <script lang="ts">
 import { tick } from 'svelte'
 import { applyAction, enhance } from '$app/forms'
+import { replaceState } from '$app/navigation'
+import { page } from '$app/state'
 import type { ActionResult } from '@sveltejs/kit'
 import { Icon } from '@respawn-social/icons'
 import { PLAYED_OPTIONS, type PlayedState } from '$lib/atproto/game'
 import { playedAt } from '$lib/atproto/log'
 import type { FoldedGroup } from '$lib/folded'
-import type { LogResult } from '$lib/log-form'
+import { today, type LogResult } from '$lib/log-form'
 import { viewerState } from '$lib/viewer-state.svelte'
 import StarRating from './star-rating.svelte'
 import Divider from './divider.svelte'
@@ -24,6 +26,7 @@ let {
 	platforms = [],
 	editionGroups = [],
 	dlcGroups = [],
+	detectedPlay,
 }: {
 	isLoggedIn: boolean
 	igdbId: number
@@ -38,6 +41,8 @@ let {
 	platforms?: string[]
 	editionGroups?: FoldedGroup[]
 	dlcGroups?: FoldedGroup[]
+	/** A play from the inbox to log: opens the dialog prefilled, and is marked logged on save. */
+	detectedPlay?: { id: string; at: string; platform?: string }
 } = $props()
 
 // The viewer's own state lives in the store, not in the page payload, so it is
@@ -80,6 +85,20 @@ let playStateLabel = $derived(
 let errorMessage = $derived(
 	error ?? (viewerState.status === 'error' ? "Couldn't load your game state." : null),
 )
+
+/** The detected play the dialog last opened for, so it opens once per play. */
+let openedForPlay: string | undefined
+
+// Waits for `ready` like the controls do: the dialog's defaults read the
+// viewer's game state. Runs in the browser only, so the date is local.
+$effect(() => {
+	if (!ready || !logDialog || !detectedPlay || openedForPlay === detectedPlay.id) return
+	openedForPlay = detectedPlay.id
+	logDialog.open({
+		datePlayed: today(new Date(detectedPlay.at)),
+		...(detectedPlay.platform ? { platform: detectedPlay.platform } : {}),
+	})
+})
 
 const uid = $props.id()
 const playStateMenuId = `${uid}-play-state`
@@ -443,6 +462,12 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 								at: playedAt(log),
 							})
 						}
+						if (detectedPlay) {
+							// Logged: drop the play from the URL so a refresh doesn't reopen it.
+							const url = new URL(page.url)
+							for (const key of ['play', 'at', 'via']) url.searchParams.delete(key)
+							replaceState(url, page.state)
+						}
 						return
 					}
 					viewerState.setGame(igdbId, prev)
@@ -452,6 +477,7 @@ function onPlayStateMenuKeydown(event: KeyboardEvent) {
 			}}
 		>
 			<input type="hidden" name="igdbId" value={igdbId} />
+			<input type="hidden" name="playId" value={detectedPlay?.id ?? ''} />
 			<input type="hidden" name="log" value={pendingLog ? JSON.stringify(pendingLog.log) : ''} />
 			<input
 				type="hidden"

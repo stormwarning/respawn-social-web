@@ -1,6 +1,7 @@
 <script lang="ts">
 import Chip from '$lib/components/chip.svelte'
 import ClampText from '$lib/components/clamp-text.svelte'
+import { page } from '$app/state'
 import CoverImage from '$lib/components/cover-image.svelte'
 import CoverList from '$lib/components/cover-list.svelte'
 import GameActions from '$lib/components/game-actions.svelte'
@@ -11,6 +12,18 @@ import type { PageData } from './$types'
 let { data }: { data: PageData } = $props()
 let { game } = $derived(data)
 let developers = $derived(game.developers.join(', '))
+
+// Arriving from the plays inbox: open the log dialog prefilled with the play.
+// Steam can't say which OS it ran on; Windows is by far the likeliest.
+let detectedPlay = $derived.by(() => {
+	const params = page.url.searchParams
+	const id = params.get('play')
+	const at = params.get('at')
+	if (!id || !at || Number.isNaN(Date.parse(at))) return undefined
+	const windows = game.platforms.some((platform) => platform.displayName === 'Windows')
+	const platform = params.get('via') === 'steam' && windows ? 'Windows' : undefined
+	return { id, at, platform }
+})
 
 let foldedGroups = $derived(groupFolded(game.folded, game.displayName))
 // The log dialog offers the same names under the same headings.
@@ -97,6 +110,7 @@ let relatedGroups = $derived.by(() => {
 				platforms={game.platforms.map((platform) => platform.displayName)}
 				editionGroups={logChoices.editions}
 				dlcGroups={logChoices.addOns}
+				{detectedPlay}
 			/>
 		</div>
 	</section>

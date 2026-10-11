@@ -1,5 +1,13 @@
 import { env } from '$env/dynamic/private'
-import type { BrowseResult, CoverColors, ResolveResult, SearchHit, Title } from '$lib/types/game'
+import type {
+	BrowseResult,
+	CoverColors,
+	DetectedPlay,
+	LinkedAccount,
+	ResolveResult,
+	SearchHit,
+	Title,
+} from '$lib/types/game'
 
 function baseUrl(): string {
 	const url = env.BACKEND_API_URL
@@ -161,4 +169,113 @@ export async function browseTitles(
 	if (query.year !== undefined) params.set('year', String(query.year))
 	if (query.decade !== undefined) params.set('decade', String(query.decade))
 	return api<BrowseResult>(`/games/browse?${params}`, fetchFn)
+}
+
+/**
+ * Play sync: linked gaming accounts and the plays noticed on them.
+ *
+ * Unlike the game routes these act on one user's data, and the backend takes
+ * the did on trust from us. `INTERNAL_API_SECRET` is what proves the caller is
+ * this server, so these must only ever run server-side, with a did that came
+ * from the signed-in session.
+ */
+async function syncApi<T>(
+	method: 'GET' | 'POST' | 'DELETE',
+	path: string,
+	body?: unknown,
+	fetchFn: typeof fetch = fetch,
+): Promise<T> {
+	const secret = env.INTERNAL_API_SECRET
+	if (!secret) throw new Error('INTERNAL_API_SECRET is not set')
+
+	let res: Response
+	try {
+		res = await fetchFn(`${baseUrl()}/sync${path}`, {
+			method,
+			headers: {
+				accept: 'application/json',
+				'X-Internal-Secret': secret,
+				...(body === undefined ? {} : { 'content-type': 'application/json' }),
+			},
+			body: body === undefined ? undefined : JSON.stringify(body),
+		})
+	} catch (err) {
+		throw new BackendError(path, 0, err instanceof Error ? err.message : String(err))
+	}
+
+	if (!res.ok) throw new BackendError(path, res.status, res.statusText)
+	return (res.status === 204 ? undefined : await res.json()) as T
+}
+
+export async function listLinkedAccounts(
+	did: string,
+	fetchFn?: typeof fetch,
+): Promise<LinkedAccount[]> {
+	const { accounts } = await syncApi<{ accounts: LinkedAccount[] }>(
+		'GET',
+		`/accounts?did=${encodeURIComponent(did)}`,
+		undefined,
+		fetchFn,
+	)
+	return accounts
+}
+
+/**
+ * Link an account. The backend runs the first sync before answering, so the
+ * returned status already says whether the library is visible. A 409 means
+ * another user linked it first.
+ */
+export async function linkAccount(
+	did: string,
+	provider: LinkedAccount['provider'],
+	externalId: string,
+	fetchFn?: typeof fetch,
+): Promise<LinkedAccount> {
+	const { account } = await syncApi<{ account: LinkedAccount }>(
+		'POST',
+		'/accounts',
+		{ did, provider, externalId },
+		fetchFn,
+	)
+	return account
+}
+
+export async function unlinkAccount(
+	did: string,
+	id: string,
+	fetchFn?: typeof fetch,
+): Promise<void> {
+	await syncApi<void>(
+		'DELETE',
+		`/accounts/${encodeURIComponent(id)}?did=${encodeURIComponent(did)}`,
+		undefined,
+		fetchFn,
+	)
+}
+
+export async function listDetectedPlays(
+	did: string,
+	fetchFn?: typeof fetch,
+): Promise<DetectedPlay[]> {
+	const { plays } = await syncApi<{ plays: DetectedPlay[] }>(
+		'GET',
+		`/plays?did=${encodeURIComponent(did)}`,
+		undefined,
+		fetchFn,
+	)
+	return plays
+}
+
+export async function resolveDetectedPlay(
+	did: string,
+	id: string,
+	resolution: { status: 'logged'; logUri: string } | { status: 'dismissed' },
+	fetchFn?: typeof fetch,
+): Promise<void> {
+	await syncApi<void>(
+		'POST',
+		`/plays/${encodeURIComponent(id)}/resolve`,
+		{ did, ...resolution },
+		fetchFn,
+	)
 }

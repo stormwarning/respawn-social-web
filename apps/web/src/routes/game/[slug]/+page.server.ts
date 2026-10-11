@@ -1,5 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit'
-import { BackendError, getTitleBySlug } from '$lib/server/backend'
+import { BackendError, getTitleBySlug, resolveDetectedPlay } from '$lib/server/backend'
 import type { Actions, PageServerLoad } from './$types'
 import { cachePageData } from '$lib/server/page-cache'
 import {
@@ -467,9 +467,12 @@ export const actions: Actions = {
 		if (!locals.user || !locals.agent) redirect(303, '/login')
 		const { agent, user, timings } = locals
 
-		const parsed = parseLogForm(await request.formData(), user.did)
+		const formData = await request.formData()
+		const parsed = parseLogForm(formData, user.did)
 		if ('error' in parsed) return fail(400, parsed)
 		const { fields, replygate } = parsed
+		// Set when the log came from a play in the inbox (/plays/).
+		const playId = String(formData.get('playId') ?? '')
 
 		try {
 			// Refetch the game server-side so the denormalized ref can't drift.
@@ -521,13 +524,24 @@ export const actions: Actions = {
 				}
 			}
 
-			await timings.track('action.put', () =>
+			const { uri } = await timings.track('action.put', () =>
 				createLog(agent, user.did, log, {
 					replygate,
 					game: { igdbId: game.id, record: gameRecord, exists: existing !== null },
 				}),
 			)
 			forgetViewerState(user.did)
+			if (playId) {
+				// The log is saved; a play left pending just stays in the inbox for
+				// the user to dismiss, so this must not fail the action.
+				try {
+					await timings.track('action.play', () =>
+						resolveDetectedPlay(user.did, playId, { status: 'logged', logUri: uri }, fetch),
+					)
+				} catch (err) {
+					console.error('[game/[slug]] could not mark the play logged', err)
+				}
+			}
 			return {
 				played: gameRecord.played ?? null,
 				playing: gameRecord.playing === true,

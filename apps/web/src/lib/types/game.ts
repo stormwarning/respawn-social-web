@@ -202,3 +202,36 @@ export interface BrowseResult {
 	page: number
 	pageSize: number
 }
+
+/** A gaming account linked for play sync, from `/sync/accounts`. */
+export interface LinkedAccount {
+	id: string
+	provider: 'steam'
+	/** The platform's account id, e.g. a SteamID64. */
+	externalId: string
+	/**
+	 * `pending` until the first sync; `private` when the platform hid the
+	 * library (on Steam, the profile's "Game details" privacy setting).
+	 */
+	status: 'pending' | 'ok' | 'private' | 'error'
+	lastError: string | null
+	lastSyncedAt: string | null
+	createdAt: string
+}
+
+/** Playtime noticed on a linked account, waiting to be logged or dismissed. */
+export interface DetectedPlay {
+	id: string
+	provider: LinkedAccount['provider']
+	externalGameId: string
+	/** The platform's name for the game, for when `title` is null. */
+	externalName: string | null
+	minutes: number
+	/** UTC `yyyy-mm-dd`; one play per game per day. */
+	playedOn: string
+	lastPlayedAt: string
+	status: 'pending' | 'logged' | 'dismissed'
+	logUri: string | null
+	/** The title the game belongs to, or null when IGDB has no match. */
+	title: TitleSummary | null
+}

@@ -16,7 +16,10 @@ let { data, form }: { data: PageData; form: ActionData } = $props()
 </svelte:head>
 
 <article class="page">
-	<h1>Account settings</h1>
+	<header class="page-header">
+		<h1>Account settings</h1>
+		<a href="/settings/connections/">Connections</a>
+	</header>
 
 	<form class="profile-settings" method="POST" enctype="multipart/form-data" use:enhance>
 		<fieldset class="main">
@@ -110,6 +113,13 @@ let { data, form }: { data: PageData; form: ActionData } = $props()
 	display: grid;
 	gap: 32px;
 	padding: 32px 0;
+}
+
+.page-header {
+	display: flex;
+	gap: 16px;
+	align-items: baseline;
+	justify-content: space-between;
 }
 
 h1 {
