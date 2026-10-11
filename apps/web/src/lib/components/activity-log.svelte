@@ -30,10 +30,12 @@ let isViewer = $derived(actor.did === page.data.user?.did)
 		{:else}
 			<a class="profile-link" href={actor.url}>{actor.name}</a>
 		{/if}
-		<a class="log-link" href={log.url}>{activityVerb(log.record)}</a>
-		<a class="game-link" href="/game/{log.record.game.slug}/">{log.record.game.title}</a>
+		<a class="activity-link" href={log.url}>
+			<span class="activity-verb">{activityVerb(log.record)}</span>
+			<span class="activity-game">{log.record.game.title}</span>
+		</a>
 		{#if log.record.rating}
-			<RatingStars value={log.record.rating} size={12} />
+			<RatingStars value={log.record.rating} isInline size={12} />
 		{/if}
 	</div>
 </ActivityBase>

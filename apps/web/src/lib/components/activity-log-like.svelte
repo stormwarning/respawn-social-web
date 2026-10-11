@@ -2,6 +2,7 @@
 import { page } from '$app/state'
 import type { RespawnLogRecord } from '$lib/atproto/log'
 import ActivityBase from './activity-base.svelte'
+import RatingStars from './rating-stars.svelte'
 
 interface LikeActor {
 	did: string
@@ -32,13 +33,13 @@ let authorIsViewer = $derived(log.author.did === viewerDid)
 			<a class="profile-link" href={actor.url}>{actor.name}</a>
 		{/if}
 		liked
-		{#if authorIsViewer}
-			<a class="log-link" href={log.url}>your review</a>
-		{:else}
-			<a class="profile-link" href={log.author.url}>{log.author.name}’s</a>
-			<a class="log-link" href={log.url}>review</a>
-		{/if}
-		of <a class="game-link" href="/game/{log.record.game.slug}/">{log.record.game.title}</a>
+		<span class="profile">
+			{#if authorIsViewer}your{:else}{log.author.name}’s{/if}
+		</span>
+		<a class="activity-link" href={log.url}>
+			{#if log.record.rating}<RatingStars value={log.record.rating} isInline size={12} />{/if}
+			review of <span class="activity-game">{log.record.game.title}</span>
+		</a>
 	</div>
 </ActivityBase>
 

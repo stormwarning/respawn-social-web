@@ -4,18 +4,20 @@ import { Icon } from '@respawn-social/icons'
 interface Props {
 	/** 1–10 in half-star steps, as records store it. */
 	value: number
+	/** Is the element used within inline text. */
+	isInline?: boolean
 	/** Star size in px. */
 	size?: number
 }
 
-let { value, size = 18 }: Props = $props()
+let { value, isInline = false, size = 18 }: Props = $props()
 
 let full = $derived(Math.floor(value / 2))
 let half = $derived(value % 2 === 1)
 </script>
 
 <span
-	class="rating-stars"
+	class="rating-stars {isInline && 'is-inline'}"
 	role="img"
 	aria-label="{value / 2} out of 5 stars"
 	style:--size="{size}px"
@@ -38,6 +40,12 @@ let half = $derived(value % 2 === 1)
 		flex: none;
 		inline-size: var(--size);
 		block-size: var(--size);
+	}
+
+	&.is-inline {
+		position: relative;
+		top: 1.5px;
+		color: inherit;
 	}
 }
 </style>

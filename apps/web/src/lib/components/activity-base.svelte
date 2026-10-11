@@ -58,7 +58,7 @@ function relativeAge(iso: string): string {
 	gap: 4px;
 	padding: 8px 0;
 	font-size: 0.875rem;
-	color: var(--color-grey-400);
+	color: var(--color-grey-300);
 	letter-spacing: 0.02em;
 
 	:global(> div) {
@@ -82,15 +82,28 @@ function relativeAge(iso: string): string {
 
 :global(.profile-link) {
 	font-weight: 600;
-	color: var(--color-grey-300);
+	color: var(--color-grey-200);
 	text-decoration: none;
 
 	&:hover {
-		color: var(--color-grey-100);
+		color: var(--color-grey-050);
 	}
 }
 
-:global(.game-link) {
+:global(.activity-backlog) {
+	color: var(--color-grey-200);
+	text-decoration: none;
+
+	&:hover {
+		color: var(--color-grey-050);
+	}
+}
+
+:global(.activity-verb) {
+	color: var(--color-grey-300);
+}
+
+:global(.activity-game) {
 	color: var(--color-grey-050);
 	text-decoration: none;
 
@@ -99,13 +112,19 @@ function relativeAge(iso: string): string {
 	}
 }
 
-:global(.backlog-link),
-:global(.log-link) {
-	color: var(--color-grey-300);
+:global(.activity-link) {
 	text-decoration: none;
 
 	&:hover {
-		color: var(--color-grey-100);
+		color: var(--color-grey-400);
+
+		:global(.activity-verb) {
+			color: var(--color-grey-400);
+		}
+
+		:global(.activity-game) {
+			color: var(--color-grey-200);
+		}
 	}
 }
 

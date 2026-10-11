@@ -32,8 +32,8 @@ let possessive = $derived(isViewer ? 'your' : possessivePronoun(actor.pronouns))
 		{:else}
 			<a class="profile-link" href={actor.url}>{actor.name}</a>
 		{/if}
-		added <a class="game-link" href="/game/{game.slug}/">{game.title}</a>
-		to <a class="backlog-link" href={actor.backlogUrl}>{possessive} backlog</a>
+		added <a class="activity-game" href="/game/{game.slug}/">{game.title}</a>
+		to <a class="activity-backlog" href={actor.backlogUrl}>{possessive} backlog</a>
 	</div>
 </ActivityBase>
 
