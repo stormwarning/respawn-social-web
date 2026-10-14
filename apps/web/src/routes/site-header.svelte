@@ -13,6 +13,9 @@ let { data, onsearch } = $props()
 	</a>
 	<div class="header-actions">
 		<a href="/games/">Games</a>
+		{#if data.user}
+			<a href="/plays/">Plays</a>
+		{/if}
 		<button class="button is-icon-only" type="button" onclick={onsearch} aria-label="Search">
 			<Icon name="magnifying-glass" width="20" height="20" />
 		</button>

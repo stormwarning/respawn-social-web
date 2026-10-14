@@ -125,8 +125,11 @@ function withSavedInGroups(
 	return [...groups.slice(0, -1), { ...last, names: withSaved(last.names, missing) }]
 }
 
-export function open() {
-	form = value ? structuredClone($state.snapshot(value)) : emptyLogForm(currentState)
+/** `defaults` prefill a new log, e.g. from a play noticed on Steam; ignored when editing. */
+export function open(defaults: Partial<LogFormValue> = {}) {
+	form = value
+		? structuredClone($state.snapshot(value))
+		: { ...emptyLogForm(currentState), ...defaults }
 	confirmingDelete = false
 	session += 1
 	dialog.showModal()
