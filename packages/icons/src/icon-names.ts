@@ -3,6 +3,7 @@
 export const iconNames = [
 	'bookmarks-duotone',
 	'bookmarks-solid',
+	'chat-circle',
 	'chevron-up-down',
 	'controller-duotone',
 	'controller-solid',
