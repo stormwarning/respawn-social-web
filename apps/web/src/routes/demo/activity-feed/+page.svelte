@@ -111,6 +111,8 @@ function log(
 			url: `/${by.handle ?? by.did}/game/${game.slug}/`,
 			author: by,
 			record: record(game, fields),
+			coverUrl: null,
+			commentCount: 0,
 		},
 		...extra,
 	})
@@ -130,6 +132,8 @@ function logLike(
 			url: `/${author.handle ?? author.did}/game/${game.slug}/`,
 			author,
 			record: record(game, { ...REVIEW, rating: 9 }),
+			coverUrl: null,
+			commentCount: 0,
 		},
 		...extra,
 	})

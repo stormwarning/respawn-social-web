@@ -2,6 +2,7 @@ import { Collections } from '@respawn-social/lexicons'
 import type { FeedItem, FeedLogView, FeedPage } from '$lib/server/appview'
 import { resolveIds } from '$lib/server/backend'
 import type { ResolveResult } from '$lib/types/game'
+import { loadGameRecord, type CoverRef } from '$lib/atproto/game'
 import type { RespawnLogRecord } from '$lib/atproto/log'
 import { resolveHandleForDid, resolvePdsEndpoint } from '$lib/atproto/identity'
 import { publicAgent } from '$lib/atproto/public'
@@ -35,6 +36,8 @@ export interface FeedLog {
 	url: string
 	author: FeedActor
 	record: RespawnLogRecord
+	coverUrl: string | null
+	commentCount: number
 }
 
 export interface HydratedFeed {
@@ -127,6 +130,22 @@ export async function hydrateFeed(page: FeedPage, fetchFn?: typeof fetch): Promi
 		}),
 	)
 
+	// Logs are written without a cover; it lives on the author's game record.
+	const gameCovers = new Map<string, CoverRef | undefined>()
+	await Promise.all(
+		feed.flatMap((item) => {
+			const log = item.log
+			const pds = log && pdsByDid.get(log.did)
+			if (!log || log.record.cover || !pds) return []
+			const key = gameCoverKey(log)
+			if (gameCovers.has(key)) return []
+			gameCovers.set(key, undefined)
+			return loadGameRecord(publicAgent(pds), log.did, log.record.game.igdbId)
+				.then((record) => gameCovers.set(key, record?.cover))
+				.catch(() => {})
+		}),
+	)
+
 	const actorFor = (did: string): FeedActor =>
 		actors.get(did) ?? { did, handle: null, displayName: null, pronouns: null, avatarUrl: null }
 
@@ -140,15 +159,34 @@ export async function hydrateFeed(page: FeedPage, fetchFn?: typeof fetch): Promi
 			game: item.game ?? null,
 			coverUrl: blobUrl(pdsByDid.get(item.did), item.did, item.cover?.image),
 			subject: item.subject ? actorFor(item.subject) : null,
-			log: item.log ? hydrateLog(item.log, actorFor(item.log.did)) : null,
+			log: item.log
+				? hydrateLog(
+						item.log,
+						actorFor(item.log.did),
+						pdsByDid.get(item.log.did),
+						gameCovers.get(gameCoverKey(item.log)),
+					)
+				: null,
 		})),
 	}
 }
 
-function hydrateLog(log: FeedLogView, author: FeedActor): FeedLog {
+function gameCoverKey(log: FeedLogView): string {
+	return `${log.did}/${log.record.game.igdbId}`
+}
+
+function hydrateLog(
+	log: FeedLogView,
+	author: FeedActor,
+	pds: string | undefined,
+	gameCover: CoverRef | undefined,
+): FeedLog {
 	return {
 		url: logPath(author.handle ?? author.did, log.record.game.slug, log.number),
 		author,
 		record: log.record,
+		coverUrl: blobUrl(pds, log.did, (log.record.cover ?? gameCover)?.image),
+		// The appview doesn't count comments yet.
+		commentCount: 0,
 	}
 }
