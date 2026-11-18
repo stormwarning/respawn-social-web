@@ -73,6 +73,26 @@ public records anonymously. The feed takes the actor it is about as a query para
 anonymous is what we want — but note that anyone who can reach the appview can
 read any DID's feed, which is why it holds public records only.
 
+## Live indexing not working
+
+Symptom: new records only show up in the feed after a manual backfill. There is
+no setting to turn live indexing on. Every record lexicon is already in the
+Jetstream `wantedCollections` filter, which the startup
+`connecting to jetstream url=…` log line lists. The likely cause is a stalled
+Jetstream connection. HappyView 2.16.0 on Railway once went five weeks without
+an event, and it logged no disconnect or error the whole time.
+
+1. **Restart the service.** Redeploy it, or change any variable. On startup,
+   `jetstream cursor is older than 72 hours, skipping it … age_hours=N` confirms
+   the stall: N hours ago is when the last event arrived.
+2. **Confirm it's live.** Add a backlog item in the web app. It should appear in
+   `getActivity?filter=author` within seconds. To trace individual records, set
+   `VERBOSE_EVENT_LOGGING=true` while debugging and unset it after, since it
+   logs every record.
+3. **Backfill the gap.** Run a backfill for each feed collection from the
+   dashboard. Jetstream only replays the last 72 hours, so records written
+   during a longer stall aren't redelivered when the connection resumes.
+
 ## Point the web app at it
 
 Set in `apps/web/.env` (and in the Netlify site env for production):
